@@ -1,0 +1,41 @@
+name: Build APK
+on: [push, workflow_dispatch]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack zip
+        run: |
+          Z=$(ls -t ./*.zip 2>/dev/null | head -1 || true)
+          if [ -n "$Z" ]; then
+            rm -rf app settings.gradle.kts
+            unzip -qo "$Z"
+            rm -f ./*.zip
+            git config user.name github-actions
+            git config user.email github-actions@users.noreply.github.com
+            git add -A
+            git commit -m "Unpack $Z" || true
+            git push
+          fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
+      - run: gradle assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: app/build/outputs/apk/debug/*.apk
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/*.apk ByteJumper.apk
+          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create latest ByteJumper.apk --title "Byte Jumper" --notes "Debug APK" --target "$(git rev-parse HEAD)"
