@@ -6,21 +6,25 @@
    Вызов: S=GameEngine.create({mode:'level'|'boss'|'endless',L:1..10,W,H,seed}); потом каждые 1/60 с GameEngine.step(S,dt,{down,pressed}).
    События для звука лежат в S.ev (очищает тот, кто рисует). Убрать игру: удалить папку features/game и её строки в index.html. */
 const GameEngine=(()=>{
- const G=1900,JV=640,HG=.55,HMAX=.3,PX=80,PW=20,PH=24,FOOT=8,GY=.68;
+ /* Прыжок: тап ≈ 66 px (малый), удержание ≈ 124 px (большой) */
+ const G=1900,JV=500,HG=.42,HMAX=.25,PX=80,PW=20,PH=24,FOOT=8,GY=.68;
  const mul=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
  /* сложность d от 0 (уровень 1) до 1 (уровень 10): растёт плавно, размер героя, высота прыжка и управление не меняются */
- const prm=d=>({v0:200+126*d,vmax:270+126*d,acc:.012,bug:.3+.35*d,pit:d<.05?0:.18+.3*d,mov:d>.5?.6*(d-.5):0,gap:68+84*d,two:d>.3?.35:0,pow:.25});
+ const prm=d=>({v0:200+126*d,vmax:270+126*d,acc:.012,bug:.3+.35*d,pit:d<.05?0:.18+.3*d,mov:d>.5?.6*(d-.5):0,gap:80+130*d,two:d>.3?.35:0,pow:.25});
  const target=L=>6000+900*(L-1);
  function create(o){
   const S={mode:o.mode||'level',L:o.L||1,W:o.W||360,H:o.H||640,rnd:mul(o.seed==null?(Math.random()*1e9)|0:o.seed),
    x:0,speed:0,t:0,items:[],pits:[],genX:420,rest:0,score:0,bytes:0,spawned:0,combo:0,usedShield:false,ev:[],over:null,
-   hearts:o.mode==='boss'?3:1,boss:null,seg:0,last:'flat'};
+   hearts:0,maxHearts:0,lost:0,boss:null,seg:0,last:'flat'};
+  S.hearts=S.maxHearts=S.mode==='level'?5:3;
   S.gy=S.H*GY;S.d=S.mode==='endless'?.25:(S.L-1)/9;S.P=prm(S.d);
   S.p={y:S.gy-PH,vy:0,on:true,hold:0,buf:0,coy:.1,sh:false,mag:0,inv:0};
   if(S.mode==='boss')S.boss={hp:100,max:100,phase:1,atk:2.2,zone:7,fix:1.6,bob:0};
   else for(let i=0;i<5;i++)byte(S,200+i*40,0);
   S.target=S.mode==='level'?target(S.L):0;
+  /* дверь «</>» в конце уровня */
+  if(S.mode==='level')S.items.push({t:'door',x:S.target+PX,h:0});
   return S}
  function byte(S,x,h,gold){S.items.push({t:gold?'gold':'byte',x,h});S.spawned++}
  const place=(S,x,h,t,e)=>{const it=Object.assign({t,x,h},e||{});S.items.push(it);return it};
@@ -29,12 +33,14 @@ const GameEngine=(()=>{
   const P=S.P,r=S.rnd,lim=S.x+S.W+500;
   while(S.genX<lim){
    let x=S.genX,len;
+   if(S.mode==='level'&&x>S.target+PX+300){S.genX=Infinity;return}
+   const calm=S.mode==='level'&&x>S.target-420;
    if(S.rest>0||S.last!=='flat'){
     /* передышка после опасного места: всегда не короче, чем нужно для спокойного прыжка */
     len=320+r()*70;const n=3+((r()*4)|0);for(let i=0;i<n;i++)byte(S,x+60+i*(len-120)/n,0,r()<.06);
     S.rest=0;S.last='flat'}
    else{
-    const w=r(),pit=P.pit,bug=P.bug,pw=r()<P.pow&&S.seg>1;
+    const w=calm?1:r(),pit=P.pit,bug=P.bug,pw=!calm&&r()<P.pow&&S.seg>1;
     if(w<pit){
      const g=40+r()*(P.gap-40);len=g+280;S.pits.push({a:x+120,b:x+120+g});
      for(let i=0;i<5;i++)byte(S,x+120+g*(i+.5)/5,Math.sin((i+.5)/5*Math.PI)*(70+g*.3));S.last='pit'}
@@ -52,10 +58,16 @@ const GameEngine=(()=>{
  const solid=(S,pw)=>!inPit(S,pw-FOOT)||!inPit(S,pw+FOOT);
  function hit(S,it){
   const p=S.p;
-  if(S.mode==='boss'){if(p.inv>0)return;S.hearts--;p.inv=1.3;S.combo=0;S.ev.push('hit');if(S.hearts<=0){S.over='dead';S.ev.push('die')}return}
   if(p.inv>0)return;
-  if(p.sh){p.sh=false;p.inv=.9;S.usedShield=true;S.combo=0;S.ev.push('shield');if(it)it.dead=1;return}
-  S.over='dead';S.ev.push('die')}
+  if(S.mode!=='boss'&&p.sh){p.sh=false;p.inv=.9;S.usedShield=true;S.combo=0;S.ev.push('shield');if(it)it.dead=1;return}
+  lose(S)}
+ /* потеря сердца: неуязвимость 1,3 с; сердец нет → уровень провален */
+ function lose(S){S.hearts--;S.lost++;S.p.inv=1.3;S.combo=0;S.ev.push('hit');if(S.hearts<=0){S.over='dead';S.ev.push('die')}}
+ /* падение в яму: минус сердце и возврат на землю за ямой */
+ function fall(S){
+  const p=S.p,pw=S.x+PX;lose(S);if(S.over)return;
+  const q=S.pits.find(q=>pw>=q.a-40&&pw<=q.b+40);
+  S.x=(q?q.b+50:pw+120)-PX;p.y=S.gy-PH;p.vy=0;p.on=true;p.buf=0;p.inv=1.8;S.ev.push('fall')}
  const pts=(S,v)=>{S.score+=v*(S.combo>=10?2:1)};
  /* ---------- босс «Ошибка 404» ---------- */
  function bossStep(S,dt){
@@ -87,8 +99,8 @@ const GameEngine=(()=>{
   if(inp&&inp.down&&p.vy<0&&p.hold>0){g=G*HG;p.hold-=dt}else if(!(inp&&inp.down))p.hold=0;
   p.vy+=g*dt;p.y+=p.vy*dt;
   if(p.y+PH>=gy&&p.vy>=0&&solid(S,pw)&&p.y+PH<gy+14){p.y=gy-PH;p.vy=0;p.on=true}else p.on=false;
-  if(!p.on&&p.y+PH>gy+14&&inPit(S,pw)){S.over='dead';S.ev.push('die');return}
-  if(p.y>S.H+80){S.over='dead';S.ev.push('die');return}
+  if(!p.on&&p.y+PH>gy+14&&inPit(S,pw)){fall(S);return}
+  if(p.y>S.H+80){fall(S);return}
   p.inv=Math.max(0,p.inv-dt);p.mag=Math.max(0,p.mag-dt);
   /* предметы */
   const px0=pw-PW/2,px1=pw+PW/2,py0=p.y,py1=p.y+PH;
@@ -117,6 +129,6 @@ const GameEngine=(()=>{
   S.pits=S.pits.filter(q=>q.b>S.x-80);
   if(S.mode==='level'){S.score=Math.max(S.score,0);if(S.x>=S.target){S.over='win';S.ev.push('win')}}
 }
- const stars=S=>{if(S.over!=='win'||S.mode!=='level')return S.over==='win'?3:0;const pc=S.bytes/Math.max(1,S.spawned);return 1+(pc>=.7?1:0)+(pc>=.9&&!S.usedShield?1:0)};
+ const stars=S=>{if(S.over!=='win'||S.mode!=='level')return S.over==='win'?3:0;const pc=S.bytes/Math.max(1,S.spawned);return 1+(pc>=.7?1:0)+(pc>=.9&&S.lost<=1?1:0)};
  const dist=S=>Math.floor(S.x/10);
  return{create,step,stars,dist,target,prm,PX,PW,PH,GY,G,JV,HMAX,HG,solid,inPit}})();

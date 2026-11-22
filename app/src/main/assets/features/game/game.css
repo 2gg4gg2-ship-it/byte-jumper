@@ -34,3 +34,16 @@
 .gm-chip-go{border:0;border-radius:999px;background:var(--tx);color:var(--bg);font:inherit;font-weight:600;min-height:36px;padding:0 16px}
 .gm-chip-x{border:0;background:transparent;color:var(--tx2);font-size:22px;width:36px;height:36px}
 @media (orientation:landscape) and (max-height:560px){.gm-hero{padding-top:6px}.gm-logo{width:56px;height:56px;margin-bottom:8px}.gm-logo svg{width:34px;height:34px}.gm-stats{margin:10px 0}}
+/* ---- история (часть 1) ---- */
+.gm-story{display:flex;flex-direction:column;justify-content:center;min-height:70vh;padding:24px 8px;gap:14px;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s}
+.gm-story.in{opacity:1;transform:none}
+.gm-st-t{margin:0;font-size:22px}
+.gm-st-x{margin:0;font-size:16px;line-height:1.55;color:var(--tx2)}
+.gm-st-d{display:flex;gap:6px}
+.gm-st-d i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.gm-st-d i.on{background:var(--tx)}
+.gm-sec{margin:18px 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2)}
+.gm-bk{background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:6px 0}
+.gm-bk summary{cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.gm-bk summary small{color:var(--tx2)}
+.gm-bk p{white-space:pre-line;line-height:1.5;color:var(--tx2);margin:10px 0 0}
