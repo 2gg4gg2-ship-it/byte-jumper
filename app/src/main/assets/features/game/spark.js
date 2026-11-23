@@ -1,55 +1,100 @@
-/* ===== ИСКРА: утверждённая графика героя (атлас spark/spark.png) и её состояния =====
-   Кадры (все из утверждённых листов автора): idle (основная), r0–r7 (бег, 8 кадров), e0–e3 (эволюции), m0–m5 (эмоции: спокойный,
-   радость, тревога «!», грусть, решимость, удивление «!»), d0–d2 (урон: обычный, «> <» с частицами, снова спокойный), front (вид спереди, бой с боссом).
-   Чего нет в материалах автора, и как обходится: отдельных кадров прыжка, падения и приземления нет, поэтому прыжок и падение = кадр бега r4 с наклоном,
-   приземление = короткое сжатие холста; ходьбы вперёд-назад в бою нет, поэтому в бою кадр front покачивается и наклоняется по движению;
-   у эволюций (e1–e3) нет бега и эмоций: форма показывается одним кадром с качанием; правила открытия форм автор не задал, форма хранится в сохранении (0..3), в меню её пока не выбрать.
-   Урон: только смена выражения (d1) и частицы, без падения и отбрасывания. Хитбокс героя не менялся (20×24), картинка больше хитбокса на вид, но попадает только он.
-   Если картинка не загрузилась, game.js рисует прежнего героя (квадрат с глазами): игра остаётся рабочей офлайн. Ничего не отправляется в сеть. */
-const GameSpark=(()=>{
- const ATL={"th": 128, "f": {"idle": [0, 0, 118, 128, 61.1], "r0": [120, 0, 124, 129, 65.0], "r1": [246, 0, 120, 129, 63.7], "r2": [368, 0, 120, 131, 62.7], "r3": [490, 0, 115, 124, 55.2], "r4": [607, 0, 128, 128, 65.3], "r5": [737, 0, 119, 121, 58.7], "r6": [858, 0, 122, 124, 65.0], "r7": [0, 133, 121, 126, 65.5], "e0": [123, 133, 119, 128, 62.6], "e1": [244, 133, 127, 135, 67.2], "e2": [373, 133, 136, 144, 70.3], "e3": [511, 133, 152, 153, 84.2], "m0": [665, 133, 120, 128, 63.0], "m1": [787, 133, 134, 125, 67.0], "m2": [0, 288, 133, 118, 60.3], "m3": [135, 288, 113, 106, 59.7], "m4": [250, 288, 123, 114, 64.2], "m5": [375, 288, 131, 134, 62.2], "d0": [508, 288, 121, 128, 65.0], "d1": [631, 288, 159, 128, 60.7], "d2": [792, 288, 164, 128, 60.7], "front": [0, 424, 127, 128, 65.2]}};
- const DH=36;/* высота героя на экране, логических px (кадры нормированы к 128 px) */
- let ok=false,form=0;
- if(typeof Image!=='undefined'){const im=new Image();im.onload=()=>{ok=true};im.onerror=()=>{ok=false};im.src='features/game/spark/spark.png';GameSpark_img=im}
- var GameSpark_img;
- const has=n=>!!ATL.f[n];
- /* рисует кадр: начало координат = ступни героя; sx,sy = сжатие/растяжение, fx = -1 отражает по горизонтали */
- function put(ctx,n,fx,sx,sy,al){const f=ATL.f[n];if(!f||!ok)return false;const k=DH/ATL.th;ctx.save();if(al!=null)ctx.globalAlpha*=al;ctx.scale((fx||1)*k*(sx||1),k*(sy||1));ctx.drawImage(GameSpark_img,f[0],f[1],f[2],f[3],-f[4],-f[3],f[2],f[3]);ctx.restore();return true}
- function state(S){return S._sp||(S._sp={hearts:S.hearts,bytes:S.bytes,tel:0,ph:1,on:true,landT:-9,hurtT:-9,emo:null,emoT:-9,parts:[],face:1,t0:S.t,after:null})}
- /* частицы урона: светлые осколки разлетаются от героя на 0,5 с; героя они не двигают */
- function burst(m){for(let i=0;i<10;i++){const a=-1.2+i*.26+Math.random()*.2;m.parts.push({x:6,y:-16,vx:Math.cos(a)*(40+Math.random()*50),vy:Math.sin(a)*(40+Math.random()*50)-10,l:.5})}}
- function emo(m,n,t,len){m.emo=n;m.emoT=t+len}
- /* выбор кадра и рисование. Вызывать после translate в центр хитбокса (и rotate). mode: 'level' | 'arena' */
- function draw(ctx,S,t,mode,E){
-  if(!ok)return false;const p=S.p,m=state(S),dt=Math.max(0,Math.min(.1,S.t-m.t0));m.t0=S.t;
-  const arena=mode==='arena',win=S.over==='win';
-  if(S.hearts<m.hearts){m.hurtT=t;burst(m);m.after=S.hearts===1?'m3':null}m.hearts=S.hearts;
-  if(S.bytes>m.bytes&&(arena||S.bytes%10===0))emo(m,'m1',t,.55);m.bytes=S.bytes;
-  if(arena){if(S.tel.length>m.tel&&t-m.hurtT>.5)emo(m,'m2',t,.5);m.tel=S.tel.length;if(S.boss.phase>m.ph)emo(m,'m4',t,.8);m.ph=S.boss.phase}
-  if(p.on&&!m.on)m.landT=t;m.on=p.on;
-  if(Math.abs(p.vx||0)>1)m.face=p.vx>0?1:-1;
-  if(win&&!m.won){m.won=1;emo(m,'m1',t,99)}
-  const hurt=t-m.hurtT;let name,fx=1,sx=1,sy=1,lean=0;
-  const foot=E.PH/2+1;ctx.translate(0,foot);
-  const land=t-m.landT;if(land>=0&&land<.12){const q=1-land/.12;sx=1+.12*q;sy=1-.15*q}
-  else if(!p.on){const v=Math.max(-1,Math.min(1,p.vy/600));sy=1+.08*Math.abs(v);sx=1-.05*Math.abs(v)}
-  const bob=arena&&p.on&&Math.abs(p.vx)>1?Math.sin(t*22)*.05:0;sy*=1+bob;sx*=1-bob;
-  if(arena)lean=(p.vx||0)/170*.12;
-  if(form>0&&has('e'+form)){/* эволюция: один кадр, без эмоций */
-   name='e'+form;fx=arena?m.face:1;if(!arena&&p.on)sy*=1+Math.sin(S.x/14*1.57)*.04}
-  else if(hurt>=0&&hurt<.45){name='d1';fx=arena?m.face:1}
-  else if(hurt>=.45&&hurt<.8){name=m.after||'d2';fx=arena?m.face:1}
-  else if(m.emo&&t<m.emoT){name=m.emo;fx=arena?m.face:1}
-  else if(arena){name='front'}
-  else name=p.on?'r'+(Math.floor(S.x/14)%8):'r4';
-  ctx.rotate(lean);
-  if(hurt>=0&&hurt<.8)ctx.globalAlpha=1;/* выражение урона видно чётко, мерцание неуязвимости не гасит его */
-  const drawn=put(ctx,name,fx,sx,sy,null);
-  /* частицы */
-  if(m.parts.length){ctx.fillStyle='#bfe6ff';for(const q of m.parts){q.l-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=120*dt;if(q.l>0){ctx.globalAlpha=Math.min(1,q.l*3);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.l*9);ctx.fillRect(-1,-2,2,4);ctx.restore()}}ctx.globalAlpha=1;m.parts=m.parts.filter(q=>q.l>0)}
-  ctx.rotate(-lean);ctx.translate(0,-foot);
-  return drawn}
- /* маленький портрет для меню: основная Искра */
- function portrait(cv){const c=cv.getContext('2d');if(!ok){return false}c.clearRect(0,0,cv.width,cv.height);const f=ATL.f.idle,k=Math.min(cv.width/f[2],cv.height/f[3])*.96;c.save();c.translate(cv.width/2,cv.height-2);c.scale(k,k);c.drawImage(GameSpark_img,f[0],f[1],f[2],f[3],-f[4],-f[3],f[2],f[3]);c.restore();return true}
- const whenReady=fn=>{if(ok)return fn();if(typeof Image==='undefined')return;const i=GameSpark_img;if(i)i.addEventListener('load',fn)};
- return{draw,portrait,whenReady,ready:()=>ok,form:v=>{if(v!=null)form=Math.max(0,Math.min(3,v|0));return form},ATL}})();
+/* Искра: визуальный слой (спрайты утверждённой внешности, выражения, тень, частицы).
+   Только рисование: физика, хитбокс и управление остаются в engine.js / arena.js.
+   Ресурсы: spark.png + spark-atlas.js (локально, без сети). */
+var GameSpark=(function(){
+ var sc=document.currentScript,dir=sc&&sc.src?sc.src.replace(/[^\/]*$/,''):'';
+ var A=window.SparkAtlas,img=null,ready=false,err='';
+ var VH=32;                       /* высота Искры на экране в логических единицах (хитбокс 24 не меняется) */
+ var RUN=['r0','r1','r2','r3','r6','r7'];
+ /* Формы. Правила открытия эволюций не заданы: доступна только base. У эволюций в атласе есть лишь стоячий кадр. */
+ var FORMS={base:{open:true,idle:'idle',front:'front',run:RUN,rise:'r4',fall:'r5'},
+  evo1:{open:false,idle:'evo1_n'},evo2:{open:false,idle:'evo2_n'},evo3:{open:false,idle:'evo3_n'}};
+ var form='base';
+ var st={pain:-99,emo:'',jump:-99,land:-99,was:true,parts:[],seed:7,last:''};
+ var rnd=function(){st.seed=(st.seed*1664525+1013904223)>>>0;return st.seed/4294967296};
+ function load(){
+  if(img||!A)return;
+  img=new Image();
+  img.onload=function(){ready=true;document.documentElement.setAttribute('data-spark','ok')};
+  img.onerror=function(){err='spark.png не загрузился';document.documentElement.setAttribute('data-spark','error');if(window.console)console.warn('[Искра] '+err+': запасной спрайт')};
+  img.src=dir+A.file;
+ }
+ function reset(){st.pain=-99;st.emo='';st.jump=-99;st.land=-99;st.was=true;st.parts.length=0}
+ function setForm(id){form=FORMS[id]&&FORMS[id].open?id:'base'}
+ /* события игры: боль = только выражение и частицы, поза и физика не меняются */
+ function note(e,S){
+  if(e==='hit'){st.pain=S.t;spawn(S.t)}
+  else if(e==='jump')st.jump=S.t;
+  else if(e==='die')st.emo='sad';
+  else if(e==='win')st.emo='joy';
+ }
+ function spawn(t){
+  st.parts=st.parts.filter(function(q){return t-q.b<q.ttl});
+  var side=rnd()<.5?-1:1;
+  for(var i=0;i<7&&st.parts.length<16;i++){
+   var a=(-1.35+rnd()*1.6)+(side<0?Math.PI*0.0:0);
+   st.parts.push({a:a,s:26+rnd()*34,l:3+rnd()*4,c:i%2?'#ffffff':'#bfe6ff',b:t,ttl:.42,x:side});
+  }
+  st.parts.push({flash:1,b:t,ttl:.2,x:side});
+ }
+ function expr(o){
+  var t=o.t;
+  if(t>=st.pain&&t-st.pain<.55)return'pain';
+  if(o.over==='win'||(o.over&&st.emo==='joy'))return'joy';
+  if(o.over==='dead'||(o.over&&st.emo==='sad'))return'sad';
+  return o.front?'focus':'n';
+ }
+ function pick(o){
+  var F=FORMS[form]||FORMS.base,b;
+  if(o.front&&F.front)b=F.front;
+  else if(o.over||!F.run)b=F.idle;
+  else if(!o.on)b=o.vy<0?F.rise:F.fall;
+  else b=F.run[Math.floor(o.t*12)%F.run.length];
+  return b;
+ }
+ function draw(ctx,o){
+  if(!ready||!A)return false;
+  var b=pick(o),ex=expr(o),r=A.s[b+'_'+ex]||A.s[b+'_n'];
+  if(!r)return false;
+  var t=o.t,u=VH/128,sx=1,sy=1;
+  if(o.on&&!st.was)st.land=t;st.was=o.on;
+  var la=t-st.land;if(la>=0&&la<.14){var k=Math.sin(Math.PI*la/.14);sy-=.05*k;sx+=.04*k}
+  var ja=t-st.jump;if(ja>=0&&ja<.16){var k2=Math.sin(Math.PI*ja/.16);sy+=.05*k2;sx-=.04*k2}
+  if(o.over)sy+=Math.sin(t*3)*.012;
+  var tilt=(o.front||o.on||o.flip)?0:Math.max(-.15,Math.min(.15,o.vy/3200));
+  /* тень на опоре */
+  if(o.ground!=null){
+   var gh=Math.max(0,o.ground-o.y),kk=Math.max(0,1-gh/170);
+   if(kk>0){ctx.save();ctx.globalAlpha=.3*kk;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(o.x-1,o.ground+1.5,12*(.55+.45*kk),3.2*(.6+.4*kk),0,0,7);ctx.fill();ctx.restore()}
+  }
+  ctx.save();
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.globalAlpha=o.alpha==null?1:o.alpha;
+  ctx.translate(o.x,o.cy);ctx.rotate(o.flip?Math.PI:tilt);
+  ctx.translate(0,o.half);ctx.scale(sx,sy);
+  ctx.drawImage(img,r[0],r[1],r[2],r[3],-r[4]*u,-r[5]*u,r[2]*u,r[3]*u);
+  ctx.restore();
+  /* щит и магнит (прежние кольца, вокруг хитбокса) */
+  if(o.col){
+   if(o.sh){ctx.save();ctx.strokeStyle=o.col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(o.x,o.cy,21,0,7);ctx.stroke();ctx.restore()}
+   if(o.mag>0){ctx.save();ctx.strokeStyle=o.col.tx2;ctx.setLineDash([4,5]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(o.x,o.cy,28+Math.sin(t*8)*2,0,7);ctx.stroke();ctx.restore()}
+  }
+  /* частицы урона: компактный блик и короткие штрихи у лица, без взрыва */
+  if(st.parts.length){
+   ctx.save();ctx.lineCap='round';
+   for(var i=0;i<st.parts.length;i++){
+    var q=st.parts[i],a=t-q.b;if(a<0||a>q.ttl)continue;
+    var bx=o.x+(o.front?q.x*9:11),by=o.cy-6,f=1-a/q.ttl;
+    if(q.flash){var g=ctx.createRadialGradient(bx,by,0,bx,by,8*f+2);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(191,230,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,8*f+2,0,7);ctx.fill();continue}
+    var dx=Math.cos(q.a)*(o.front?q.x:1),dy=Math.sin(q.a),px=bx+dx*q.s*a,py=by+dy*q.s*a;
+    ctx.globalAlpha=f;ctx.strokeStyle=q.c;ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+dx*q.l,py+dy*q.l);ctx.stroke();
+   }
+   ctx.restore();
+  }
+  st.last=b+'_'+ex;
+  return true;
+ }
+ function state(){return{ready:ready,err:err,sprite:st.last,parts:st.parts.length,form:form,pain:st.pain}}
+ load();
+ return{load:load,reset:reset,note:note,draw:draw,state:state,setForm:setForm,forms:FORMS,expr:expr};
+})();

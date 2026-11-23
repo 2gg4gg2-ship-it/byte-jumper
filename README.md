@@ -16,7 +16,6 @@ app/src/main/assets/
     engine.js             физика, уровни, босс (без DOM)
     game.js               экраны, canvas, звук, сохранение
     game.css
-    spark.js, spark/       Искра: атлас кадров (spark/spark.png) и состояния героя
 app/src/main/java/com/bytejumper/app/MainActivity.kt   оболочка: WebView + кнопка «Назад»
 ```
 

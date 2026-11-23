@@ -12,8 +12,8 @@ const Game=(()=>{
  const T=s=>typeof L==='function'?L(s):s;
  /* ---------- сохранение ---------- */
  let sv=load();
- if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);
- function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,tr:j.tr|0,form:Math.max(0,Math.min(3,j.form|0))}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,tr:0,form:0}}}
+ function load(){let j={};try{j=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}return Object.assign({},j&&typeof j==='object'&&!Array.isArray(j)?j:{},load0())}
+ function load0(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,tr:j.tr|0}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,tr:0}}}
  function save(){try{localStorage.setItem(KEY,JSON.stringify(sv))}catch(e){}}
  /* ---------- звук: короткие сигналы, создаются по первому нажатию ---------- */
  let ac=null;
@@ -47,7 +47,6 @@ const Game=(()=>{
   b.textContent='';
   const h=mk('div','gm-hero');
   const ico=mk('div','gm-logo');ico.innerHTML='<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="14" y="20" width="36" height="36" rx="9" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="26" cy="35" r="3.5" fill="currentColor"/><circle cx="38" cy="35" r="3.5" fill="currentColor"/><path d="M8 58h48" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 12l-3-6M32 10V3M42 12l3-6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
-  if(typeof GameSpark!=='undefined'){const pc=mk('canvas','gm-logo');pc.width=pc.height=160;pc.style.width=pc.style.height='72px';pc.style.margin='0 auto';GameSpark.whenReady(()=>GameSpark.portrait(pc));if(GameSpark.ready())GameSpark.portrait(pc);h.append(pc);ico.style.display='none'}
   h.append(ico,mk('h1','',T('Байт-прыгун')),mk('p','gm-tag',T('Один тап — прыжок. Держи — прыгнешь выше.')));
   const st=mk('div','gm-stats');
   [[T('Байтов собрано'),sv.b],[T('Рекорд'),sv.best]].forEach(([k,v])=>{const c=mk('div','gm-stat');c.append(mk('b','',String(v)),mk('small','',k));st.append(c)});
@@ -86,6 +85,12 @@ const Game=(()=>{
   const pb=mk('button','gm-pb');pb.type='button';pb.setAttribute('aria-label',T('Пауза'));pb.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>';
   wrap.append(cv,pb);b.append(wrap);
   const ctx=cv.getContext('2d');
+  /* Искра: спрайты рисует spark.js; пока не загрузились (или ошибка) возвращает false, и рисуется прежний запасной квадрат */
+  const sparkDraw=(p,x,front)=>{
+   const o={x,y:p.y+E.PH,cy:p.y+E.PH/2,half:E.PH/2,vy:p.vy,on:p.on,t:S.t,front,flip:front&&S.flip>0,over:S.over,sh:p.sh,mag:p.mag,col,alpha:p.inv>0&&Math.floor(S.t*14)%2?.5:1,ground:null};
+   if(front){if(!o.flip)for(const q of S.pl){if(q.st==='gone')continue;if(x>q.x&&x<q.x+q.w&&q.y>=o.y-4&&(o.ground===null||q.y<o.ground))o.ground=q.y}}
+   else{const wx=S.x+E.PX;o.ground=S.pits.some(q=>wx>q.a&&wx<q.b)?null:S.gy}
+   return GameSpark.draw(ctx,o)};
   let ax=0,frz=false,stk=null,introOn=false,S=null,raf=0,last=0,acc=0,down=false,press=false,paused=false,ended=false,sc=1,dpr=1,col={},ov=null,gone=false,hint=3;
   const cs=()=>{const s=getComputedStyle(document.documentElement);const g=n=>s.getPropertyValue(n).trim();col={bg:g('--bg')||'#0B0B0C',s1:g('--s1')||'#131315',s2:g('--s2')||'#1C1C1F',line:g('--line')||'#2B2B2F',tx:g('--tx')||'#EDEDEF',tx2:g('--tx2')||'#9A9AA2',err:g('--err')||'#E5736B'};col.font=getComputedStyle(document.body).fontFamily||'sans-serif'};
   function size(){
@@ -95,7 +100,7 @@ const Game=(()=>{
    if(S&&S.arena){S.W=W;S.H=H;GameArena.layout(S)}else if(S){const og=S.gy;S.W=W;S.H=H;S.gy=H*E.GY;S.p.y+=S.gy-og}
    return{W,H}}
   cur._S=()=>S;
-  function reset(){
+  function reset(){GameSpark.reset();
    closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,id:Lv/10,seed:(Date.now()&0xffff)||7,bytes:sv.b}):E.create({mode,L:Lv,W:z.W,H:z.H});ax=0;frz=false;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
    if(mode==='boss'&&!introOn){introOn=true;paused=true;intro()}
    if(!raf)raf=requestAnimationFrame(loop)}
@@ -149,7 +154,7 @@ const Game=(()=>{
    if(!paused&&!ended){
     acc+=dt;let n=0;
     while(acc>=1/60&&n<6){if(S.arena)GameArena.step(S,1/60,{ax,down,pressed:press,frz});else E.step(S,1/60,{down,pressed:press});press=false;acc-=1/60;n++;
-     for(const e of S.ev){if(SFX[e])SFX[e]();if(e==='hit'||e==='die')buzz(e==='die'?60:30)}S.ev.length=0;
+     for(const e of S.ev){GameSpark.note(e,S);if(SFX[e])SFX[e]();if(e==='hit'||e==='die')buzz(e==='die'?60:30)}S.ev.length=0;
      if(S.over){finish();break}}
     if(hint>0)hint-=dt}
    draw();
@@ -227,9 +232,9 @@ const Game=(()=>{
    if(S.key){const k=S.key,y=k.y+Math.sin(t*4)*3;ctx.save();ctx.translate(k.x,y);ctx.globalAlpha=k.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#34C759';ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(12,-13);ctx.lineTo(9,11);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.fillStyle='#0b1018';ctx.fillRect(-6,-1,12,3);ctx.restore()}
    if(S.seq&&S.dark){S.seq.n.forEach((d,i)=>{const lit=S.seq.lit===i;ctx.fillStyle=lit?'#fff':'#2a2440';ctx.globalAlpha=lit?1:.7;ctx.fillRect(d.x-8,d.y-8,16,16);ctx.globalAlpha=1})}
    /* игрок */
-   {const p=S.p,bl=p.inv>0&&Math.floor(t*14)%2;if(!bl||GameSpark.ready()){ctx.save();if(bl)ctx.globalAlpha=.45;ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
-    if(!GameSpark.draw(ctx,S,t,'arena',E)){ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
-    ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill()}ctx.restore()}}
+   {const p=S.p;if(!sparkDraw(p,p.x,true)&&!(p.inv>0&&Math.floor(t*14)%2)){ctx.save();ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+    ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+    ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();ctx.restore()}}
    /* HUD: полоса босса, сердца, управление */
    ctx.fillStyle=col.line;ctx.fillRect(W*.2,10,W*.6,8);ctx.fillStyle=col.err;ctx.fillRect(W*.2,10,W*.6*(B.hp/B.max),8);
    ctx.textAlign='center';ctx.fillStyle=col.tx2;ctx.font='600 11px '+col.font;ctx.fillText(GameStory.bosses[S.bid-1].name,W/2,34);
@@ -290,10 +295,10 @@ const Game=(()=>{
     ctx.fillStyle=col.bg;ctx.font='700 11px '+col.font;ctx.textAlign='center';ctx.fillText('404',0,24);ctx.restore()}
    /* игрок */
    {const p=S.p,blink=p.inv>0&&Math.floor(t*14)%2;
-    if(!blink||GameSpark.ready()){ctx.save();if(blink)ctx.globalAlpha=.45;ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
-     if(!GameSpark.draw(ctx,S,t,'level',E)){ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+    if(!sparkDraw(p,E.PX,false)&&!blink){ctx.save();ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+     ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
      ctx.fillStyle=col.bg;ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();
-     ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill()}
+     ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill();
      if(p.sh){ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(0,0,21,0,7);ctx.stroke()}
      if(p.mag>0){ctx.strokeStyle=col.tx2;ctx.setLineDash([4,5]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,28+Math.sin(t*8)*2,0,7);ctx.stroke()}
      ctx.restore()}}
@@ -355,5 +360,4 @@ const Game=(()=>{
   const r=el('<button class="sr" data-game-go><span class="si c"></span><span class="m"><b></b><small></small></span>'+ic('chevR')+'</button>');
   $('b',r).textContent=T('Байт-прыгун');$('small',r).textContent=T('Отдых: игра без интернета');
   r.onclick=()=>open();ab.insertAdjacentElement('beforebegin',r)});
- /* форма Искры (эволюция 0..3): правила открытия автор не задал, выбор только программный; сохраняется */
- return{open,state:()=>sv,setForm:v=>{sv.form=Math.max(0,Math.min(3,v|0));if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);save()}}})();
+ return{open,state:()=>sv}})();
