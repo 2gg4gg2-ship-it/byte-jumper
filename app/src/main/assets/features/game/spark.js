@@ -51,11 +51,11 @@ var GameSpark=(function(){
   c.save();
   c.lineCap='round';
   c.strokeStyle=C.d1;c.lineWidth=17;c.beginPath();c.moveTo(hx,hy);c.lineTo(fx,fy-12);c.stroke();
-  c.translate(fx,fy);c.rotate(ang);c.scale(1,1.22);
+  c.translate(fx,fy);c.rotate(ang);c.scale(1.12,1.28);
   c.beginPath();
   if(front){c.moveTo(-10,-14);c.bezierCurveTo(-13,-6,-12,0,-6,0);c.lineTo(6,0);c.bezierCurveTo(12,0,13,-6,10,-14);c.closePath()}
   else{c.moveTo(-10,-14);c.bezierCurveTo(-13,-5,-11,0,-4,0);c.lineTo(9,0);c.bezierCurveTo(16,0,16,-5,12,-9);c.bezierCurveTo(8,-14,-2,-16,-10,-14);c.closePath()}
-  c.fillStyle=lin(c,0,-14,0,0,[0,C.d0,1,C.d2]);c.fill();
+  c.fillStyle=lin(c,-8,-16,8,0,[0,'#2f3658',1,C.d2]);c.fill();c.save();c.clip();poly(c,[-12,-16,0,-15,-3,0,-10,0],'rgba(120,150,230,.16)');poly(c,[2,-15,12,-10,10,0,-3,0],'rgba(0,0,10,.35)');c.restore();
   c.lineWidth=1.1;c.strokeStyle='#05060d';c.stroke();
   c.beginPath();c.moveTo(-7,-11);c.quadraticCurveTo(0,-14,8,-10);c.lineWidth=1.3;c.strokeStyle='rgba(150,190,255,.38)';c.stroke();
   c.restore();
@@ -97,48 +97,49 @@ var GameSpark=(function(){
   c.beginPath();c.moveTo(x-r,y+3);c.quadraticCurveTo(x,y-r*1.15,x+r,y+3);
   c.lineWidth=3.8;c.strokeStyle=C.eye;c.shadowColor=C.glow;c.shadowBlur=7;c.stroke();c.shadowBlur=0;
  }
- /* ---------- вид сбоку (бег, прыжок, ожидание) ---------- */
+/* ---------- вид сбоку (бег, прыжок, ожидание) ---------- */
+ var FACE_S='M-2 -98C-22 -90 -24 -48 -4 -32C8 -24 34 -26 44 -40C53 -54 50 -80 34 -92C22 -102 10 -102 -2 -98Z';
  function side(c,P,ex,blink){
   var by=P.lift;
-  /* ноги — позади корпуса */
-  leg(c,-12,-30-by*.2,P.l0[0],P.l0[1],P.l0[2],0);
-  c.save();c.translate(0,-by+5);
-  c.rotate(P.lean);          /* поворот корпуса вокруг опоры ног даёт перенос веса */
-  /* тёмная подложка корпуса (видна слева за пластиной) */
-  c.beginPath();c.ellipse(-5,-62,52,45,0,0,7);c.fillStyle=lin(c,-50,-100,40,-20,[0,C.d0,1,C.d2]);c.fill();
-  /* задняя пластина (жёсткая, на корпусе) */
-  c.save();c.translate(-50,-52);c.rotate(P.plate);c.translate(50,52);
-  poly(c,[-62,-60,-48,-76,-33,-70,-47,-55],C.w0,C.ln,1.3);
-  poly(c,[-62,-60,-47,-55,-41,-34,-57,-40],lin(c,-60,-60,-42,-36,[0,C.w2,1,C.w3]),C.ln,1.3);
+  leg(c,-15,-30-by*.2,P.l0[0],P.l0[1],P.l0[2],0);
+  c.save();c.translate(0,-by+5);c.rotate(P.lean);
+  var egg=function(){c.beginPath();c.moveTo(-6,-108);c.bezierCurveTo(30,-112,56,-90,54,-56);c.bezierCurveTo(52,-30,30,-14,0,-14);c.bezierCurveTo(-30,-14,-52,-34,-52,-62);c.bezierCurveTo(-52,-90,-34,-106,-6,-108);c.closePath()};
+  /* тёмная подложка */
+  egg();c.fillStyle=lin(c,-50,-100,40,-20,[0,C.d0,1,C.d2]);c.fill();
+  /* задний блок-пластина (жёсткий, торчит назад) */
+  c.save();c.translate(-52,-52);c.rotate(P.plate);c.translate(52,52);
+  poly(c,[-66,-58,-54,-76,-40,-70,-48,-52],C.w0,C.ln,1.3);
+  poly(c,[-66,-58,-48,-52,-44,-30,-62,-38],lin(c,-64,-58,-44,-30,[0,C.w2,1,C.w4]),C.ln,1.3);
+  poly(c,[-48,-52,-40,-70,-34,-60,-42,-34,-44,-30],'rgba(120,125,180,.55)');
   c.restore();
-  /* корпус: оболочка с гранями */
+  /* оболочка-капюшон: всё тело белое, лицо вырезается */
+  c.save();egg();c.clip();
+  c.fillStyle=lin(c,-48,-108,40,-16,[0,C.w0,.5,C.w1,1,C.w3]);c.fillRect(-70,-120,140,110);
+  poly(c,[-48,-70,-34,-104,-6,-110,-8,-84,-20,-62],'rgba(255,255,255,.85)');
+  poly(c,[-20,-62,-8,-84,4,-92,-6,-48,-14,-34],'rgba(190,194,228,.6)');
+  poly(c,[-46,-36,-14,-30,10,-20,30,-16,-30,-12],'rgba(118,124,176,.4)');
+  poly(c,[10,-20,30,-16,52,-34,40,-30],'rgba(140,146,200,.45)');
+  c.lineWidth=1;c.strokeStyle='rgba(70,76,128,.55)';c.beginPath();c.moveTo(-8,-84);c.lineTo(-20,-62);c.lineTo(-14,-34);c.moveTo(4,-92);c.lineTo(-6,-48);c.stroke();
+  c.restore();
+  egg();c.lineWidth=1.7;c.strokeStyle=C.ln;c.stroke();
+  /* лицо: D-образная тёмная область */
   c.save();
-  c.beginPath();c.ellipse(0,-62,50,44,0,0,7);c.clip();
-  c.fillStyle=lin(c,-44,-104,34,-20,[0,C.w0,.45,C.w1,1,C.w3]);c.fillRect(-60,-110,120,100);
-  poly(c,[-46,-66,-30,-102,-4,-108,-4,-82,-22,-58],'rgba(255,255,255,.75)');
-  poly(c,[-22,-58,-4,-82,10,-86,4,-38,-20,-28],'rgba(196,199,230,.55)');
-  poly(c,[-44,-34,-6,-24,34,-26,40,-38,-30,-46],'rgba(112,118,170,.38)');
-  c.lineWidth=1;c.strokeStyle='rgba(78,84,134,.5)';c.beginPath();c.moveTo(-4,-82);c.lineTo(-22,-58);c.lineTo(-20,-28);c.moveTo(10,-86);c.lineTo(4,-38);c.stroke();
+  var f=new Path2D(FACE_S);
+  var g=c.createRadialGradient(22,-76,2,14,-62,48);g.addColorStop(0,'#2b3258');g.addColorStop(.55,C.d1);g.addColorStop(1,C.d2);
+  c.fillStyle=g;c.fill(f);c.lineWidth=2;c.strokeStyle='#05060d';c.stroke(f);
+  c.clip(f);c.lineWidth=2.4;c.strokeStyle='rgba(175,210,255,.32)';c.stroke(f);
   c.restore();
-  c.beginPath();c.ellipse(0,-62,50,44,0,0,7);c.lineWidth=1.6;c.strokeStyle=C.ln;c.stroke();
-  /* лицевая область */
-  var fx=15,fy=-60,fr=34,fh=32;
-  c.save();c.translate(fx,fy);
-  c.beginPath();c.ellipse(0,0,fr,fh,0,0,7);
-  var g=c.createRadialGradient(8,-12,2,0,0,fr+2);g.addColorStop(0,'#2a3156');g.addColorStop(.55,C.d1);g.addColorStop(1,C.d2);
-  c.fillStyle=g;c.fill();c.lineWidth=2;c.strokeStyle='#05060d';c.stroke();
-  c.beginPath();c.ellipse(0,0,fr-2.5,fh-2.5,0,Math.PI*.95,Math.PI*1.45);c.lineWidth=1.4;c.strokeStyle='rgba(170,205,255,.35)';c.stroke();
-  c.restore();
-  eyes(c,ex,fx-9,fx+13,fy,7,25,blink,P.lx,P.ly,.88);
-  /* спинной плавник: жёсткая пластина, шарнир у основания */
-  c.save();c.translate(-16,-92);c.rotate(P.fin);c.translate(16,92);
-  poly(c,[-32,-94,-27,-121,-8,-128,-4,-100,-14,-90],lin(c,-32,-128,-4,-90,[0,C.w0,1,C.w2]),C.ln,1.4);
-  poly(c,[-27,-121,-8,-128,-3,-117,-18,-111],'rgba(255,255,255,.9)');
-  poly(c,[-8,-128,-4,-100,-3,-117],'rgba(130,135,185,.45)');
+  /* светлая кромка по нижнему краю лица */
+  c.beginPath();c.moveTo(-4,-30);c.bezierCurveTo(8,-22,34,-24,44,-38);c.lineWidth=1.5;c.strokeStyle='rgba(255,255,255,.75)';c.stroke();
+  eyes(c,ex,8,32,-60,9,28,blink,P.lx,P.ly,.9);
+  /* спинной плавник: двухъярусная жёсткая пластина, шарнир у основания */
+  c.save();c.translate(-22,-92);c.rotate(P.fin);c.translate(22,92);
+  poly(c,[-42,-86,-38,-108,-12,-132,4,-106,-6,-92,-20,-98],lin(c,-40,-130,4,-90,[0,C.w0,1,C.w2]),C.ln,1.5);
+  poly(c,[-38,-108,-12,-132,-4,-120,-26,-104],'rgba(255,255,255,.95)');
+  poly(c,[-12,-132,4,-106,0,-100,-4,-120],'rgba(120,126,182,.55)');
   c.restore();
   c.restore();
-  /* вторая нога — перед корпусом лишь ступнёй, поэтому тоже сзади, но смещена вперёд */
-  leg(c,14,-28-by*.2,P.l1[0],P.l1[1],P.l1[2],0);
+  leg(c,16,-28-by*.2,P.l1[0],P.l1[1],P.l1[2],0);
  }
  /* ---------- вид спереди (бой с боссом) ---------- */
  function front(c,P,ex,blink){
@@ -161,13 +162,13 @@ var GameSpark=(function(){
   poly(c,[-50,-34,0,-18,50,-34,50,-44,0,-30,-50,-44],'rgba(112,118,170,.35)');
   c.restore();
   c.beginPath();c.ellipse(0,-62,50,46,0,0,7);c.lineWidth=1.6;c.strokeStyle=C.ln;c.stroke();
-  c.save();c.translate(0,-60);
+  c.save();c.translate(3,-60);
   c.beginPath();c.ellipse(0,0,38,35,0,0,7);
   var g=c.createRadialGradient(8,-12,2,0,0,40);g.addColorStop(0,'#2a3156');g.addColorStop(.55,C.d1);g.addColorStop(1,C.d2);
   c.fillStyle=g;c.fill();c.lineWidth=2;c.strokeStyle='#05060d';c.stroke();
   c.beginPath();c.ellipse(0,0,35.5,32.5,0,Math.PI*.9,Math.PI*1.5);c.lineWidth=1.4;c.strokeStyle='rgba(170,205,255,.35)';c.stroke();
   c.restore();
-  eyes(c,ex,-14,14,-60,9,27,blink,P.lx,P.ly,1);
+  eyes(c,ex,-11,17,-60,10,28,blink,P.lx,P.ly,1);
   c.save();c.translate(-16,-100);c.rotate(P.fin);c.translate(16,100);
   poly(c,[-28,-96,-24,-122,-6,-128,-2,-102,-12,-94],lin(c,-28,-128,-2,-94,[0,C.w0,1,C.w2]),C.ln,1.4);
   poly(c,[-24,-122,-6,-128,-1,-118,-16,-112],'rgba(255,255,255,.9)');
