@@ -121,11 +121,16 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
  const names=new Set(),pal=new Set();let ok=true;
  for(let L=1;L<=20;L++){const th=GA.theme('level',L);names.add(th.m+th.name);pal.add(th.top+th.bot+th.ac);try{GA.bg(ctx,360,640,435,5000+L*37,L*1.3,th,1)}catch(e){ok=false;console.log(e.message)}}
  c('графика: 20 уровней рисуют фон без ошибок',ok);
- c('графика: у каждого из уровней 1–20 своя палитра',pal.size>=19);
+ c('графика: 4 сцены на уровни 1–20, смена раз в 5 уровней (не новый фон на каждый уровень)',pal.size===4&&GA.theme('level',5).top===GA.theme('level',1).top&&GA.theme('level',6).top!==GA.theme('level',5).top);
  c('графика: уровни 21+ берут палитры по кругу, бесконечный режим тоже',GA.theme('level',21).top===GA.theme('level',1).top&&GA.theme('endless',1).i===11);
  let ok2=true;const th=GA.theme('level',3);try{for(const t of['byte','gold','bug','door','proj','fix','shield','magnet','zone'])if(!GA.item(ctx,{t,x:10,w:80,age:.5,big:true},100,300,435,1,640))ok2=false;
-  GA.seg(ctx,0,300,435,640,100,th,1);GA.voidFill(ctx,360,640,435,th,1);GA.shadow(ctx,80,435,400,24);GA.plat(ctx,0,300,100,10);
+  GA.seg(ctx,0,300,435,640,100,th,1);GA.voidFill(ctx,360,640,435,th,1);GA.shadow(ctx,80,435,400,24);GA.plat(ctx,0,300,100,10);for(const st of['warn','stale','lit'])GA.plat(ctx,0,300,100,10,st);GA.arenaHud(ctx,{score:5,bytes:3,hearts:2,maxHearts:3},360,640,1,{font:'sans-serif',name:'Босс',frac:.5});GA.joy(ctx,60,500,.5,true);GA.jump(ctx,300,500,true);GA.rejectBtn(ctx,300,400,true,'Отклонить','sans-serif');
   const S=AR.create({W:360,H:520,seed:1,id:1,bytes:0});GA.parts(ctx,S,S.t,th,1,GE);GA.hud(ctx,{score:5,bytes:3,combo:12,hearts:3,maxHearts:5},360,640,1,{th,font:'sans-serif',hearts:true,f:.4,label:'3 · Архивариус'});
-  ok2=ok2&&GA.arenaBg(ctx,{bid:1,gy:430},360,520,1)&&GA.arenaBg(ctx,{bid:2,gy:430},360,520,1)&&GA.arenaBg(ctx,{bid:3,gy:430},360,520,1)===false}catch(e){ok2=false;console.log(e.message)}
- c('графика: предметы, земля, интерфейс, частицы и арены 1–2 рисуются без ошибок',ok2)}
+  ok2=ok2&&GA.arenaBg(ctx,{bid:1,gy:430},360,520,1)&&GA.arenaBg(ctx,{bid:2,gy:430},360,520,1)&&[3,4,5,6,7,8,9,10].every(id=>GA.arenaBg(ctx,{bid:id,gy:430},360,520,1)===true)}catch(e){ok2=false;console.log(e.message)}
+ c('графика: предметы, земля, интерфейс, частицы и арены 1–10 рисуются без ошибок',ok2)}
+{const fs=require('fs'),path=require('path'),dir=path.join(__dirname,'../../app/src/main/assets/features/game');let bad2=[];
+ for(const f of['art.js','bossart.js','game.js','game.css','fx.js','spark.js']){const txt=fs.readFileSync(path.join(dir,f),'utf8');for(const m of txt.matchAll(/#([0-9a-fA-F]{6})\b/g)){const n=parseInt(m[1],16),r=n>>16,g=(n>>8)&255,b=n&255,mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx-mn<18)continue;
+   let h;if(mx===r)h=((g-b)/(mx-mn)+6)%6*60;else if(mx===g)h=((b-r)/(mx-mn)+2)*60;else h=((r-g)/(mx-mn)+4)*60;
+   const red=(h<12||h>348);if(!red)bad2.push(f+' #'+m[1]+' hue '+Math.round(h))}}
+ c('палитра: в коде игры нет цветных (фиолетовых, розовых, синих, зелёных, жёлтых) оттенков, только серые и красный'+(bad2.length?' '+bad2.slice(0,6).join('; '):''),bad2.length===0)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}

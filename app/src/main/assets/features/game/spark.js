@@ -46,10 +46,12 @@ const GameSpark=(()=>{
   if(hurt>=0&&hurt<.8)ctx.globalAlpha=1;/* выражение урона видно чётко, мерцание неуязвимости не гасит его */
   const drawn=put(ctx,name,fx,sx,sy,null);
   /* частицы */
-  if(m.parts.length){ctx.fillStyle='#bfe6ff';for(const q of m.parts){q.l-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=120*dt;if(q.l>0){ctx.globalAlpha=Math.min(1,q.l*3);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.l*9);ctx.fillRect(-1,-2,2,4);ctx.restore()}}ctx.globalAlpha=1;m.parts=m.parts.filter(q=>q.l>0)}
+  if(m.parts.length){ctx.fillStyle='#e6e8eb';for(const q of m.parts){q.l-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=120*dt;if(q.l>0){ctx.globalAlpha=Math.min(1,q.l*3);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.l*9);ctx.fillRect(-1,-2,2,4);ctx.restore()}}ctx.globalAlpha=1;m.parts=m.parts.filter(q=>q.l>0)}
   ctx.rotate(-lean);ctx.translate(0,-foot);
   return drawn}
  /* маленький портрет для меню: основная Искра */
  function portrait(cv){const c=cv.getContext('2d');if(!ok){return false}c.clearRect(0,0,cv.width,cv.height);const f=ATL.f.idle,k=Math.min(cv.width/f[2],cv.height/f[3])*.96;c.save();c.translate(cv.width/2,cv.height-2);c.scale(k,k);c.drawImage(GameSpark_img,f[0],f[1],f[2],f[3],-f[4],-f[3],f[2],f[3]);c.restore();return true}
+ /* значок для интерфейса: основной кадр, ступни в (x,y), высота h */
+ function icon(ctx,x,y,h){if(!ok)return false;const f=ATL.f.idle,k=h/f[3];ctx.save();ctx.translate(x,y);ctx.scale(k,k);ctx.drawImage(GameSpark_img,f[0],f[1],f[2],f[3],-f[4],-f[3],f[2],f[3]);ctx.restore();return true}
  const whenReady=fn=>{if(ok)return fn();if(typeof Image==='undefined')return;const i=GameSpark_img;if(i)i.addEventListener('load',fn)};
- return{draw,portrait,whenReady,ready:()=>ok,form:v=>{if(v!=null)form=Math.max(0,Math.min(3,v|0));return form},ATL}})();
+ return{draw,portrait,icon,whenReady,ready:()=>ok,form:v=>{if(v!=null)form=Math.max(0,Math.min(3,v|0));return form},ATL}})();
