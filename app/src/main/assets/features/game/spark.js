@@ -1,272 +1,55 @@
-/* Искра: визуальный слой. Персонаж собирается из отдельных частей прямо на canvas (вектор, без картинки):
-   жёсткие пластины оболочки (спинной плавник, задняя пластина, корпус), тёмная лицевая область,
-   глаза-капсулы, две короткие ноги с настоящей сменой опоры.
-   Только рисование: физика, хитбокс и управление остаются в engine.js / arena.js.
-   Единицы рисования: Искра высотой 128, начало координат — центр низа ног. На экране высота VH. */
-var GameSpark=(function(){
- var VH=32;                        /* высота Искры на экране (хитбокс 24 не меняется) */
- var FORMS={base:{open:true},evo1:{open:false},evo2:{open:false},evo3:{open:false}};
- var form='base';
- var st={pain:-99,emo:'',jump:-99,land:-99,was:true,parts:[],seed:7,last:'',air:0,pt:0,fy:0,lastPose:null};
- var rnd=function(){st.seed=(st.seed*1664525+1013904223)>>>0;return st.seed/4294967296};
- var C={w0:'#ffffff',w1:'#eeeef9',w2:'#d3d4ea',w3:'#aeb1d1',w4:'#868ab0',ln:'#23273f',d0:'#262c4c',d1:'#12152a',d2:'#080a15',eye:'#dff8ff',glow:'#7fd8ff'};
- function lerp(a,b,k){return a+(b-a)*k}
- function cl(v,a,b){return v<a?a:v>b?b:v}
- function load(){document.documentElement.setAttribute('data-spark','ok')}
- function reset(){st.pain=-99;st.emo='';st.jump=-99;st.land=-99;st.was=true;st.parts.length=0;st.air=0;st.pt=0}
- function setForm(id){form=FORMS[id]&&FORMS[id].open?id:'base'}
- function note(e,S){
-  if(e==='hit'){st.pain=S.t;spawn(S.t)}
-  else if(e==='jump')st.jump=S.t;
-  else if(e==='die')st.emo='sad';
-  else if(e==='win')st.emo='joy';
- }
- function spawn(t){
-  st.parts=st.parts.filter(function(q){return t-q.b<q.ttl});
-  var side=rnd()<.5?-1:1;
-  for(var i=0;i<7&&st.parts.length<16;i++){
-   var a=(-1.35+rnd()*1.6);
-   st.parts.push({a:a,s:26+rnd()*34,l:3+rnd()*4,c:i%2?'#ffffff':'#bfe6ff',b:t,ttl:.42,x:side});
-  }
-  st.parts.push({flash:1,b:t,ttl:.2,x:side});
- }
- function expr(o){
-  var t=o.t;
-  if(t>=st.pain&&t-st.pain<.55)return'pain';
-  if(o.over==='win'||(o.over&&st.emo==='joy'))return'joy';
-  if(o.over==='dead'||(o.over&&st.emo==='sad'))return'sad';
-  return o.front?'focus':'n';
- }
- /* ---------- примитивы ---------- */
- function poly(c,pts,fill,stroke,lw){
-  c.beginPath();c.moveTo(pts[0],pts[1]);
-  for(var i=2;i<pts.length;i+=2)c.lineTo(pts[i],pts[i+1]);
-  c.closePath();
-  if(fill){c.fillStyle=fill;c.fill()}
-  if(stroke){c.lineWidth=lw||1.4;c.strokeStyle=stroke;c.lineJoin='round';c.stroke()}
- }
- function lin(c,x0,y0,x1,y1,s){var g=c.createLinearGradient(x0,y0,x1,y1);for(var i=0;i<s.length;i+=2)g.addColorStop(s[i],s[i+1]);return g}
-/* нога: тёмный граненый клин, широкий у корпуса и сужается к низу (как на утверждённых листах) */
- function leg(c,hx,hy,fx,fy,ang,front){
-  c.save();
-  var ca=Math.cos(ang),sa=Math.sin(ang);
-  var rp=function(x,y){return[fx+x*ca-y*sa,fy+x*sa+y*ca]};
-  var p1=rp(-9,-3),p2=rp(-5,0),p3=rp(6,0),p4=rp(10,-4);
-  var pts=[hx-13,hy,hx+13,hy,p4[0],p4[1],p3[0],p3[1],p2[0],p2[1],p1[0],p1[1]];
-  c.beginPath();c.moveTo(pts[0],pts[1]);for(var i=2;i<pts.length;i+=2)c.lineTo(pts[i],pts[i+1]);c.closePath();
-  c.fillStyle=lin(c,hx-13,hy,hx+13,fy,[0,'#343b62',.5,C.d1,1,C.d2]);c.fill();
-  c.save();c.clip();
-  poly(c,[hx-13,hy,hx-2,hy,p2[0]+1,p2[1],p1[0],p1[1]],'rgba(130,160,240,.2)');
-  poly(c,[hx+4,hy,hx+13,hy,p4[0],p4[1],p3[0],p3[1]],'rgba(0,0,12,.4)');
-  c.restore();
-  c.lineJoin='round';c.lineWidth=1.2;c.strokeStyle='#05060d';c.stroke();
-  c.restore();
- }
- /* глаза: капсулы / дуги по выражению. cx,cy — центр лица, sp — половина расстояния, p — перспектива правого глаза */
- function eyes(c,ex,cxL,cxR,cy,w,h,blink,lx,ly,pr){
-  c.save();c.lineCap='round';c.lineJoin='round';
-  var xs=[cxL+lx,cxR+lx*1.1],sc=[1,pr],i,x,k;
-  for(i=0;i<2;i++){
-   x=xs[i];k=sc[i];var ww=w*k,hh=h*k,y=cy+ly,dir=i?1:-1;
-   if(ex==='joy'){arc(c,x,y+3*k,7*k,0)}
-   else if(ex==='sad'){
-    c.beginPath();c.moveTo(x-7*k,y-1*k);c.quadraticCurveTo(x,y+(5*k),x+7*k,y-1*k);
-    c.lineWidth=3.6*k;c.strokeStyle=C.eye;c.shadowColor=C.glow;c.shadowBlur=6;c.stroke();c.shadowBlur=0;
-   }
-   else if(ex==='pain'){
-    var d=i?-1:1;
-    c.beginPath();c.moveTo(x-d*7*k,y-8*k);c.lineTo(x+d*5*k,y);c.lineTo(x-d*7*k,y+8*k);
-    c.lineWidth=3.8*k;c.strokeStyle=C.eye;c.shadowColor=C.glow;c.shadowBlur=7;c.stroke();c.shadowBlur=0;
-   }
-   else{
-    var rot=0,hs=hh;
-    if(ex==='focus'){rot=-dir*.55;hs=hh*.72}
-    var bl=ex==='focus'?Math.max(blink,.35):blink;
-    c.save();c.translate(x,y);c.rotate(rot);c.scale(1,bl);
-    var r=ww/2;
-    /* мягкое свечение */
-    c.shadowColor=C.glow;c.shadowBlur=9;
-    c.fillStyle=lin(c,0,-hs/2,0,hs/2,[0,'#ffffff',1,'#aee9ff']);
-    capsule(c,-r,-hs/2,ww,hs);c.fill();
-    c.shadowBlur=0;c.lineWidth=1.3;c.strokeStyle='rgba(110,205,255,.75)';c.stroke();
-    c.fillStyle='rgba(255,255,255,.95)';capsule(c,-r*.45,-hs/2+hs*.12,ww*.45,hs*.5);c.fill();
-    c.fillStyle='rgba(60,170,235,.45)';capsule(c,-r*.7,hs/2-hs*.2,ww*.7,hs*.16);c.fill();
-    c.restore();
-   }
-  }
-  c.restore();
- }
- function capsule(c,x,y,w,h){var r=w/2;c.beginPath();c.moveTo(x+r,y);c.arc(x+r,y+r,r,-Math.PI/2,Math.PI,true);c.lineTo(x,y+h-r);c.arc(x+r,y+h-r,r,Math.PI,0,true);c.lineTo(x+w,y+r);c.arc(x+r,y+r,r,0,-Math.PI/2,true);c.closePath()}
- function arc(c,x,y,r,a){
-  c.beginPath();c.moveTo(x-r,y+3);c.quadraticCurveTo(x,y-r*1.15,x+r,y+3);
-  c.lineWidth=3.8;c.strokeStyle=C.eye;c.shadowColor=C.glow;c.shadowBlur=7;c.stroke();c.shadowBlur=0;
- }
-/* ---------- вид сбоку (бег, прыжок, ожидание) ---------- */
- var FACE_S='M-2 -98C-22 -90 -24 -48 -4 -32C8 -24 34 -26 44 -40C53 -54 50 -80 34 -92C22 -102 10 -102 -2 -98Z';
- function side(c,P,ex,blink){
-  var by=P.lift;
-  leg(c,-15,-26-by*.2,P.l0[0],P.l0[1],P.l0[2],0);
-  c.save();c.translate(0,-by-3);c.rotate(P.lean);
-  var egg=function(){c.beginPath();c.moveTo(-6,-108);c.bezierCurveTo(30,-112,56,-90,54,-56);c.bezierCurveTo(52,-30,30,-14,0,-14);c.bezierCurveTo(-30,-14,-52,-34,-52,-62);c.bezierCurveTo(-52,-90,-34,-106,-6,-108);c.closePath()};
-  /* тёмная подложка */
-  egg();c.fillStyle=lin(c,-50,-100,40,-20,[0,C.d0,1,C.d2]);c.fill();
-  /* задний блок-пластина (жёсткий, торчит назад) */
-  c.save();c.translate(-52,-52);c.rotate(P.plate);c.translate(52,52);
-  poly(c,[-70,-56,-56,-82,-40,-75,-48,-48],C.w0,C.ln,1.4);
-  poly(c,[-70,-56,-48,-48,-44,-24,-66,-33],lin(c,-72,-56,-46,-22,[0,C.w2,1,C.w4]),C.ln,1.4);
-  poly(c,[-48,-48,-40,-75,-32,-62,-40,-28,-44,-24],'rgba(120,125,180,.55)');
-  c.restore();
-  /* оболочка-капюшон: всё тело белое, лицо вырезается */
-  c.save();egg();c.clip();
-  c.fillStyle=lin(c,-48,-108,40,-16,[0,C.w0,.5,C.w1,1,C.w3]);c.fillRect(-70,-120,140,110);
-  poly(c,[-48,-70,-34,-104,-6,-110,-8,-84,-20,-62],'rgba(255,255,255,.85)');
-  poly(c,[-20,-62,-8,-84,4,-92,-6,-48,-14,-34],'rgba(190,194,228,.6)');
-  poly(c,[-46,-36,-14,-30,10,-20,30,-16,-30,-12],'rgba(118,124,176,.4)');
-  poly(c,[10,-20,30,-16,52,-34,40,-30],'rgba(140,146,200,.45)');
-  c.lineWidth=1;c.strokeStyle='rgba(70,76,128,.55)';c.beginPath();c.moveTo(-8,-84);c.lineTo(-20,-62);c.lineTo(-14,-34);c.moveTo(4,-92);c.lineTo(-6,-48);c.stroke();
-  poly(c,[-46,-80,-42,-84,-36,-54,-40,-34,-45,-42],'rgba(12,14,32,.92)');
-  c.lineCap='round';c.strokeStyle='rgba(10,12,28,.9)';c.lineWidth=1.8;c.beginPath();c.moveTo(-14,-101);c.quadraticCurveTo(-8,-96,-2,-98);c.moveTo(-8,-84);c.lineTo(-20,-62);c.lineTo(-14,-34);c.moveTo(4,-92);c.lineTo(-6,-48);c.stroke();
-  c.restore();
-  egg();c.lineWidth=1.7;c.strokeStyle=C.ln;c.stroke();
-  /* лицо: D-образная тёмная область */
-  c.save();
-  var f=new Path2D(FACE_S);
-  var g=c.createRadialGradient(22,-76,2,14,-62,48);g.addColorStop(0,'#2b3258');g.addColorStop(.55,C.d1);g.addColorStop(1,C.d2);
-  c.fillStyle=g;c.fill(f);c.lineWidth=2;c.strokeStyle='#05060d';c.stroke(f);
-  c.clip(f);c.lineWidth=2.4;c.strokeStyle='rgba(175,210,255,.32)';c.stroke(f);
-  c.restore();
-  /* светлая кромка по нижнему краю лица */
-  c.beginPath();c.moveTo(-4,-30);c.bezierCurveTo(8,-22,34,-24,44,-38);c.lineWidth=1.5;c.strokeStyle='rgba(255,255,255,.75)';c.stroke();
-  eyes(c,ex,8,32,-60,9,28,blink,P.lx,P.ly,.9);
-  /* спинной плавник: нижний уступ + верхняя лопасть, жёсткие, шарнир у основания */
-  c.save();c.translate(-22,-92);c.rotate(P.fin);c.translate(22,92);
-  poly(c,[-48,-80,-42,-96,-12,-94,-4,-82,-12,-68],lin(c,-48,-96,-4,-68,[0,C.w1,1,C.w3]),C.ln,1.4);
-  poly(c,[-42,-96,-12,-94,-4,-82,-30,-86],'rgba(255,255,255,.9)');
-  poly(c,[-44,-92,-40,-114,-14,-136,10,-120,-2,-98,-14,-94],lin(c,-44,-136,8,-94,[0,C.w0,1,C.w2]),C.ln,1.5);
-  poly(c,[-40,-114,-14,-136,10,-120,-14,-108],'rgba(255,255,255,.95)');
-  poly(c,[-14,-108,10,-120,-2,-98,-14,-94],'rgba(125,131,188,.6)');
-  c.lineWidth=1.2;c.strokeStyle='rgba(12,14,32,.8)';c.beginPath();c.moveTo(-40,-114);c.lineTo(-14,-108);c.lineTo(-14,-94);c.stroke();
-  c.restore();
-  c.restore();
-  leg(c,16,-26-by*.2,P.l1[0],P.l1[1],P.l1[2],0);
- }
- /* ---------- вид спереди (бой с боссом) ---------- */
- function front(c,P,ex,blink){
-  var by=P.lift;
-  leg(c,-17,-26-by*.2,-17+P.l0[0],P.l0[1],P.l0[2],1);
-  leg(c,17,-26-by*.2,17+P.l1[0],P.l1[1],P.l1[2],1);
-  c.save();c.translate(0,-by-3);c.rotate(P.lean*.4);
-  /* боковые модули */
-  for(var s=-1;s<=1;s+=2){
-   c.save();c.scale(s,1);
-   poly(c,[50,-68,60,-78,66,-52,56,-42],lin(c,50,-78,66,-42,[0,C.w0,1,C.w3]),C.ln,1.3);
-   poly(c,[50,-68,56,-42,52,-40,47,-52],'rgba(120,125,175,.5)');
-   c.beginPath();c.moveTo(57,-47);c.quadraticCurveTo(61,-45,63,-51);c.lineWidth=2.4;c.lineCap='round';c.strokeStyle='#8fe0ff';c.shadowColor=C.glow;c.shadowBlur=6;c.stroke();c.shadowBlur=0;
-   c.restore();
-  }
-  c.save();
-  c.beginPath();c.ellipse(0,-62,50,46,0,0,7);c.clip();
-  c.fillStyle=lin(c,-40,-108,30,-18,[0,C.w0,.5,C.w1,1,C.w3]);c.fillRect(-60,-112,120,100);
-  poly(c,[-48,-60,-30,-100,-8,-108,-12,-78,-30,-52],'rgba(255,255,255,.7)');
-  poly(c,[-50,-34,0,-18,50,-34,50,-44,0,-30,-50,-44],'rgba(112,118,170,.35)');
-  c.restore();
-  c.beginPath();c.ellipse(0,-62,50,46,0,0,7);c.lineWidth=1.6;c.strokeStyle=C.ln;c.stroke();
-  c.save();c.translate(3,-60);
-  c.beginPath();c.ellipse(0,0,38,35,0,0,7);
-  var g=c.createRadialGradient(8,-12,2,0,0,40);g.addColorStop(0,'#2a3156');g.addColorStop(.55,C.d1);g.addColorStop(1,C.d2);
-  c.fillStyle=g;c.fill();c.lineWidth=2;c.strokeStyle='#05060d';c.stroke();
-  c.beginPath();c.ellipse(0,0,35.5,32.5,0,Math.PI*.9,Math.PI*1.5);c.lineWidth=1.4;c.strokeStyle='rgba(170,205,255,.35)';c.stroke();
-  c.restore();
-  eyes(c,ex,-11,17,-60,10,28,blink,P.lx,P.ly,1);
-  c.save();c.translate(-16,-100);c.rotate(P.fin);c.translate(16,100);
-  poly(c,[-28,-96,-24,-122,-6,-128,-2,-102,-12,-94],lin(c,-28,-128,-2,-94,[0,C.w0,1,C.w2]),C.ln,1.4);
-  poly(c,[-24,-122,-6,-128,-1,-118,-16,-112],'rgba(255,255,255,.9)');
-  c.restore();
-  c.restore();
- }
- /* ---------- поза ---------- */
- function pose(o,t,dt,fr){
-  var P={lift:0,lean:0,fin:0,plate:0,lx:0,ly:0,l0:[0,0,0],l1:[0,0,0]};
-  var hx0=fr?-17:-12,hx1=fr?17:14;
-  var on=!!o.on&&!o.over;
-  /* плавный переход земля ↔ воздух; бег продолжает фазу и не обнуляется */
-  st.air+=((o.on?0:1)-st.air)*(1-Math.exp(-dt*22));
-  var a=st.air;
-  var run=[0,0,0],run1=[0,0,0],lift=0,lean=0,fin=0,plate=0;
-  if(o.over){
-   
-   run=[hx0-2,0,.06];run1=[hx1+2,0,-.06];lift=0;fin=0;plate=0;
-  }else{
-   var ph=t*2.4%1,ph1=(ph+.5)%1,k=fr?.45:1;
-   var f=function(p){
-    if(p<.5){var u=p/.5;return[lerp(10,-10,u)*k,0,lerp(.12,-.18,u)*k]}
-    var v=(p-.5)/.5;return[lerp(-10,10,.5-.5*Math.cos(Math.PI*v))*k,-Math.sin(Math.PI*v)*(fr?4:7),lerp(-.5,.35,v)*k]};
-   var f0=f(ph),f1=f(ph1);
-   run=[hx0+f0[0],f0[1],f0[2]];run1=[hx1+f1[0],f1[1],f1[2]];
-   var c2=Math.cos(4*Math.PI*ph);
-   lift=(fr?1.3:2.4)*(.5+.5*c2);lean=fr?0:.05+.012*Math.sin(4*Math.PI*ph);
-   fin=-.03+.05*c2;plate=.025*Math.sin(4*Math.PI*ph+1);
-  }
-  /* воздух: подъём — ноги подтянуты назад, падение — вперёд и вниз; связь с реальной vy */
-  var m=cl(.5+o.vy/700,0,1);
-  var ar=[hx0-13,-9,-.7],ar1=[hx1-9,-5,-.5];     /* подъём */
-  var af=[hx0+5,-2,.25],af1=[hx1+9,-6,.35];       /* падение */
-  if(fr){ar=[hx0-2,-8,-.15];ar1=[hx1+2,-8,.15];af=[hx0-1,-3,0];af1=[hx1+1,-3,0]}
-  var air0=[lerp(ar[0],af[0],m),lerp(ar[1],af[1],m),lerp(ar[2],af[2],m)];
-  var air1=[lerp(ar1[0],af1[0],m),lerp(ar1[1],af1[1],m),lerp(ar1[2],af1[2],m)];
-  var i;
-  for(i=0;i<3;i++){P.l0[i]=lerp(run[i],air0[i],a);P.l1[i]=lerp(run1[i],air1[i],a)}
-  var airLift=lerp(3,0,m);                                   /* ноги тянут корпус вверх при подъёме */
-  P.lift=lerp(lift,fr?3:airLift+1,a);
-  P.lean=lerp(lean,fr?0:lerp(-.05,.07,m),a);
-  P.fin=lerp(fin,lerp(.16,-.12,m),a);                        /* пластина лагает против движения */
-  P.plate=lerp(plate,lerp(.05,-.05,m),a);
-  /* приземление: короткое приседание корпуса, без смены физики */
-  var la=t-st.land;
-  if(la>=0&&la<.13&&!o.over){var kk=Math.sin(Math.PI*la/.13);P.lift-=kk*2.4;P.lean+=kk*.015}
-  /* взгляд: вверх при подъёме, вниз при падении */
-  P.ly=a>.3?lerp(-3.2,3,m)*a:0;P.lx=a>.3?1.2*a:.6;
-  return P;
- }
- function draw(ctx,o){
-  var ex=expr(o),t=o.t,fr=!!o.front;
-  var dt=cl(t-st.pt,0,.05);st.pt=t;
-  if(o.on&&!st.was)st.land=t;st.was=o.on;
-  var P=pose(o,t,dt,fr);
-  var bp=t%3.7,bl=1;if(bp<.13)bl=1-.9*Math.sin(Math.PI*bp/.13);
-  var bq=(t+1.9)%6.1;if(bq<.11)bl=Math.min(bl,1-.9*Math.sin(Math.PI*bq/.11));
-  /* тень на опоре: от высоты, без постоянного пятна */
-  if(o.ground!=null){
-   var gh=Math.max(0,o.ground-o.y),kk=Math.max(0,1-gh/170);
-   if(kk>0){ctx.save();ctx.globalAlpha=.3*kk;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(o.x-1,o.ground+1.5,12*(.55+.45*kk),3.2*(.6+.4*kk),0,0,7);ctx.fill();ctx.restore()}
-  }
-  var u=VH/138;
-  ctx.save();
-  ctx.globalAlpha=o.alpha==null?1:o.alpha;
-  ctx.translate(o.x,o.cy);ctx.rotate(o.flip?Math.PI:0);
-  ctx.translate(0,o.half);ctx.scale(u,u);
-  ctx.lineJoin='round';
-  try{if(fr)front(ctx,P,ex,bl);else side(ctx,P,ex,bl)}catch(e){ctx.restore();return false}
-  ctx.restore();
-  if(o.col){
-   if(o.sh){ctx.save();ctx.strokeStyle=o.col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(o.x,o.cy,21,0,7);ctx.stroke();ctx.restore()}
-   if(o.mag>0){ctx.save();ctx.strokeStyle=o.col.tx2;ctx.setLineDash([4,5]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(o.x,o.cy,28+Math.sin(t*8)*2,0,7);ctx.stroke();ctx.restore()}
-  }
-  if(st.parts.length){
-   ctx.save();ctx.lineCap='round';
-   for(var i=0;i<st.parts.length;i++){
-    var q=st.parts[i],a=t-q.b;if(a<0||a>q.ttl)continue;
-    var bx=o.x+(fr?q.x*9:11),by=o.cy-6,f=1-a/q.ttl;
-    if(q.flash){var g=ctx.createRadialGradient(bx,by,0,bx,by,8*f+2);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(191,230,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,8*f+2,0,7);ctx.fill();continue}
-    var dx=Math.cos(q.a)*(fr?q.x:1),dy=Math.sin(q.a),px=bx+dx*q.s*a,py=by+dy*q.s*a;
-    ctx.globalAlpha=f;ctx.strokeStyle=q.c;ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+dx*q.l,py+dy*q.l);ctx.stroke();
-   }
-   ctx.restore();
-  }
-  st.last=(fr?'front':'side')+'_'+ex;
-  return true;
- }
- function state(){return{ready:true,err:'',sprite:st.last,parts:st.parts.length,form:form,pain:st.pain}}
- load();
- return{load:load,reset:reset,note:note,draw:draw,state:state,setForm:setForm,forms:FORMS,expr:expr};
-})();
+/* ===== ИСКРА: утверждённая графика героя (атлас spark/spark.png) и её состояния =====
+   Кадры (все из утверждённых листов автора): idle (основная), r0–r7 (бег, 8 кадров), e0–e3 (эволюции), m0–m5 (эмоции: спокойный,
+   радость, тревога «!», грусть, решимость, удивление «!»), d0–d2 (урон: обычный, «> <» с частицами, снова спокойный), front (вид спереди, бой с боссом).
+   Чего нет в материалах автора, и как обходится: отдельных кадров прыжка, падения и приземления нет, поэтому прыжок и падение = кадр бега r4 с наклоном,
+   приземление = короткое сжатие холста; ходьбы вперёд-назад в бою нет, поэтому в бою кадр front покачивается и наклоняется по движению;
+   у эволюций (e1–e3) нет бега и эмоций: форма показывается одним кадром с качанием; правила открытия форм автор не задал, форма хранится в сохранении (0..3), в меню её пока не выбрать.
+   Урон: только смена выражения (d1) и частицы, без падения и отбрасывания. Хитбокс героя не менялся (20×24), картинка больше хитбокса на вид, но попадает только он.
+   Если картинка не загрузилась, game.js рисует прежнего героя (квадрат с глазами): игра остаётся рабочей офлайн. Ничего не отправляется в сеть. */
+const GameSpark=(()=>{
+ const ATL={"th": 128, "f": {"idle": [0, 0, 118, 128, 61.1], "r0": [120, 0, 124, 129, 65.0], "r1": [246, 0, 120, 129, 63.7], "r2": [368, 0, 120, 131, 62.7], "r3": [490, 0, 115, 124, 55.2], "r4": [607, 0, 128, 128, 65.3], "r5": [737, 0, 119, 121, 58.7], "r6": [858, 0, 122, 124, 65.0], "r7": [0, 133, 121, 126, 65.5], "e0": [123, 133, 119, 128, 62.6], "e1": [244, 133, 127, 135, 67.2], "e2": [373, 133, 136, 144, 70.3], "e3": [511, 133, 152, 153, 84.2], "m0": [665, 133, 120, 128, 63.0], "m1": [787, 133, 134, 125, 67.0], "m2": [0, 288, 133, 118, 60.3], "m3": [135, 288, 113, 106, 59.7], "m4": [250, 288, 123, 114, 64.2], "m5": [375, 288, 131, 134, 62.2], "d0": [508, 288, 121, 128, 65.0], "d1": [631, 288, 159, 128, 60.7], "d2": [792, 288, 164, 128, 60.7], "front": [0, 424, 127, 128, 65.2]}};
+ const DH=36;/* высота героя на экране, логических px (кадры нормированы к 128 px) */
+ let ok=false,form=0;
+ if(typeof Image!=='undefined'){const im=new Image();im.onload=()=>{ok=true};im.onerror=()=>{ok=false};im.src='features/game/spark/spark.png';GameSpark_img=im}
+ var GameSpark_img;
+ const has=n=>!!ATL.f[n];
+ /* рисует кадр: начало координат = ступни героя; sx,sy = сжатие/растяжение, fx = -1 отражает по горизонтали */
+ function put(ctx,n,fx,sx,sy,al){const f=ATL.f[n];if(!f||!ok)return false;const k=DH/ATL.th;ctx.save();if(al!=null)ctx.globalAlpha*=al;ctx.scale((fx||1)*k*(sx||1),k*(sy||1));ctx.drawImage(GameSpark_img,f[0],f[1],f[2],f[3],-f[4],-f[3],f[2],f[3]);ctx.restore();return true}
+ function state(S){return S._sp||(S._sp={hearts:S.hearts,bytes:S.bytes,tel:0,ph:1,on:true,landT:-9,hurtT:-9,emo:null,emoT:-9,parts:[],face:1,t0:S.t,after:null})}
+ /* частицы урона: светлые осколки разлетаются от героя на 0,5 с; героя они не двигают */
+ function burst(m){for(let i=0;i<10;i++){const a=-1.2+i*.26+Math.random()*.2;m.parts.push({x:6,y:-16,vx:Math.cos(a)*(40+Math.random()*50),vy:Math.sin(a)*(40+Math.random()*50)-10,l:.5})}}
+ function emo(m,n,t,len){m.emo=n;m.emoT=t+len}
+ /* выбор кадра и рисование. Вызывать после translate в центр хитбокса (и rotate). mode: 'level' | 'arena' */
+ function draw(ctx,S,t,mode,E){
+  if(!ok)return false;const p=S.p,m=state(S),dt=Math.max(0,Math.min(.1,S.t-m.t0));m.t0=S.t;
+  const arena=mode==='arena',win=S.over==='win';
+  if(S.hearts<m.hearts){m.hurtT=t;burst(m);m.after=S.hearts===1?'m3':null}m.hearts=S.hearts;
+  if(S.bytes>m.bytes&&(arena||S.bytes%10===0))emo(m,'m1',t,.55);m.bytes=S.bytes;
+  if(arena){if(S.tel.length>m.tel&&t-m.hurtT>.5)emo(m,'m2',t,.5);m.tel=S.tel.length;if(S.boss.phase>m.ph)emo(m,'m4',t,.8);m.ph=S.boss.phase}
+  if(p.on&&!m.on)m.landT=t;m.on=p.on;
+  if(Math.abs(p.vx||0)>1)m.face=p.vx>0?1:-1;
+  if(win&&!m.won){m.won=1;emo(m,'m1',t,99)}
+  const hurt=t-m.hurtT;let name,fx=1,sx=1,sy=1,lean=0;
+  const foot=E.PH/2+1;ctx.translate(0,foot);
+  const land=t-m.landT;if(land>=0&&land<.12){const q=1-land/.12;sx=1+.12*q;sy=1-.15*q}
+  else if(!p.on){const v=Math.max(-1,Math.min(1,p.vy/600));sy=1+.08*Math.abs(v);sx=1-.05*Math.abs(v)}
+  const bob=arena&&p.on&&Math.abs(p.vx)>1?Math.sin(t*22)*.05:0;sy*=1+bob;sx*=1-bob;
+  if(arena)lean=(p.vx||0)/170*.12;
+  if(form>0&&has('e'+form)){/* эволюция: один кадр, без эмоций */
+   name='e'+form;fx=arena?m.face:1;if(!arena&&p.on)sy*=1+Math.sin(S.x/14*1.57)*.04}
+  else if(hurt>=0&&hurt<.45){name='d1';fx=arena?m.face:1}
+  else if(hurt>=.45&&hurt<.8){name=m.after||'d2';fx=arena?m.face:1}
+  else if(m.emo&&t<m.emoT){name=m.emo;fx=arena?m.face:1}
+  else if(arena){name='front'}
+  else name=p.on?'r'+(Math.floor(S.x/14)%8):'r4';
+  ctx.rotate(lean);
+  if(hurt>=0&&hurt<.8)ctx.globalAlpha=1;/* выражение урона видно чётко, мерцание неуязвимости не гасит его */
+  const drawn=put(ctx,name,fx,sx,sy,null);
+  /* частицы */
+  if(m.parts.length){ctx.fillStyle='#bfe6ff';for(const q of m.parts){q.l-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=120*dt;if(q.l>0){ctx.globalAlpha=Math.min(1,q.l*3);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.l*9);ctx.fillRect(-1,-2,2,4);ctx.restore()}}ctx.globalAlpha=1;m.parts=m.parts.filter(q=>q.l>0)}
+  ctx.rotate(-lean);ctx.translate(0,-foot);
+  return drawn}
+ /* маленький портрет для меню: основная Искра */
+ function portrait(cv){const c=cv.getContext('2d');if(!ok){return false}c.clearRect(0,0,cv.width,cv.height);const f=ATL.f.idle,k=Math.min(cv.width/f[2],cv.height/f[3])*.96;c.save();c.translate(cv.width/2,cv.height-2);c.scale(k,k);c.drawImage(GameSpark_img,f[0],f[1],f[2],f[3],-f[4],-f[3],f[2],f[3]);c.restore();return true}
+ const whenReady=fn=>{if(ok)return fn();if(typeof Image==='undefined')return;const i=GameSpark_img;if(i)i.addEventListener('load',fn)};
+ return{draw,portrait,whenReady,ready:()=>ok,form:v=>{if(v!=null)form=Math.max(0,Math.min(3,v|0));return form},ATL}})();

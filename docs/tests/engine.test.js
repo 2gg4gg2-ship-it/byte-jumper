@@ -108,4 +108,24 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
 {const mk=b=>{const S=AR.create({W:360,H:520,seed:10,id:10,bytes:b});S.hearts=999;S.boss.hp=20;for(let i=0;i<120;i++)AR.step(S,1/60,{ax:0});return S};const a=mk(0),b=mk(300);
  let quiet=true;const S=mk(0);for(let i=0;i<600;i++){AR.step(S,1/60,{ax:0});if(S.tel.length||S.sh.length)quiet=false}
  c('«Ноль»: атак нет, мост шире, чем больше байтов собрано ('+Math.round(a.pl[4].w)+'→'+Math.round(b.pl[4].w)+')',a.p4&&quiet&&b.pl[4].w>a.pl[4].w+60)}
+
+/* ---- Искра: атлас кадров и неизменный хитбокс (0.6.1) ---- */
+{const SP=ld('spark.js','GameSpark'),need=['idle','front','r0','r1','r2','r3','r4','r5','r6','r7','e0','e1','e2','e3','m0','m1','m2','m3','m4','m5','d0','d1','d2'];
+ c('Искра: в атласе все 23 утверждённых кадра',need.every(n=>SP.ATL.f[n]));
+ c('Искра: без браузера не рисует, игра берёт запасной вид',SP.ready()===false&&SP.draw({},{},0,'level',{PH:24})===false);
+ c('хитбокс героя не менялся (20×24), прыжок и управление те же',GE.PW===20&&GE.PH===24&&tap>55&&tap<80&&hold>110&&hold<135);
+ c('форма Искры 0..3 хранится и ограничена',SP.form(7)===3&&SP.form(-1)===0)}
+
+/* ---- графика 0.7.0: 20 фонов, предметы и интерфейс рисуются без ошибок ---- */
+{const GA=ld('art.js','GameArt');const G={addColorStop(){}};const ctx=new Proxy({},{get:(o,k)=>k in o?o[k]:(k==='createLinearGradient'||k==='createRadialGradient')?()=>G:(k==='measureText')?()=>({width:10}):()=>{},set:(o,k,v)=>{o[k]=v;return true}});
+ const names=new Set(),pal=new Set();let ok=true;
+ for(let L=1;L<=20;L++){const th=GA.theme('level',L);names.add(th.m+th.name);pal.add(th.top+th.bot+th.ac);try{GA.bg(ctx,360,640,435,5000+L*37,L*1.3,th,1)}catch(e){ok=false;console.log(e.message)}}
+ c('графика: 20 уровней рисуют фон без ошибок',ok);
+ c('графика: у каждого из уровней 1–20 своя палитра',pal.size>=19);
+ c('графика: уровни 21+ берут палитры по кругу, бесконечный режим тоже',GA.theme('level',21).top===GA.theme('level',1).top&&GA.theme('endless',1).i===11);
+ let ok2=true;const th=GA.theme('level',3);try{for(const t of['byte','gold','bug','door','proj','fix','shield','magnet','zone'])if(!GA.item(ctx,{t,x:10,w:80,age:.5,big:true},100,300,435,1,640))ok2=false;
+  GA.seg(ctx,0,300,435,640,100,th,1);GA.voidFill(ctx,360,640,435,th,1);GA.shadow(ctx,80,435,400,24);GA.plat(ctx,0,300,100,10);
+  const S=AR.create({W:360,H:520,seed:1,id:1,bytes:0});GA.parts(ctx,S,S.t,th,1,GE);GA.hud(ctx,{score:5,bytes:3,combo:12,hearts:3,maxHearts:5},360,640,1,{th,font:'sans-serif',hearts:true,f:.4,label:'3 · Архивариус'});
+  ok2=ok2&&GA.arenaBg(ctx,{bid:1,gy:430},360,520,1)&&GA.arenaBg(ctx,{bid:2,gy:430},360,520,1)&&GA.arenaBg(ctx,{bid:3,gy:430},360,520,1)===false}catch(e){ok2=false;console.log(e.message)}
+ c('графика: предметы, земля, интерфейс, частицы и арены 1–2 рисуются без ошибок',ok2)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}

@@ -12,7 +12,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 9
-        versionName = "0.6.2"
+        versionName = "0.7.0"
     }
     // Постоянный debug-ключ: новые APK ставятся поверх старых
     signingConfigs {

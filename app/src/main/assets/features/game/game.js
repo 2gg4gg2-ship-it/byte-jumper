@@ -12,8 +12,8 @@ const Game=(()=>{
  const T=s=>typeof L==='function'?L(s):s;
  /* ---------- сохранение ---------- */
  let sv=load();
- function load(){let j={};try{j=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}return Object.assign({},j&&typeof j==='object'&&!Array.isArray(j)?j:{},load0())}
- function load0(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,tr:j.tr|0}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,tr:0}}}
+ if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);
+ function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,tr:j.tr|0,form:Math.max(0,Math.min(3,j.form|0))}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,tr:0,form:0}}}
  function save(){try{localStorage.setItem(KEY,JSON.stringify(sv))}catch(e){}}
  /* ---------- звук: короткие сигналы, создаются по первому нажатию ---------- */
  let ac=null;
@@ -47,6 +47,7 @@ const Game=(()=>{
   b.textContent='';
   const h=mk('div','gm-hero');
   const ico=mk('div','gm-logo');ico.innerHTML='<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="14" y="20" width="36" height="36" rx="9" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="26" cy="35" r="3.5" fill="currentColor"/><circle cx="38" cy="35" r="3.5" fill="currentColor"/><path d="M8 58h48" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 12l-3-6M32 10V3M42 12l3-6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+  if(typeof GameSpark!=='undefined'){const pc=mk('canvas','gm-logo');pc.width=pc.height=240;pc.className='gm-logo gm-spark';pc.style.width=pc.style.height='';pc.style.margin='0 auto';GameSpark.whenReady(()=>GameSpark.portrait(pc));if(GameSpark.ready())GameSpark.portrait(pc);h.append(pc);ico.style.display='none'}
   h.append(ico,mk('h1','',T('Байт-прыгун')),mk('p','gm-tag',T('Один тап — прыжок. Держи — прыгнешь выше.')));
   const st=mk('div','gm-stats');
   [[T('Байтов собрано'),sv.b],[T('Рекорд'),sv.best]].forEach(([k,v])=>{const c=mk('div','gm-stat');c.append(mk('b','',String(v)),mk('small','',k));st.append(c)});
@@ -65,12 +66,13 @@ const Game=(()=>{
   b.append(top);
   GameStory.chapters.forEach(ch=>{
    const first=(ch.n-1)*10+1;
-   if(first>sv.u){const d=mk('div','gm-bk lock');d.append(mk('b','',ch.n+'. '+ch.name),mk('small','','Закрыто'));b.append(d);return}
-   b.append(mk('h4','gm-sec',ch.n+'. '+ch.name));
+   const cc=GameArt.TH[((ch.n-1)%2)*10][2];
+   if(first>sv.u){const d=mk('div','gm-bk lock');d.style.setProperty('--c',cc);d.append(mk('b','',ch.n+'. '+ch.name),mk('small','','Закрыто'));b.append(d);return}
+   {let got=0;for(let i=first;i<first+10;i++)got+=sv.st[i]|0;const hd=mk('div','gm-ch-h');hd.style.setProperty('--c',cc);const nb=mk('span','gm-ch-n',String(ch.n)),tx=mk('div','gm-ch-t');tx.append(mk('b','',ch.name),mk('small','','★ '+got+' / 27'));hd.append(nb,tx);b.append(hd)}
    const g=mk('div','gm-grid');
    for(let i=first;i<first+10;i++){
     const isB=i%10===0,lk=i>sv.u;
-    const c=mk('button','gm-lv'+(isB?' gm-boss':'')+(lk?' lock':''));c.type='button';c.disabled=lk;
+    const c=mk('button','gm-lv'+(isB?' gm-boss':'')+(lk?' lock':''));c.type='button';c.disabled=lk;if(!isB)c.style.setProperty('--c',GameArt.TH[(i-1)%20][2]);
     c.append(mk('b','',isB?T('Босс'):String(i)));
     if(isB)c.append(mk('small','',(sv.bosses|0)>=ch.n?'✓':ch.boss.name));
     else{const st=sv.st[i]|0,row=mk('span','gm-stars');for(let k=1;k<=3;k++)row.append(mk('i',k<=st?'on':'',''));c.append(row)}
@@ -85,14 +87,8 @@ const Game=(()=>{
   const pb=mk('button','gm-pb');pb.type='button';pb.setAttribute('aria-label',T('Пауза'));pb.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>';
   wrap.append(cv,pb);b.append(wrap);
   const ctx=cv.getContext('2d');
-  /* Искра: спрайты рисует spark.js; пока не загрузились (или ошибка) возвращает false, и рисуется прежний запасной квадрат */
-  const sparkDraw=(p,x,front)=>{
-   const o={x,y:p.y+E.PH,cy:p.y+E.PH/2,half:E.PH/2,vy:p.vy,on:p.on,t:S.t,front,flip:front&&S.flip>0,over:S.over,sh:p.sh,mag:p.mag,col,alpha:p.inv>0&&Math.floor(S.t*14)%2?.5:1,ground:null};
-   if(front){if(!o.flip)for(const q of S.pl){if(q.st==='gone')continue;if(x>q.x&&x<q.x+q.w&&q.y>=o.y-4&&(o.ground===null||q.y<o.ground))o.ground=q.y}}
-   else{const wx=S.x+E.PX;o.ground=S.pits.some(q=>wx>q.a&&wx<q.b)?null:S.gy}
-   return GameSpark.draw(ctx,o)};
   let ax=0,frz=false,stk=null,introOn=false,S=null,raf=0,last=0,acc=0,down=false,press=false,paused=false,ended=false,sc=1,dpr=1,col={},ov=null,gone=false,hint=3;
-  const cs=()=>{const s=getComputedStyle(document.documentElement);const g=n=>s.getPropertyValue(n).trim();col={bg:g('--bg')||'#0B0B0C',s1:g('--s1')||'#131315',s2:g('--s2')||'#1C1C1F',line:g('--line')||'#2B2B2F',tx:g('--tx')||'#EDEDEF',tx2:g('--tx2')||'#9A9AA2',err:g('--err')||'#E5736B'};col.font=getComputedStyle(document.body).fontFamily||'sans-serif'};
+  const cs=()=>{const s=getComputedStyle(cur||document.documentElement);const g=n=>s.getPropertyValue(n).trim();col={bg:g('--bg')||'#0B0B0C',s1:g('--s1')||'#131315',s2:g('--s2')||'#1C1C1F',line:g('--line')||'#2B2B2F',tx:g('--tx')||'#EDEDEF',tx2:g('--tx2')||'#9A9AA2',err:g('--err')||'#E5736B'};col.font=getComputedStyle(document.body).fontFamily||'sans-serif'};
   function size(){
    const r=wrap.getBoundingClientRect(),w=Math.max(200,r.width),h=Math.max(200,r.height);
    dpr=GameCore.dprFor(Math.min(window.devicePixelRatio||1,2));cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
@@ -100,7 +96,7 @@ const Game=(()=>{
    if(S&&S.arena){S.W=W;S.H=H;GameArena.layout(S)}else if(S){const og=S.gy;S.W=W;S.H=H;S.gy=H*E.GY;S.p.y+=S.gy-og}
    return{W,H}}
   cur._S=()=>S;
-  function reset(){GameSpark.reset();
+  function reset(){
    closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,id:Lv/10,seed:(Date.now()&0xffff)||7,bytes:sv.b}):E.create({mode,L:Lv,W:z.W,H:z.H});ax=0;frz=false;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
    if(mode==='boss'&&!introOn){introOn=true;paused=true;intro()}
    if(!raf)raf=requestAnimationFrame(loop)}
@@ -154,7 +150,7 @@ const Game=(()=>{
    if(!paused&&!ended){
     acc+=dt;let n=0;
     while(acc>=1/60&&n<6){if(S.arena)GameArena.step(S,1/60,{ax,down,pressed:press,frz});else E.step(S,1/60,{down,pressed:press});press=false;acc-=1/60;n++;
-     for(const e of S.ev){GameSpark.note(e,S);if(SFX[e])SFX[e]();if(e==='hit'||e==='die')buzz(e==='die'?60:30)}S.ev.length=0;
+     for(const e of S.ev){if(SFX[e])SFX[e]();if(e==='hit'||e==='die')buzz(e==='die'?60:30)}S.ev.length=0;
      if(S.over){finish();break}}
     if(hint>0)hint-=dt}
    draw();
@@ -165,13 +161,13 @@ const Game=(()=>{
    const W=S.W,H=S.H,gy=S.gy,t=S.t,B=S.boss;
    ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
    ctx.fillStyle=BGC[Math.min(9,S.bid-1)];ctx.fillRect(0,0,W,H);
-   /* фон: туман и падающие строки «File not found» */
+   if(!GameArt.arenaBg(ctx,S,W,H,t)){/* фон: туман и падающие строки «File not found» */
    ctx.fillStyle='#16202e';for(let i=0;i<5;i++)ctx.fillRect(((i*83)%W)-10,gy-120-(i*37)%90,26+(i*19)%20,gy);
    ctx.font='600 10px monospace';ctx.fillStyle=col.tx2;ctx.textAlign='left';
-   for(let i=0;i<7;i++){ctx.globalAlpha=.16;ctx.fillText('File not found',(i*61)%(W-70),((t*40+i*83)%(H+20))-10)}ctx.globalAlpha=1;
+   for(let i=0;i<7;i++){ctx.globalAlpha=.16;ctx.fillText('File not found',(i*61)%(W-70),((t*40+i*83)%(H+20))-10)}ctx.globalAlpha=1}
    /* платформы */
    S.pl.forEach(q=>{if(q.st==='gone')return;const warn=q.st==='warn',sh=warn&&Math.sin(t*30)>0?2:0;
-    ctx.fillStyle=col.s2;ctx.fillRect(q.x+sh,q.y,q.w,q.floor?H-q.y:10);ctx.fillStyle=warn?col.err:q.stale?'#777':S.bid===3||(S.bid===10&&S.p4&&q===S.pl[4])?'#4cc9c0':col.tx2;ctx.fillRect(q.x+sh,q.y,q.w,3);
+    GameArt.plat(ctx,q.x+sh,q.y,q.w,q.floor?H-q.y:10);ctx.fillStyle=warn?col.err:q.stale?'#777':S.bid===3||(S.bid===10&&S.p4&&q===S.pl[4])?'#4cc9c0':col.tx2;ctx.fillRect(q.x+sh,q.y,q.w,3);
     if(warn){ctx.globalAlpha=.5;ctx.fillStyle=col.err;for(let x=q.x;x<q.x+q.w;x+=14)ctx.fillRect(x+sh,q.y-8,7,5);ctx.globalAlpha=1}});
    if(S.lag){const L=S.lag;ctx.globalAlpha=L.on?.28:.12+.1*Math.sin(t*12);ctx.fillStyle='#8aa4c8';ctx.fillRect(L.x,0,L.w,H);ctx.globalAlpha=1}
    if(S.ghost){ctx.globalAlpha=.45;ctx.fillStyle=col.err;ctx.fillRect(S.ghost.x-12,S.ghost.y,24,E.PH);ctx.globalAlpha=1}
@@ -232,9 +228,9 @@ const Game=(()=>{
    if(S.key){const k=S.key,y=k.y+Math.sin(t*4)*3;ctx.save();ctx.translate(k.x,y);ctx.globalAlpha=k.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#34C759';ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(12,-13);ctx.lineTo(9,11);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.fillStyle='#0b1018';ctx.fillRect(-6,-1,12,3);ctx.restore()}
    if(S.seq&&S.dark){S.seq.n.forEach((d,i)=>{const lit=S.seq.lit===i;ctx.fillStyle=lit?'#fff':'#2a2440';ctx.globalAlpha=lit?1:.7;ctx.fillRect(d.x-8,d.y-8,16,16);ctx.globalAlpha=1})}
    /* игрок */
-   {const p=S.p;if(!sparkDraw(p,p.x,true)&&!(p.inv>0&&Math.floor(t*14)%2)){ctx.save();ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
-    ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
-    ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();ctx.restore()}}
+   {const p=S.p,bl=p.inv>0&&Math.floor(t*14)%2;if(!bl||GameSpark.ready()){ctx.save();if(bl)ctx.globalAlpha=.45;ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+    if(!GameSpark.draw(ctx,S,t,'arena',E)){ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+    ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill()}ctx.restore()}}
    /* HUD: полоса босса, сердца, управление */
    ctx.fillStyle=col.line;ctx.fillRect(W*.2,10,W*.6,8);ctx.fillStyle=col.err;ctx.fillRect(W*.2,10,W*.6*(B.hp/B.max),8);
    ctx.textAlign='center';ctx.fillStyle=col.tx2;ctx.font='600 11px '+col.font;ctx.fillText(GameStory.bosses[S.bid-1].name,W/2,34);
@@ -254,21 +250,20 @@ const Game=(()=>{
    if(S.arena)return drawArena();
    const W=S.W,H=S.H,gy=S.gy,pw=S.x+E.PX;
    ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
-   ctx.fillStyle=col.bg;ctx.fillRect(0,0,W,H);
-   /* фон: медленные строки «кода» */
-   ctx.fillStyle=col.line;
-   for(let i=0;i<16;i++){const k=.12+(i%3)*.07,x=((i*97-S.x*k)%(W+120)+W+120)%(W+120)-60,y=30+(i*53)%Math.max(40,gy-90);ctx.globalAlpha=.55;ctx.fillRect(x,y,24+(i*37)%70,3)}
-   ctx.globalAlpha=1;
+   const th=GameArt.theme(mode,Lv);/* свой фон и цвет у каждого уровня (art.js) */
+   GameArt.bg(ctx,W,H,gy,S.x,S.t,th,GameCore.perf.q);
    /* земля с ямами */
    const px=x=>x-S.x;
    const pits=S.pits.slice().sort((a,b)=>a.a-b.a);let cx=-10;
-   const seg=(a,b)=>{if(b<=a)return;ctx.fillStyle=col.s1;ctx.fillRect(a,gy,b-a,H-gy+4);ctx.fillStyle=col.tx2;ctx.fillRect(a,gy,b-a,2);ctx.fillStyle=col.line;for(let x=Math.ceil(a/40)*40;x<b;x+=40)ctx.fillRect(x,gy+16,18,2)};
+   const seg=(a,b)=>GameArt.seg(ctx,a,b,gy,H,S.x,th,S.t);
+   GameArt.voidFill(ctx,W,H,gy,th,S.t);
    for(const q of pits){const a=px(q.a),b=px(q.b);seg(cx,Math.min(a,W+10));cx=Math.max(cx,b)}
    seg(cx,W+10);
    /* предметы */
    const t=S.t;
    for(const it of S.items){
     const x=px(it.x),y=gy-it.h;if(x<-60||x>W+80)continue;
+    if(GameArt.item(ctx,it,x,y,gy,t,H))continue;
     if(it.t==='byte'||it.t==='gold'){
      const s=it.t==='gold'?9:7;ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t*3+it.x)*.3);ctx.fillStyle=col.tx;ctx.fillRect(-s,-s,s*2,s*2);
      ctx.fillStyle=col.bg;ctx.fillRect(-s+3,-s+3,s*2-6,s*2-6);ctx.fillStyle=col.tx;ctx.fillRect(-2,-2,4,4);if(it.t==='gold'){ctx.lineWidth=2;ctx.strokeStyle=col.tx;ctx.strokeRect(-s-3,-s-3,s*2+6,s*2+6)}ctx.restore()}
@@ -294,25 +289,18 @@ const Game=(()=>{
     if(B.charge){ctx.strokeStyle=col.err;ctx.lineWidth=4;ctx.strokeRect(-40,-34,80,68)}
     ctx.fillStyle=col.bg;ctx.font='700 11px '+col.font;ctx.textAlign='center';ctx.fillText('404',0,24);ctx.restore()}
    /* игрок */
+   GameArt.shadow(ctx,E.PX,gy,S.p.y,E.PH);
    {const p=S.p,blink=p.inv>0&&Math.floor(t*14)%2;
-    if(!sparkDraw(p,E.PX,false)&&!blink){ctx.save();ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
-     ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+    if(!blink||GameSpark.ready()){ctx.save();if(blink)ctx.globalAlpha=.45;ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+     if(!GameSpark.draw(ctx,S,t,'level',E)){ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
      ctx.fillStyle=col.bg;ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();
-     ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill();
+     ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill()}
      if(p.sh){ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(0,0,21,0,7);ctx.stroke()}
      if(p.mag>0){ctx.strokeStyle=col.tx2;ctx.setLineDash([4,5]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,28+Math.sin(t*8)*2,0,7);ctx.stroke()}
      ctx.restore()}}
+   GameArt.parts(ctx,S,S.t,th,GameCore.perf.q,E);
    /* HUD */
-   ctx.textAlign='left';ctx.fillStyle=col.tx;ctx.font='700 16px '+col.font;
-   const topY=18;
-   ctx.fillText(String(S.score),14,topY+12);
-   ctx.fillStyle=col.tx2;ctx.font='600 12px '+col.font;
-   ctx.fillText(mode==='boss'?T('Босс'):mode==='endless'?T('Бесконечный режим'):T('Уровень')+' '+Lv,14,topY+30);
-   ctx.fillText('◆ '+S.bytes,14,topY+46);
-   if(S.combo>=10){ctx.fillStyle=col.tx;ctx.font='700 13px '+col.font;ctx.fillText('x2',14,topY+64)}
-   if(mode==='level'){const f=Math.min(1,S.x/S.target);ctx.fillStyle=col.line;ctx.fillRect(0,0,W,4);ctx.fillStyle=col.tx;ctx.fillRect(0,0,W*f,4)}
-   if(S.boss){const f=S.boss.hp/S.boss.max;ctx.fillStyle=col.line;ctx.fillRect(W*.2,10,W*.6,8);ctx.fillStyle=col.err;ctx.fillRect(W*.2,10,W*.6*f,8)}
-   if(S.maxHearts)for(let i=0;i<S.maxHearts;i++){ctx.fillStyle=i<S.hearts?col.err:col.line;ctx.fillRect(W-14-(S.maxHearts-i)*16,topY+8,11,11)}
+   GameArt.hud(ctx,S,W,H,S.t,{th,font:col.font,hearts:S.maxHearts>0,f:mode==='level'?Math.min(1,S.x/S.target):-1,label:mode==='boss'?T('Босс'):mode==='endless'?T('Бесконечный режим'):Lv+' · '+th.name});
    if(sv.gl)GameFX.draw(ctx,W,H,S.t,sv.end==='reboot'?0:sv.bosses|0,col.tx,GameCore.perf.q)
    if(hint>0&&mode!=='boss'&&Lv<=1){ctx.globalAlpha=Math.min(1,hint);ctx.fillStyle=col.tx;ctx.textAlign='center';ctx.font='600 14px '+col.font;ctx.fillText(T('Один тап — прыжок. Держи — прыгнешь выше.'),W/2,gy+60);ctx.globalAlpha=1}}
   /* ---------- управление ---------- */
@@ -360,4 +348,5 @@ const Game=(()=>{
   const r=el('<button class="sr" data-game-go><span class="si c"></span><span class="m"><b></b><small></small></span>'+ic('chevR')+'</button>');
   $('b',r).textContent=T('Байт-прыгун');$('small',r).textContent=T('Отдых: игра без интернета');
   r.onclick=()=>open();ab.insertAdjacentElement('beforebegin',r)});
- return{open,state:()=>sv}})();
+ /* форма Искры (эволюция 0..3): правила открытия автор не задал, выбор только программный; сохраняется */
+ return{open,state:()=>sv,setForm:v=>{sv.form=Math.max(0,Math.min(3,v|0));if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);save()}}})();
