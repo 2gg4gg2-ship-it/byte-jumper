@@ -14,7 +14,7 @@ const GameStoryUI=(()=>{
   sk.onclick=()=>done();
   row.append(sk,nx);box.append(t,x,dots,row);host.append(box);show()}
  /* книга: defeated = сколько боссов побеждено (0–10) */
- function book(host,defeated,back){
+ function book(host,defeated,back,sv){
   host.textContent='';
   const S=GameStory,top=mk('div','gm-lt'),b=mk('button','gm-btn ghost sm','‹');b.type='button';b.setAttribute('aria-label','В меню');b.onclick=back;
   top.append(b,mk('h3','','История'));host.append(top);
@@ -37,5 +37,7 @@ const GameStoryUI=(()=>{
   else card('Как растут помехи','Стадий открыто: '+Math.min(defeated,10),S.stages.filter(s=>s.n<=defeated).map(s=>s.n+' ('+s.boss+'): '+s.screen+' Звук: '+s.sound+' '+s.ui).join('\n\n'));
   sec('Финалы');
   if(defeated<10)lock('Финалы','Четыре исхода','Откроются после победы над десятым боссом.');
-  else card('Финалы','Выбор Искры',S.finals.replace(/^Финалы\s*/,''))}
+  else{card('Финалы','Выбор Искры',S.finals.replace(/^Финалы\s*/,''));
+   if(sv){const N={reboot:'Перезагрузка',open:'Открытая Сеть',fix:'Исправление',auto:'Полное Авто'},E=sv.ends||[];
+    card('Твои финалы','Получено: '+E.length,Object.keys(N).map(k=>N[k]+': '+(E.includes(k)?'получен':k==='fix'?'тайный, нужно починить 90 Потеряшек из 100 (у тебя '+(sv.lf|0)+')':k==='auto'?'тёмный, нужно принять предложение Кернела на уровнях 88 и 96':'не получен')).join('\n'))}}}
  return{read,book}})();

@@ -82,4 +82,30 @@ function bot(id,seed,opt){opt=opt||{};const S=AR.create({W:360,H:520,seed,id});S
  c('Тьма: собрать байты в порядке = удар по Тени; ошибка порядка сбрасывает',S.boss.hp<hp0||S.over==='win');
  const S2=AR.create({W:360,H:520,seed:8,id:7});S2.hearts=999;S2.boss.hp=20;AR.step(S2,1/60,{ax:0});const o2=S2.seq.ord,wrong=o2[1];const d=S2.seq.n[wrong];S2.p.inv=99;S2.atk=99;S2.kt=99;for(let f=0;f<20;f++){S2.p.x=d.x;S2.p.y=d.y-GE.PH/2;S2.p.vy=0;AR.step(S2,1/60,{ax:0})}c('неверный байт: прогресс 0',S2.seq.got===0)}
 {const S=AR.create({W:360,H:520,seed:9,id:7});S.hearts=999;S.fallT=99;S.atk=99;S.boss.hp=100;let traps=0;for(let f=0;f<60*20;f++){const k=Math.floor(f/50)%2;S.p.x=k?80:280;S.p.y=S.gy-GE.PH;AR.step(S,1/60,{ax:0});if(S.tel.some(a=>a.k==='big'))traps++}c('ИИ Тени: повторяющийся маршрут получает ловушку',traps>0)}
+
+/* ---- боссы глав 8–10 (шаг 4) ---- */
+function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.bytes||0});S.hearts=999;const k={},ph={};let tel=0,mem=0,fake=0,fz=0,fh=0,gh=0,cks={};
+ for(let f=0;f<60*400&&!S.over;f++){const kk=S.key;if(kk&&S.t>1&&!S.p4){S.p.x=kk.x;S.p.y=kk.y-GE.PH/2}
+  if(S.p4){const q=S.pl[4];S.p.x=q.x+q.w-20;S.p.y=q.y-GE.PH;S.p.vy=0;S.p.on=true}
+  AR.step(S,1/60,{ax:0,frz:true});ph[S.boss.phase]=1;S.tel.forEach(a=>{k[a.k]=1});tel+=S.tel.length?1:0;if(S.sh.length>20)throw new Error('снарядов больше 20');
+  if(S.mm.some(m=>m.real))mem=1;if(S.mm.some(m=>!m.real))fake=1;if(S.fz)fz=1;if(S.fh)fh=1;if(S.gh.length)gh=1;if(S.ck)cks[S.ck]=1;S.ev.length=0}
+ return{S,k,ph,tel,mem,fake,fz,fh,gh,cks}}
+{const r=bot2(8,8);c('босс 8: победа ('+r.S.over+', t='+Math.round(r.S.t)+'), 4 фазы',r.S.over==='win'&&r.ph[1]&&r.ph[2]&&r.ph[3]&&r.ph[4]);
+ c('босс 8: паттерны прошлых боссов ('+Object.keys(r.k).join(',')+'), «Дамп»: настоящие и подделки',(r.k.big||r.k.row)&&(r.k.pkt||r.k.fan)&&r.k.str&&r.mem&&r.fake&&r.tel>0)}
+{const S=AR.create({W:360,H:520,seed:8,id:8});S.hearts=999;S.fear[2]=4;S.atk=0;S.fallT=99;AR.step(S,1/60,{ax:0});const a=S.lastK;const S2=AR.create({W:360,H:520,seed:8,id:8});S2.fear[1]=4;S2.atk=0;S2.fallT=99;AR.step(S2,1/60,{ax:0});c('ИИ Летописца берёт паттерн, от которого игрок получил больше ударов ('+a+','+S2.lastK+')',a===2&&S2.lastK===1)}
+{const S=AR.create({W:360,H:520,seed:8,id:8});S.boss.hp=20;S.atk=99;S.fallT=99;S.p.inv=0;S.mm.push({x:S.p.x,y:S.p.y+GE.PH/2,vx:0,real:0,dead:0});AR.step(S,1/60,{ax:0});const lost=S.hearts===2;
+ const S2=AR.create({W:360,H:520,seed:8,id:8});S2.boss.hp=20;S2.atk=99;S2.fallT=99;S2.mm.push({x:S2.p.x,y:S2.p.y+GE.PH/2,vx:0,real:1,dead:0});AR.step(S2,1/60,{ax:0});c('воспоминания: подделка = минус сердце, настоящее собирается без урона',lost&&S2.hearts===3&&S2.memc===1)}
+{const r=bot2(9,9);c('босс 9: победа ('+r.S.over+', t='+Math.round(r.S.t)+'), 3 фазы',r.S.over==='win'&&r.ph[1]&&r.ph[2]&&r.ph[3]);c('босс 9: серия «Замри» и фальшивый HUD, осколки с предупреждением',r.fz&&r.fh&&r.k.big&&r.tel>0)}
+{const S=AR.create({W:360,H:520,seed:9,id:9});S.boss.hp=60;S.atk=99;S.fallT=99;S.fzQ=1;for(let i=0;i<60*2.6;i++)AR.step(S,1/60,{ax:0,frz:true});const ok=S.fzS===1&&S.hearts===3&&S.fzK===2;
+ const S2=AR.create({W:360,H:520,seed:9,id:9});S2.boss.hp=60;S2.atk=99;S2.fallT=99;S2.fzQ=1;for(let i=0;i<60*2.6;i++)AR.step(S2,1/60,{ax:0,frz:false});
+ c('«Замри»: удержал 1,5 с = успех и серия длиннее, не удержал = минус сердце ('+S.fzK+','+S2.hearts+')',ok&&S2.hearts===2&&S2.fzK===1)}
+{const S=AR.create({W:360,H:520,seed:9,id:9});S.boss.hp=60;S.atk=99;S.fallT=99;S.fzQ=1;AR.step(S,1/60,{ax:0});let warn=0;for(let i=0;i<30;i++){AR.step(S,1/60,{ax:0,frz:false});if(S.fz&&S.fz.st==='warn')warn++}c('«Замри»: предупреждение 0,8 с до проверки (без удержания не штрафует)',warn>=40&&S.hearts===3||warn>=28&&S.hearts===3)}
+{const S=AR.create({W:360,H:520,seed:9,id:9});S.boss.hp=60;S.atk=99;S.fallT=99;S.fzQ=1;const hp0=S.boss.hp;S.fzS=2;for(let i=0;i<60*2.6;i++)AR.step(S,1/60,{ax:0,frz:true});c('3 успешных «Замри» подряд = трещина сферы (удар по боссу)',S.boss.hp<hp0)}
+{const r=bot2(10,10);c('босс 10: 4 фазы, победа только по мосту ('+r.S.over+', t='+Math.round(r.S.t)+')',r.S.over==='win'&&r.ph[1]&&r.ph[2]&&r.ph[3]&&r.ph[4]);c('босс 10: призраки, окна, паттерны Ядра ('+Object.keys(r.cks).join('')+')',r.gh&&Object.keys(r.cks).length>=2&&r.tel>0)}
+{const S=AR.create({W:360,H:520,seed:10,id:10});S.hearts=999;S.atk=99;S.fallT=99;const p=S.p,g={x:p.x,y:S.gy-14,vx:0,dead:0};S.gh.push(g);p.y=g.y-14-GE.PH-2;p.vy=200;p.on=false;AR.step(S,1/60,{ax:0});const st=g.dead===1&&S.rem===1&&S.hearts===999;
+ const S2=AR.create({W:360,H:520,seed:10,id:10});S2.atk=99;S2.fallT=99;S2.p.inv=0;S2.gh.push({x:S2.p.x,y:S2.gy-14,vx:0,dead:0});AR.step(S2,1/60,{ax:0});c('призрак: приземлиться сверху = вспомнил имя (без урона), коснуться сбоку = минус сердце',st&&S2.hearts===2)}
+{const S=AR.create({W:360,H:520,seed:10,id:10});S.hearts=999;S.boss.hp=40;S.fallT=99;const ck={};for(let f=0;f<60*76;f++){AR.step(S,1/60,{ax:0});ck[S.ck]=1;S.ev.length=0;if(S.sh.length>20)throw new Error('больше 20')}c('Ядро: паттерны всех 9 боссов по 8 с ('+Object.keys(ck).join('')+')',[1,2,3,4,5,6,7,8,9].every(i=>ck[i]))}
+{const mk=b=>{const S=AR.create({W:360,H:520,seed:10,id:10,bytes:b});S.hearts=999;S.boss.hp=20;for(let i=0;i<120;i++)AR.step(S,1/60,{ax:0});return S};const a=mk(0),b=mk(300);
+ let quiet=true;const S=mk(0);for(let i=0;i<600;i++){AR.step(S,1/60,{ax:0});if(S.tel.length||S.sh.length)quiet=false}
+ c('«Ноль»: атак нет, мост шире, чем больше байтов собрано ('+Math.round(a.pl[4].w)+'→'+Math.round(b.pl[4].w)+')',a.p4&&quiet&&b.pl[4].w>a.pl[4].w+60)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}
