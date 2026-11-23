@@ -108,4 +108,11 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
 {const mk=b=>{const S=AR.create({W:360,H:520,seed:10,id:10,bytes:b});S.hearts=999;S.boss.hp=20;for(let i=0;i<120;i++)AR.step(S,1/60,{ax:0});return S};const a=mk(0),b=mk(300);
  let quiet=true;const S=mk(0);for(let i=0;i<600;i++){AR.step(S,1/60,{ax:0});if(S.tel.length||S.sh.length)quiet=false}
  c('«Ноль»: атак нет, мост шире, чем больше байтов собрано ('+Math.round(a.pl[4].w)+'→'+Math.round(b.pl[4].w)+')',a.p4&&quiet&&b.pl[4].w>a.pl[4].w+60)}
+
+/* ---- Искра: атлас кадров и неизменный хитбокс (0.6.1) ---- */
+{const SP=ld('spark.js','GameSpark'),need=['idle','front','r0','r1','r2','r3','r4','r5','r6','r7','e0','e1','e2','e3','m0','m1','m2','m3','m4','m5','d0','d1','d2'];
+ c('Искра: в атласе все 23 утверждённых кадра',need.every(n=>SP.ATL.f[n]));
+ c('Искра: без браузера не рисует, игра берёт запасной вид',SP.ready()===false&&SP.draw({},{},0,'level',{PH:24})===false);
+ c('хитбокс героя не менялся (20×24), прыжок и управление те же',GE.PW===20&&GE.PH===24&&tap>55&&tap<80&&hold>110&&hold<135);
+ c('форма Искры 0..3 хранится и ограничена',SP.form(7)===3&&SP.form(-1)===0)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}

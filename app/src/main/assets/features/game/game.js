@@ -12,7 +12,8 @@ const Game=(()=>{
  const T=s=>typeof L==='function'?L(s):s;
  /* ---------- сохранение ---------- */
  let sv=load();
- function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,tr:j.tr|0}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,tr:0}}}
+ if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);
+ function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,tr:j.tr|0,form:Math.max(0,Math.min(3,j.form|0))}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,tr:0,form:0}}}
  function save(){try{localStorage.setItem(KEY,JSON.stringify(sv))}catch(e){}}
  /* ---------- звук: короткие сигналы, создаются по первому нажатию ---------- */
  let ac=null;
@@ -46,6 +47,7 @@ const Game=(()=>{
   b.textContent='';
   const h=mk('div','gm-hero');
   const ico=mk('div','gm-logo');ico.innerHTML='<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="14" y="20" width="36" height="36" rx="9" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="26" cy="35" r="3.5" fill="currentColor"/><circle cx="38" cy="35" r="3.5" fill="currentColor"/><path d="M8 58h48" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 12l-3-6M32 10V3M42 12l3-6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+  if(typeof GameSpark!=='undefined'){const pc=mk('canvas','gm-logo');pc.width=pc.height=160;pc.style.width=pc.style.height='72px';pc.style.margin='0 auto';GameSpark.whenReady(()=>GameSpark.portrait(pc));if(GameSpark.ready())GameSpark.portrait(pc);h.append(pc);ico.style.display='none'}
   h.append(ico,mk('h1','',T('Байт-прыгун')),mk('p','gm-tag',T('Один тап — прыжок. Держи — прыгнешь выше.')));
   const st=mk('div','gm-stats');
   [[T('Байтов собрано'),sv.b],[T('Рекорд'),sv.best]].forEach(([k,v])=>{const c=mk('div','gm-stat');c.append(mk('b','',String(v)),mk('small','',k));st.append(c)});
@@ -225,9 +227,9 @@ const Game=(()=>{
    if(S.key){const k=S.key,y=k.y+Math.sin(t*4)*3;ctx.save();ctx.translate(k.x,y);ctx.globalAlpha=k.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#34C759';ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(12,-13);ctx.lineTo(9,11);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.fillStyle='#0b1018';ctx.fillRect(-6,-1,12,3);ctx.restore()}
    if(S.seq&&S.dark){S.seq.n.forEach((d,i)=>{const lit=S.seq.lit===i;ctx.fillStyle=lit?'#fff':'#2a2440';ctx.globalAlpha=lit?1:.7;ctx.fillRect(d.x-8,d.y-8,16,16);ctx.globalAlpha=1})}
    /* игрок */
-   {const p=S.p;if(!(p.inv>0&&Math.floor(t*14)%2)){ctx.save();ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
-    ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
-    ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();ctx.restore()}}
+   {const p=S.p,bl=p.inv>0&&Math.floor(t*14)%2;if(!bl||GameSpark.ready()){ctx.save();if(bl)ctx.globalAlpha=.45;ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+    if(!GameSpark.draw(ctx,S,t,'arena',E)){ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+    ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill()}ctx.restore()}}
    /* HUD: полоса босса, сердца, управление */
    ctx.fillStyle=col.line;ctx.fillRect(W*.2,10,W*.6,8);ctx.fillStyle=col.err;ctx.fillRect(W*.2,10,W*.6*(B.hp/B.max),8);
    ctx.textAlign='center';ctx.fillStyle=col.tx2;ctx.font='600 11px '+col.font;ctx.fillText(GameStory.bosses[S.bid-1].name,W/2,34);
@@ -288,10 +290,10 @@ const Game=(()=>{
     ctx.fillStyle=col.bg;ctx.font='700 11px '+col.font;ctx.textAlign='center';ctx.fillText('404',0,24);ctx.restore()}
    /* игрок */
    {const p=S.p,blink=p.inv>0&&Math.floor(t*14)%2;
-    if(!blink){ctx.save();ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
-     ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+    if(!blink||GameSpark.ready()){ctx.save();if(blink)ctx.globalAlpha=.45;ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+     if(!GameSpark.draw(ctx,S,t,'level',E)){ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
      ctx.fillStyle=col.bg;ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();
-     ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill();
+     ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill()}
      if(p.sh){ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(0,0,21,0,7);ctx.stroke()}
      if(p.mag>0){ctx.strokeStyle=col.tx2;ctx.setLineDash([4,5]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,28+Math.sin(t*8)*2,0,7);ctx.stroke()}
      ctx.restore()}}
@@ -353,4 +355,5 @@ const Game=(()=>{
   const r=el('<button class="sr" data-game-go><span class="si c"></span><span class="m"><b></b><small></small></span>'+ic('chevR')+'</button>');
   $('b',r).textContent=T('Байт-прыгун');$('small',r).textContent=T('Отдых: игра без интернета');
   r.onclick=()=>open();ab.insertAdjacentElement('beforebegin',r)});
- return{open,state:()=>sv}})();
+ /* форма Искры (эволюция 0..3): правила открытия автор не задал, выбор только программный; сохраняется */
+ return{open,state:()=>sv,setForm:v=>{sv.form=Math.max(0,Math.min(3,v|0));if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);save()}}})();

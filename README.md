@@ -4,7 +4,7 @@
 
 Игра родилась внутри приложения **Kairema** (`features/game`). Здесь она живёт отдельно, пока её доделывают. Когда будет готова, папку `features/game` копируют обратно в Kairema (см. `docs/RETURN_TO_KAIREMA.md`).
 
-Текущая версия: 0.6.0
+Текущая версия: 0.6.1
 
 ## Устройство
 
@@ -16,6 +16,7 @@ app/src/main/assets/
     engine.js             физика, уровни, босс (без DOM)
     game.js               экраны, canvas, звук, сохранение
     game.css
+    spark.js, spark/       Искра: атлас кадров (spark/spark.png) и состояния героя
 app/src/main/java/com/bytejumper/app/MainActivity.kt   оболочка: WebView + кнопка «Назад»
 ```
 
