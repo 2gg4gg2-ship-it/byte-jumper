@@ -50,3 +50,17 @@
 .gm-bk.lock{display:flex;flex-direction:column;gap:2px;opacity:.55}
 .gm-bk.lock small{color:var(--tx2)}
 .gm-hint{color:var(--tx2);font-size:13px;margin:6px 0}
+/* появление босса */
+.gm-intro{background:rgba(5,8,14,.94);animation:gmIntro .9s ease both}
+.gm-intro .gm-card h3{font-size:26px;letter-spacing:.04em;animation:gmGl .12s steps(2) 6}
+.gm-intro .gm-card p{animation:gmFade 1.2s ease .5s both}
+@keyframes gmIntro{from{opacity:0}to{opacity:1}}
+@keyframes gmFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes gmGl{0%{transform:translateX(-4px);color:#E5736B}100%{transform:translateX(3px)}}
+/* появление босса */
+.gm-intro{background:rgba(5,8,14,.94);animation:gmIntro .9s ease both}
+.gm-intro .gm-card h3{font-size:26px;letter-spacing:.04em;animation:gmGl .12s steps(2) 6}
+.gm-intro .gm-card p{animation:gmFade 1.2s ease .5s both}
+@keyframes gmIntro{from{opacity:0}to{opacity:1}}
+@keyframes gmFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes gmGl{0%{transform:translateX(-4px);color:#E5736B}100%{transform:translateX(3px)}}

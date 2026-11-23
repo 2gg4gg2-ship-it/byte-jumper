@@ -80,18 +80,24 @@ const Game=(()=>{
   const pb=mk('button','gm-pb');pb.type='button';pb.setAttribute('aria-label',T('Пауза'));pb.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>';
   wrap.append(cv,pb);b.append(wrap);
   const ctx=cv.getContext('2d');
-  let S=null,raf=0,last=0,acc=0,down=false,press=false,paused=false,ended=false,sc=1,dpr=1,col={},ov=null,gone=false,hint=3;
+  let ax=0,stk=null,introOn=false,S=null,raf=0,last=0,acc=0,down=false,press=false,paused=false,ended=false,sc=1,dpr=1,col={},ov=null,gone=false,hint=3;
   const cs=()=>{const s=getComputedStyle(document.documentElement);const g=n=>s.getPropertyValue(n).trim();col={bg:g('--bg')||'#0B0B0C',s1:g('--s1')||'#131315',s2:g('--s2')||'#1C1C1F',line:g('--line')||'#2B2B2F',tx:g('--tx')||'#EDEDEF',tx2:g('--tx2')||'#9A9AA2',err:g('--err')||'#E5736B'};col.font=getComputedStyle(document.body).fontFamily||'sans-serif'};
   function size(){
    const r=wrap.getBoundingClientRect(),w=Math.max(200,r.width),h=Math.max(200,r.height);
    dpr=GameCore.dprFor(Math.min(window.devicePixelRatio||1,2));cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
    sc=Math.min(w/360,h/520);const W=w/sc,H=h/sc;
-   if(S){const og=S.gy;S.W=W;S.H=H;S.gy=H*E.GY;S.p.y+=S.gy-og}
+   if(S&&S.arena){S.W=W;S.H=H;GameArena.layout(S)}else if(S){const og=S.gy;S.W=W;S.H=H;S.gy=H*E.GY;S.p.y+=S.gy-og}
    return{W,H}}
   cur._S=()=>S;
   function reset(){
-   closeOv();cs();const z=size();GameLook.init(E);GameLook.reset();S=E.create({mode,L:Lv,W:z.W,H:z.H});acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
+   closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,seed:(Date.now()&0xffff)||7}):E.create({mode,L:Lv,W:z.W,H:z.H});ax=0;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
+   if(mode==='boss'&&!introOn){introOn=true;paused=true;intro()}
    if(!raf)raf=requestAnimationFrame(loop)}
+  /* анимация появления босса: затемнение, помехи, имя и короткий контекст; тап/кнопка «К бою» */
+  function intro(){
+   const B=GameStory.bosses[0],C=GameStory.chapters[0];
+   overlay(B.name,[B.code?'«'+B.code+'»':'',B.look.charAt(0).toUpperCase()+B.look.slice(1).replace(/\.$/,'')+'.',C.plot],[btn('К бою',()=>{closeOv();paused=false;last=0},'pri')]);
+   ov.classList.add('gm-intro')}
   function closeOv(){if(ov){ov.remove();ov=null}}
   function overlay(title,lines,buttons){
    closeOv();ov=mk('div','gm-ov');const card=mk('div','gm-card');card.append(mk('h3','',title));
@@ -125,17 +131,58 @@ const Game=(()=>{
    if(!last)last=ts;let dt=Math.min((ts-last)/1000,.05);if(GameCore.tick(dt*1000))size();last=ts;
    if(!paused&&!ended){
     acc+=dt;let n=0;
-    while(acc>=1/60&&n<6){E.step(S,1/60,{down,pressed:press});press=false;acc-=1/60;n++;
+    while(acc>=1/60&&n<6){if(S.arena)GameArena.step(S,1/60,{ax,down,pressed:press});else E.step(S,1/60,{down,pressed:press});press=false;acc-=1/60;n++;
      for(const e of S.ev){if(SFX[e])SFX[e]();if(e==='hit'||e==='die')buzz(e==='die'?60:30)}S.ev.length=0;
      if(S.over){finish();break}}
     if(hint>0)hint-=dt}
    draw();
    raf=requestAnimationFrame(loop)}
   /* ---------- рисование ---------- */
+  function drawArena(){
+   const W=S.W,H=S.H,gy=S.gy,t=S.t,B=S.boss;
+   ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
+   ctx.fillStyle='#0b1018';ctx.fillRect(0,0,W,H);
+   /* фон: туман и падающие строки «File not found» */
+   ctx.fillStyle='#16202e';for(let i=0;i<5;i++)ctx.fillRect(((i*83)%W)-10,gy-120-(i*37)%90,26+(i*19)%20,gy);
+   ctx.font='600 10px monospace';ctx.fillStyle=col.tx2;ctx.textAlign='left';
+   for(let i=0;i<7;i++){ctx.globalAlpha=.16;ctx.fillText('File not found',(i*61)%(W-70),((t*40+i*83)%(H+20))-10)}ctx.globalAlpha=1;
+   /* платформы */
+   S.pl.forEach(q=>{if(q.st==='gone')return;const warn=q.st==='warn',sh=warn&&Math.sin(t*30)>0?2:0;
+    ctx.fillStyle=col.s2;ctx.fillRect(q.x+sh,q.y,q.w,q.floor?H-q.y:10);ctx.fillStyle=warn?col.err:col.tx2;ctx.fillRect(q.x+sh,q.y,q.w,3);
+    if(warn){ctx.globalAlpha=.5;ctx.fillStyle=col.err;for(let x=q.x;x<q.x+q.w;x+=14)ctx.fillRect(x+sh,q.y-8,7,5);ctx.globalAlpha=1}});
+   /* метки будущих снарядов */
+   S.tel.forEach(a=>{ctx.globalAlpha=.4+.4*Math.abs(Math.sin(t*14));ctx.fillStyle=col.err;
+    if(a.k==='big'||a.k==='fan2'){ctx.fillRect(a.x-2,0,4,H*.5);ctx.fillRect(a.x-9,0,18,6)}else if(a.k==='fan'){ctx.fillRect(B.x-9,B.y+34,18,5)}ctx.globalAlpha=1});
+   /* снаряды: обломки табличек, красные очереди, мелкие осколки */
+   S.sh.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);if(q.kind===1){ctx.rotate(t*3);ctx.fillStyle=col.tx2;ctx.fillRect(-q.r,-q.r*.7,q.r*2,q.r*1.4);ctx.fillStyle=col.err;ctx.fillRect(-3,-3,6,6)}else{ctx.fillStyle=col.err;ctx.beginPath();ctx.arc(0,0,q.r,0,7);ctx.fill()}ctx.restore()});
+   /* босс: ржавая арка-дверь на двух ногах, красное око, пустая рамка на груди */
+   {const j=B.phase>1&&Math.sin(t*37)>.92?2:0,x=B.x+j,y=B.y;ctx.save();ctx.translate(x,y);
+    ctx.fillStyle='#6b4a2e';ctx.fillRect(-34,-14,68,58);ctx.beginPath();ctx.arc(0,-14,34,Math.PI,0);ctx.fill();
+    ctx.fillStyle='#0b1018';ctx.fillRect(-24,0,48,44);ctx.beginPath();ctx.arc(0,0,24,Math.PI,0);ctx.fill();
+    ctx.strokeStyle=col.tx2;ctx.lineWidth=2;ctx.strokeRect(-14,12,28,22);
+    ctx.fillStyle=B.conf?col.tx:col.err;ctx.beginPath();ctx.arc(0,-22,7,0,7);ctx.fill();
+    if(B.conf){ctx.fillStyle=col.tx;ctx.font='700 10px monospace';ctx.textAlign='center';ctx.fillText('404',0,-40)}
+    ctx.fillStyle='#4a3320';ctx.fillRect(-26,44,10,14+Math.sin(t*3)*3);ctx.fillRect(16,44,10,14-Math.sin(t*3)*3);ctx.restore()}
+   /* ключ: осколок таблички */
+   if(S.key){const k=S.key,y=k.y+Math.sin(t*4)*3;ctx.save();ctx.translate(k.x,y);ctx.globalAlpha=k.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#34C759';ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(12,-13);ctx.lineTo(9,11);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.fillStyle='#0b1018';ctx.fillRect(-6,-1,12,3);ctx.restore()}
+   /* игрок */
+   {const p=S.p;if(!(p.inv>0&&Math.floor(t*14)%2)){ctx.save();ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+    ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+    ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();ctx.restore()}}
+   /* HUD: полоса босса, сердца, управление */
+   ctx.fillStyle=col.line;ctx.fillRect(W*.2,10,W*.6,8);ctx.fillStyle=col.err;ctx.fillRect(W*.2,10,W*.6*(B.hp/B.max),8);
+   ctx.textAlign='center';ctx.fillStyle=col.tx2;ctx.font='600 11px '+col.font;ctx.fillText(GameStory.bosses[0].name,W/2,34);
+   for(let i=0;i<S.maxHearts;i++){ctx.fillStyle=i<S.hearts?col.err:col.line;ctx.fillRect(14+i*16,44,11,11)}
+   ctx.textAlign='left';ctx.fillStyle=col.tx;ctx.font='700 14px '+col.font;ctx.fillText(String(S.score),14,36);
+   const bx=stk?stk.ox:62,by=stk?stk.oy:H-62;ctx.strokeStyle=col.tx2;ctx.lineWidth=2;ctx.globalAlpha=stk?.9:.35;
+   ctx.beginPath();ctx.arc(bx,by,34,0,7);ctx.stroke();ctx.fillStyle=col.tx2;ctx.beginPath();ctx.arc(bx+ax*26,by,14,0,7);ctx.fill();
+   const jx=W-62,jy=H-62;ctx.globalAlpha=down?.9:.35;ctx.beginPath();ctx.arc(jx,jy,34,0,7);ctx.stroke();ctx.textAlign='center';ctx.font='600 11px '+col.font;ctx.fillText('прыжок',jx,jy+4);ctx.globalAlpha=1;
+   if(sv.gl)GameFX.draw(ctx,W,H,S.t,sv.bosses|0,col.tx,GameCore.perf.q)}
   function draw(){
+   if(S.arena)return drawArena();
    const W=S.W,H=S.H,gy=S.gy,pw=S.x+E.PX;
    ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
-   ctx.fillStyle=col.bg;ctx.fillRect(0,0,W,H);GameLook.bg(ctx,S,col,S.t);
+   ctx.fillStyle=col.bg;ctx.fillRect(0,0,W,H);
    /* фон: медленные строки «кода» */
    ctx.fillStyle=col.line;
    for(let i=0;i<16;i++){const k=.12+(i%3)*.07,x=((i*97-S.x*k)%(W+120)+W+120)%(W+120)-60,y=30+(i*53)%Math.max(40,gy-90);ctx.globalAlpha=.55;ctx.fillRect(x,y,24+(i*37)%70,3)}
@@ -143,9 +190,8 @@ const Game=(()=>{
    /* земля с ямами */
    const px=x=>x-S.x;
    const pits=S.pits.slice().sort((a,b)=>a.a-b.a);let cx=-10;
-   const seg=(a,b)=>{if(b<=a)return;ctx.fillStyle=col.s1;ctx.fillRect(a,gy,b-a,H-gy+4);ctx.fillStyle=col.tx2;ctx.fillRect(a,gy,b-a,2);GameLook.grass(ctx,S,a,b);ctx.fillStyle=col.line;for(let x=Math.ceil(a/40)*40;x<b;x+=40)ctx.fillRect(x,gy+16,18,2)};
-   for(const q of pits){const a=px(q.a),b=px(q.b);seg(cx,Math.min(a,W+10));cx=Math.max(cx,b);
-    if(b>-20&&a<W+20){ctx.save();ctx.beginPath();ctx.rect(a,gy,b-a,H-gy+4);ctx.clip();ctx.fillStyle=col.bg;ctx.fillRect(a,gy,b-a,H-gy+4);ctx.globalAlpha=.35;ctx.strokeStyle=col.err;ctx.lineWidth=3;for(let x=a-H;x<b+H;x+=16){ctx.beginPath();ctx.moveTo(x,H+4);ctx.lineTo(x+(H-gy),gy);ctx.stroke()}ctx.restore();ctx.fillStyle=col.err;ctx.fillRect(a-3,gy,4,H-gy+4);ctx.fillRect(b-1,gy,4,H-gy+4)}}
+   const seg=(a,b)=>{if(b<=a)return;ctx.fillStyle=col.s1;ctx.fillRect(a,gy,b-a,H-gy+4);ctx.fillStyle=col.tx2;ctx.fillRect(a,gy,b-a,2);ctx.fillStyle=col.line;for(let x=Math.ceil(a/40)*40;x<b;x+=40)ctx.fillRect(x,gy+16,18,2)};
+   for(const q of pits){const a=px(q.a),b=px(q.b);seg(cx,Math.min(a,W+10));cx=Math.max(cx,b)}
    seg(cx,W+10);
    /* предметы */
    const t=S.t;
@@ -176,7 +222,14 @@ const Game=(()=>{
     if(B.charge){ctx.strokeStyle=col.err;ctx.lineWidth=4;ctx.strokeRect(-40,-34,80,68)}
     ctx.fillStyle=col.bg;ctx.font='700 11px '+col.font;ctx.textAlign='center';ctx.fillText('404',0,24);ctx.restore()}
    /* игрок */
-   GameLook.hero(ctx,S,col,t,S.p.inv>0&&S.p.inv<=1&&Math.floor(t*14)%2);
+   {const p=S.p,blink=p.inv>0&&Math.floor(t*14)%2;
+    if(!blink){ctx.save();ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+     ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+     ctx.fillStyle=col.bg;ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();
+     ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill();
+     if(p.sh){ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(0,0,21,0,7);ctx.stroke()}
+     if(p.mag>0){ctx.strokeStyle=col.tx2;ctx.setLineDash([4,5]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,28+Math.sin(t*8)*2,0,7);ctx.stroke()}
+     ctx.restore()}}
    /* HUD */
    ctx.textAlign='left';ctx.fillStyle=col.tx;ctx.font='700 16px '+col.font;
    const topY=18;
@@ -187,16 +240,26 @@ const Game=(()=>{
    if(S.combo>=10){ctx.fillStyle=col.tx;ctx.font='700 13px '+col.font;ctx.fillText('x2',14,topY+64)}
    if(mode==='level'){const f=Math.min(1,S.x/S.target);ctx.fillStyle=col.line;ctx.fillRect(0,0,W,4);ctx.fillStyle=col.tx;ctx.fillRect(0,0,W*f,4)}
    if(S.boss){const f=S.boss.hp/S.boss.max;ctx.fillStyle=col.line;ctx.fillRect(W*.2,10,W*.6,8);ctx.fillStyle=col.err;ctx.fillRect(W*.2,10,W*.6*f,8)}
-   if(S.maxHearts)for(let i=0;i<S.maxHearts;i++){ctx.fillStyle=i<S.hearts?col.err:col.line;ctx.fillRect(W-64-(S.maxHearts-i)*16,topY+8,11,11)}
+   if(S.maxHearts)for(let i=0;i<S.maxHearts;i++){ctx.fillStyle=i<S.hearts?col.err:col.line;ctx.fillRect(W-14-(S.maxHearts-i)*16,topY+8,11,11)}
    if(sv.gl)GameFX.draw(ctx,W,H,S.t,sv.bosses|0,col.tx,GameCore.perf.q)
    if(hint>0&&mode!=='boss'&&Lv<=1){ctx.globalAlpha=Math.min(1,hint);ctx.fillStyle=col.tx;ctx.textAlign='center';ctx.font='600 14px '+col.font;ctx.fillText(T('Один тап — прыжок. Держи — прыгнешь выше.'),W/2,gy+60);ctx.globalAlpha=1}}
   /* ---------- управление ---------- */
   const pd=e=>{if(paused||ended)return;e.preventDefault();down=true;press=true;if(sv.snd&&!ac)beep(1,.001,'sine',.0001)};
   const pu=()=>{down=false};
-  cv.addEventListener('pointerdown',pd);cv.addEventListener('pointerup',pu);cv.addEventListener('pointercancel',pu);cv.addEventListener('pointerleave',pu);
+  /* бой с боссом: джойстик слева (лево/право), прыжок справа; несколько пальцев сразу */
+  const ptr={};
+  const lp=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/sc,y:(e.clientY-r.top)/sc,w:r.width/sc}};
+  const pdA=e=>{if(paused||ended)return;e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(x){}const q=lp(e);
+   if(q.x<q.w/2){ptr[e.pointerId]='s';stk={ox:q.x,oy:q.y,id:e.pointerId}}else{ptr[e.pointerId]='j';down=true;press=true}
+   if(sv.snd&&!ac)beep(1,.001,'sine',.0001)};
+  const pmA=e=>{if(ptr[e.pointerId]!=='s'||!stk)return;const q=lp(e);ax=Math.max(-1,Math.min(1,(q.x-stk.ox)/28));if(Math.abs(ax)<.25)ax=0};
+  const puA=e=>{const k=ptr[e.pointerId];if(!k)return;delete ptr[e.pointerId];if(k==='s'){ax=0;stk=null}else down=false};
+  if(mode==='boss'){cv.addEventListener('pointerdown',pdA);cv.addEventListener('pointermove',pmA);cv.addEventListener('pointerup',puA);cv.addEventListener('pointercancel',puA)}
+  else{cv.addEventListener('pointerdown',pd);cv.addEventListener('pointerup',pu);cv.addEventListener('pointercancel',pu);cv.addEventListener('pointerleave',pu)}
   pb.onclick=()=>pause(!paused);
-  const kd=e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();if(!e.repeat&&!paused&&!ended){down=true;press=true}}else if(e.code==='Escape')pause(!paused)};
-  const ku=e=>{if(e.code==='Space'||e.code==='ArrowUp')down=false};
+  const kd=e=>{if(mode==='boss'){if(e.code==='ArrowLeft'||e.code==='KeyA')ax=-1;else if(e.code==='ArrowRight'||e.code==='KeyD')ax=1}
+   if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();if(!e.repeat&&!paused&&!ended){down=true;press=true}}else if(e.code==='Escape')pause(!paused)};
+  const ku=e=>{if(e.code==='Space'||e.code==='ArrowUp')down=false;if(mode==='boss'&&(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD'))ax=0};
   const vis=()=>{if(document.hidden)pause(true)};
   const rs=()=>{if(S){size();if(!raf)raf=requestAnimationFrame(loop)}};
   document.addEventListener('keydown',kd);document.addEventListener('keyup',ku);document.addEventListener('visibilitychange',vis);window.addEventListener('resize',rs);
