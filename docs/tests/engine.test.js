@@ -17,7 +17,7 @@ for(const L of [1,3,5,8,10]){const S=play(L,7);c('бот проходит уро
 {const S=GE.create({mode:'level',L:1,seed:1,W:360,H:600});S.hearts=1;S.items=[{t:'bug',x:S.x+GE.PX,h:0}];GE.step(S,.016,{});c('последнее сердце: уровень провален',S.over==='dead')}
 {const S=GE.create({mode:'level',L:2,seed:3,W:360,H:600});c('дверь в конце уровня',S.items.some(i=>i.t==='door'&&i.x===S.target+GE.PX))}
 c('100 уровней, 10 актов',ST.LEVELS===100&&ST.act(100)===10&&ST.act(1)===1&&ST.act(11)===2);
-c('10 боссов, построены 3',ST.bosses.length===10&&ST.bosses.filter(b=>b.built).length===3);
+c('10 глав по 9 уровней + босс, 10 боссов с текстом',ST.chapters.length===10&&ST.chapters.every(x=>x.levels.length===9)&&ST.bosses.length===10&&ST.bosses.every(b=>b.text.length>100));c('имена боссов из истории автора',ST.bosses[0].name==='Потерянный Страж'&&ST.bosses[9].name==='Кернел'&&ST.stages.length===10);
 let calls=0;const ctx=new Proxy({},{get:(t,k)=>k==='save'||k==='restore'?()=>{}:k==='fillText'||k==='fillRect'?()=>{calls++}:undefined,set:()=>true});
 FX.draw(ctx,360,600,1.3,0,'#fff',1);const c0=calls;FX.draw(ctx,360,600,1.3,10,'#fff',1);
 c('помех нет без боссов, много на 10',c0===0&&calls>20);c('помех при 1 боссе мало',(()=>{calls=0;FX.draw(ctx,360,600,1.3,1,'#fff',1);return calls>0&&calls<8})());

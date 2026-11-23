@@ -90,7 +90,7 @@ const Game=(()=>{
    return{W,H}}
   cur._S=()=>S;
   function reset(){
-   closeOv();cs();const z=size();GameLook.init(E);GameLook.reset();S=E.create({mode,L:Lv,W:z.W,H:z.H});acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
+   closeOv();cs();const z=size();S=E.create({mode,L:Lv,W:z.W,H:z.H});acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
    if(!raf)raf=requestAnimationFrame(loop)}
   function closeOv(){if(ov){ov.remove();ov=null}}
   function overlay(title,lines,buttons){
@@ -117,8 +117,8 @@ const Game=(()=>{
    bs.push(btn(T('Ещё раз'),reset,win?'':'pri'));
    if(mode==='level'||mode==='boss')bs.push(btn(T('К уровням'),()=>{stop();levels(b)},'ghost'));
    else bs.push(btn(T('В меню'),()=>{stop();cur._inPlay=false;menu(b)},'ghost'));
-   if(win&&mode==='boss')lines.push(GameStory.bosses[0].after);
-   if(win&&mode==='level'&&Lv===10)lines.push('Дверь «</>» открыта. Впереди первая Ошибка.');
+   if(win&&mode==='boss')lines.push(GameStory.bosses[0].scene);
+   if(win&&mode==='level'&&Lv===10)lines.push('Дверь открыта. Впереди Потерянный Страж: «Ошибка 404».');
    setTimeout(()=>{if(gone)return;overlay(win?(mode==='boss'?T('Босс побеждён!'):T('Уровень пройден!')):T('Баг победил'),lines.concat(win&&mode==='level'?['★'.repeat(stars)+'☆'.repeat(3-stars)]:[]),bs)},450)}
   function loop(ts){
    raf=0;if(gone)return;
@@ -135,7 +135,7 @@ const Game=(()=>{
   function draw(){
    const W=S.W,H=S.H,gy=S.gy,pw=S.x+E.PX;
    ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
-   ctx.fillStyle=col.bg;ctx.fillRect(0,0,W,H);GameLook.bg(ctx,S,col,S.t);
+   ctx.fillStyle=col.bg;ctx.fillRect(0,0,W,H);
    /* фон: медленные строки «кода» */
    ctx.fillStyle=col.line;
    for(let i=0;i<16;i++){const k=.12+(i%3)*.07,x=((i*97-S.x*k)%(W+120)+W+120)%(W+120)-60,y=30+(i*53)%Math.max(40,gy-90);ctx.globalAlpha=.55;ctx.fillRect(x,y,24+(i*37)%70,3)}
@@ -143,9 +143,8 @@ const Game=(()=>{
    /* земля с ямами */
    const px=x=>x-S.x;
    const pits=S.pits.slice().sort((a,b)=>a.a-b.a);let cx=-10;
-   const seg=(a,b)=>{if(b<=a)return;ctx.fillStyle=col.s1;ctx.fillRect(a,gy,b-a,H-gy+4);ctx.fillStyle=col.tx2;ctx.fillRect(a,gy,b-a,2);GameLook.grass(ctx,S,a,b);ctx.fillStyle=col.line;for(let x=Math.ceil(a/40)*40;x<b;x+=40)ctx.fillRect(x,gy+16,18,2)};
-   for(const q of pits){const a=px(q.a),b=px(q.b);seg(cx,Math.min(a,W+10));cx=Math.max(cx,b);
-    if(b>-20&&a<W+20){ctx.save();ctx.beginPath();ctx.rect(a,gy,b-a,H-gy+4);ctx.clip();ctx.fillStyle=col.bg;ctx.fillRect(a,gy,b-a,H-gy+4);ctx.globalAlpha=.35;ctx.strokeStyle=col.err;ctx.lineWidth=3;for(let x=a-H;x<b+H;x+=16){ctx.beginPath();ctx.moveTo(x,H+4);ctx.lineTo(x+(H-gy),gy);ctx.stroke()}ctx.restore();ctx.fillStyle=col.err;ctx.fillRect(a-3,gy,4,H-gy+4);ctx.fillRect(b-1,gy,4,H-gy+4)}}
+   const seg=(a,b)=>{if(b<=a)return;ctx.fillStyle=col.s1;ctx.fillRect(a,gy,b-a,H-gy+4);ctx.fillStyle=col.tx2;ctx.fillRect(a,gy,b-a,2);ctx.fillStyle=col.line;for(let x=Math.ceil(a/40)*40;x<b;x+=40)ctx.fillRect(x,gy+16,18,2)};
+   for(const q of pits){const a=px(q.a),b=px(q.b);seg(cx,Math.min(a,W+10));cx=Math.max(cx,b)}
    seg(cx,W+10);
    /* предметы */
    const t=S.t;
@@ -176,7 +175,14 @@ const Game=(()=>{
     if(B.charge){ctx.strokeStyle=col.err;ctx.lineWidth=4;ctx.strokeRect(-40,-34,80,68)}
     ctx.fillStyle=col.bg;ctx.font='700 11px '+col.font;ctx.textAlign='center';ctx.fillText('404',0,24);ctx.restore()}
    /* игрок */
-   GameLook.hero(ctx,S,col,t,S.p.inv>0&&Math.floor(t*14)%2);
+   {const p=S.p,blink=p.inv>0&&Math.floor(t*14)%2;
+    if(!blink){ctx.save();ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+     ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
+     ctx.fillStyle=col.bg;ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();
+     ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill();
+     if(p.sh){ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(0,0,21,0,7);ctx.stroke()}
+     if(p.mag>0){ctx.strokeStyle=col.tx2;ctx.setLineDash([4,5]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,28+Math.sin(t*8)*2,0,7);ctx.stroke()}
+     ctx.restore()}}
    /* HUD */
    ctx.textAlign='left';ctx.fillStyle=col.tx;ctx.font='700 16px '+col.font;
    const topY=18;
@@ -187,7 +193,7 @@ const Game=(()=>{
    if(S.combo>=10){ctx.fillStyle=col.tx;ctx.font='700 13px '+col.font;ctx.fillText('x2',14,topY+64)}
    if(mode==='level'){const f=Math.min(1,S.x/S.target);ctx.fillStyle=col.line;ctx.fillRect(0,0,W,4);ctx.fillStyle=col.tx;ctx.fillRect(0,0,W*f,4)}
    if(S.boss){const f=S.boss.hp/S.boss.max;ctx.fillStyle=col.line;ctx.fillRect(W*.2,10,W*.6,8);ctx.fillStyle=col.err;ctx.fillRect(W*.2,10,W*.6*f,8)}
-   if(S.maxHearts)for(let i=0;i<S.maxHearts;i++){ctx.fillStyle=i<S.hearts?col.err:col.line;ctx.fillRect(W-64-(S.maxHearts-i)*16,topY+8,11,11)}
+   if(S.maxHearts)for(let i=0;i<S.maxHearts;i++){ctx.fillStyle=i<S.hearts?col.err:col.line;ctx.fillRect(W-14-(S.maxHearts-i)*16,topY+8,11,11)}
    if(sv.gl)GameFX.draw(ctx,W,H,S.t,sv.bosses|0,col.tx,GameCore.perf.q)
    if(hint>0&&mode!=='boss'&&Lv<=1){ctx.globalAlpha=Math.min(1,hint);ctx.fillStyle=col.tx;ctx.textAlign='center';ctx.font='600 14px '+col.font;ctx.fillText(T('Один тап — прыжок. Держи — прыгнешь выше.'),W/2,gy+60);ctx.globalAlpha=1}}
   /* ---------- управление ---------- */

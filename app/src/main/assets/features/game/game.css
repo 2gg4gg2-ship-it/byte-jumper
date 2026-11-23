@@ -47,3 +47,6 @@
 .gm-bk summary{cursor:pointer;display:flex;flex-direction:column;gap:2px}
 .gm-bk summary small{color:var(--tx2)}
 .gm-bk p{white-space:pre-line;line-height:1.5;color:var(--tx2);margin:10px 0 0}
+.gm-bk.lock{display:flex;flex-direction:column;gap:2px;opacity:.55}
+.gm-bk.lock small{color:var(--tx2)}
+.gm-hint{color:var(--tx2);font-size:13px;margin:6px 0}
