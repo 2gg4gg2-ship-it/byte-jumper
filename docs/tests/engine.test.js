@@ -51,4 +51,35 @@ for(const id of [2,3,4]){const S=AR.create({W:360,H:520,seed:id,id});let tel=0,k
  c('босс '+id+': свои атаки '+Object.keys(kinds).join(','),(id===2?kinds.row&&kinds.blk:id===3?kinds.fan:kinds.pkt)&&tel>0)}
 {const S=AR.create({W:360,H:520,seed:1,id:4});S.hearts=999;let reps=0;for(let f=0;f<60*200;f++){AR.step(S,1/60,{ax:0});reps=Math.max(reps,S.rep||0);S.ev.length=0}c('Таймаут: до 7 повторов серии ('+reps+')',reps===7)}
 {const S=AR.create({W:360,H:520,seed:1,id:3});S.hearts=999;S.boss.hp=60;let st=false;for(let f=0;f<60*30;f++){AR.step(S,1/60,{ax:0});if(S.pl.some(q=>q.stale))st=true;S.ev.length=0}c('Stale: есть устаревшие платформы',st)}
+
+/* ---- боссы глав 5–7 (шаг 3) ---- */
+function bot(id,seed,opt){opt=opt||{};const S=AR.create({W:360,H:520,seed,id});S.hearts=999;const k={},seen={ph:{},fw:0,flip:0,dark:0,sd:0,slow:0,wins:0,walls:0};let tel=0,telBefore=true;
+ for(let f=0;f<60*300&&!S.over;f++){const kk=S.key;if(kk&&S.t>1&&!(S.flip>0)){S.p.x=kk.x;S.p.y=kk.y-GE.PH/2}
+  if(opt.rej&&f%6===0)AR.reject(S);
+  AR.step(S,1/60,{ax:0});seen.ph[S.boss.phase]=1;S.tel.forEach(a=>{k[a.k]=1});tel+=S.tel.length?1:0;S.ev.length=0;if(S.sh.length>20)throw new Error('снарядов больше 20');
+  if(S.fw>0)seen.fw=1;if(S.flip>0)seen.flip=1;if(S.dark)seen.dark=1;if(S.sd)seen.sd=1;if(S.slow>0)seen.slow=1;if(S.wins.length)seen.wins=1;if(S.walls.length)seen.walls=1}
+ return{S,k,seen,tel}}
+{const r=bot(5,5);c('босс 5: победа, 3 фазы ('+r.S.over+', t='+Math.round(r.S.t)+')',r.S.over==='win'&&r.seen.ph[1]&&r.seen.ph[2]&&r.seen.ph[3]);
+ c('босс 5: монеты (str), стены (wall) с предупреждением, «Лимит исчерпан» замедляет',r.k.str&&r.k.wall&&r.seen.walls&&r.seen.slow&&r.tel>0)}
+{const S=AR.create({W:360,H:520,seed:2,id:5});S.walls.push({x:S.p.x+40,y:S.gy-56,h:56,t:9});S.wb=0;for(let i=0;i<90;i++)AR.step(S,1/60,{ax:1});const blocked=S.p.x<S.p.x+1&&S.p.x<=S.walls[0].x;
+ const S2=AR.create({W:360,H:520,seed:2,id:5});S2.walls.push({x:S2.p.x+40,y:S2.gy-56,h:56,t:9});S2.wb=1;for(let i=0;i<90;i++)AR.step(S2,1/60,{ax:1});
+ const S3=AR.create({W:360,H:520,seed:2,id:5});S3.walls.push({x:S3.p.x+40,y:S3.gy-56,h:56,t:9});let over=false;AR.step(S3,1/60,{ax:0,pressed:true,down:true});for(let i=0;i<140;i++){AR.step(S3,1/60,{ax:1,down:true});if(S3.p.x>S3.walls[0].x+14&&!S3.walls[0].dead)over=true}
+ c('стена: без байта не пройти, с байтом рывок пробивает (−1 байт), сверху обойти можно',blocked&&S2.wb===0&&S2.p.x>S2.W*.22+40&&S3.walls.length>0)}
+{const S=AR.create({W:360,H:520,seed:2,id:5});S.tok=5;S.boss.phase=1;S.atk=0;AR.step(S,1/60,{ax:0});const x0=S.p.x;for(let i=0;i<30;i++)AR.step(S,1/60,{ax:1});const dx=S.p.x-x0;c('замедление 20%: скорость 136 px/с ('+Math.round(dx*2)+')',S.slow>0&&Math.abs(dx*2-136)<8)}
+{const r=bot(6,6,{rej:1});c('босс 6: победа ('+r.S.over+', t='+Math.round(r.S.t)+'), 3 фазы',r.S.over==='win'&&r.seen.ph[1]&&r.seen.ph[2]&&r.seen.ph[3]);c('босс 6: окна «Разрешить?» и лазер/снаряды с предупреждением',r.seen.wins&&r.tel>0&&r.k.big)}
+{const S=AR.create({W:360,H:520,seed:3,id:6});S.fallT=99;S.wins.push({t:1.5,max:1.5,real:1,d:0});AR.reject(S);const a=S.chg===1&&S.wins.length===0;
+ S.wins.push({t:.3,max:1.5,real:1,d:0});for(let i=0;i<30;i++)AR.step(S,1/60,{ax:0});const er=S.pl.some(q=>q.st!=='ok');
+ const S2=AR.create({W:360,H:520,seed:3,id:6});S2.fallT=99;S2.atk=99;S2.wins.push({t:.2,max:1.5,real:0,d:0});for(let i=0;i<30;i++)AR.step(S2,1/60,{ax:0});const none=!S2.pl.some(q=>q.st!=='ok')&&S2.hearts===3&&S2.wins.length===0;
+ c('«Отклонить»: настоящее окно даёт заряд; не успел = платформа гаснет с меткой; ложное окно без последствий',a&&er&&none)}
+{const S=AR.create({W:360,H:520,seed:3,id:6});S.fallT=99;S.atk=99;S.wins.push({t:1,max:1.5,real:1,d:0},{t:.5,max:1.5,real:0,d:0});S.boss.hp=100;for(let i=0;i<5;i++){S.wins.push({t:1,max:1.5,real:1,d:0});AR.reject(S);AR.reject(S)}c('5 «Отклонить» подряд снимают часть HP босса',S.chg>=5&&S.boss.hp<100)}
+{const S=AR.create({W:360,H:520,seed:3,id:6});S.boss.hp=20;const lims=[];for(const hp of [100,60,20]){S.boss.hp=hp;S.wins=[];S.atk=0;S.fallT=99;S.p.inv=99;AR.step(S,1/60,{ax:0});lims.push(S.wins[0]&&S.wins[0].max)}c('время ответа 1,5 / 1,2 / 0,9 с по фазам ('+lims+')',lims[0]===1.5&&lims[1]===1.2&&lims[2]===.9)}
+{const r=bot(7,7);c('босс 7: победа ('+r.S.over+', t='+Math.round(r.S.t)+'), 3 фазы',r.S.over==='win'&&r.seen.ph[1]&&r.seen.ph[2]&&r.seen.ph[3]);c('босс 7: Эхо (копия), предупреждение гравитации, затем переворот, Тьма',r.seen.sd&&r.seen.fw&&r.seen.flip&&r.seen.dark&&r.tel>0)}
+{const S=AR.create({W:360,H:520,seed:7,id:7});S.hearts=999;S.boss.hp=60;let fwT=-1,flT=-1,ceil=false,grav=false,t0=0;for(let f=0;f<60*40;f++){AR.step(S,1/60,{ax:0});S.ev.length=0;if(S.fw>0&&fwT<0)fwT=S.t;if(S.flip>0&&flT<0)flT=S.t;if(S.flip>0&&S.p.y===100&&S.p.on)ceil=true;if(S.flip>0&&S.p.vy<0)grav=false}
+ c('гравитация: предупреждение ≥1 с до переворота, игрок встаёт на потолок',fwT>0&&flT-fwT>=.95&&ceil);
+ const S2=AR.create({W:360,H:520,seed:7,id:7});S2.boss.hp=60;S2.hearts=999;S2.flip=0;S2.fw=1;let fl=false;for(let f=0;f<400;f++){AR.step(S2,1/60,{ax:0});if(S2.flip>0)fl=true;if(S2.flip>0)break}let yy=S2.p.y;for(let f=0;f<20;f++)AR.step(S2,1/60,{ax:0});c('при перевороте игрок падает вверх (y уменьшается)',fl&&S2.p.y<yy-5)}
+{const S=AR.create({W:360,H:520,seed:7,id:7});S.hearts=999;S.boss.hp=20;AR.step(S,1/60,{ax:0});const sq=S.seq,ord=sq.ord.slice();c('Тьма: арена гаснет, три тёмных байта',S.dark&&sq.n.length===3&&ord.length===3);
+ const hp0=S.boss.hp;S.fair=99;S.p.inv=99;for(const i of ord){const d=S.seq.n[i];S.p.x=d.x;S.p.y=d.y-GE.PH/2;S.atk=99;S.key=null;S.kt=99;for(let f=0;f<45;f++){S.p.x=d.x;S.p.y=d.y-GE.PH/2;S.p.vy=0;AR.step(S,1/60,{ax:0})}}
+ c('Тьма: собрать байты в порядке = удар по Тени; ошибка порядка сбрасывает',S.boss.hp<hp0||S.over==='win');
+ const S2=AR.create({W:360,H:520,seed:8,id:7});S2.hearts=999;S2.boss.hp=20;AR.step(S2,1/60,{ax:0});const o2=S2.seq.ord,wrong=o2[1];const d=S2.seq.n[wrong];S2.p.inv=99;S2.atk=99;S2.kt=99;for(let f=0;f<20;f++){S2.p.x=d.x;S2.p.y=d.y-GE.PH/2;S2.p.vy=0;AR.step(S2,1/60,{ax:0})}c('неверный байт: прогресс 0',S2.seq.got===0)}
+{const S=AR.create({W:360,H:520,seed:9,id:7});S.hearts=999;S.fallT=99;S.atk=99;S.boss.hp=100;let traps=0;for(let f=0;f<60*20;f++){const k=Math.floor(f/50)%2;S.p.x=k?80:280;S.p.y=S.gy-GE.PH;AR.step(S,1/60,{ax:0});if(S.tel.some(a=>a.k==='big'))traps++}c('ИИ Тени: повторяющийся маршрут получает ловушку',traps>0)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}

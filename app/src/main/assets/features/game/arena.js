@@ -1,5 +1,5 @@
 /* ===== АРЕНА БОССА: логика без DOM. Экран не прокручивается; управление: ax (-1..1), прыжок тап/удержание =====
-   Босс 1 «Потерянный Страж» («Ошибка 404»). Подробности и числа: docs/BOSSES.md. Предупреждение перед каждой атакой обязательно.
+   Боссы 1–7 (наборы атак kit1..kit7). Подробности и числа: docs/BOSSES.md. Предупреждение перед каждой атакой обязательно.
    ИИ босса (aim/habits): целится с упреждением и ошибкой, давит там, где игрок проводит больше времени, и ослабляет прицел после двух ударов подряд. */
 const GameArena=(()=>{
  const E=GameEngine,SPD=170,KEYHP=100/9;
@@ -11,7 +11,7 @@ const GameArena=(()=>{
  function create(o){
   const S={bid:o.id||1,arena:true,mode:'boss',W:o.W,H:o.H,rnd:mul(o.seed||7),t:0,over:null,ev:[],score:0,bytes:0,combo:0,hearts:3,maxHearts:3,lost:0,
    boss:{hp:100,max:100,phase:1,x:o.W/2,y:64,conf:0},p:{x:o.W*.22,y:0,vx:0,vy:0,on:false,hold:0,buf:0,coy:0,inv:0},
-   tel:[],sh:[],key:null,kt:3,atk:2,aN:0,fallT:8,hab:[0,0,0],idle:0,fair:0,hits:[],pl:null};
+   tel:[],sh:[],key:null,kt:3,atk:2,aN:0,fallT:8,hab:[0,0,0],idle:0,fair:0,hits:[],pl:null,tok:100,slow:0,wb:0,walls:[],free:[],fk:5,wins:[],chg:0,rj:[],las:null,flip:0,fw:0,fT:10,dark:false,seq:null,hs:[],sd:null,sdA:false,rt:{},cell:-1,trapT:0};
   layout(S);const p=S.p;p.y=S.gy-E.PH;p.on=true;return S}
  function mul(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -60,7 +60,38 @@ const GameArena=(()=>{
   S.rep=Math.min(7,S.rep+1);S.series=1+S.rep;S.ev.push('warn');
   if(f>=2){const x=aim(S,1);S.lag={x:x-45,w:90,t:3,on:0}}
   S.atk=.8}
- const KITS={1:kit1,2:kit2,3:kit3,4:kit4};
+ /* --- общие помощники боссов 5–7 --- */
+ function dmg(S){const B=S.boss;B.hp=Math.max(0,B.hp-KEYHP);S.combo++;S.score+=100;S.bytes++;S.ev.push('fix');if(B.hp<=0){S.over='win';S.score+=1000;S.ev.push('win');return true}return false}
+ function nearPl(S,x){const p=S.p;let best=null,bd=1e9;S.pl.forEach(q=>{if(q.st!=='ok')return;const d=Math.abs(q.x+q.w/2-x)+Math.abs(q.y-(p.y+E.PH))*1.5;if(d<bd){bd=d;best=q}});return best}
+ /* --- глава 5: Монарх Лимита: монеты-очереди, стеклянные стены-ценники, баланс токенов --- */
+ function wallTel(S){if(S.walls.length+S.tel.filter(a=>a.k==='wall').length>=3)return;const x=aim(S,1),q=nearPl(S,x);if(q)S.tel.push({x:clamp(x,q.x+10,q.x+q.w-10),y:q.y,t:1,k:'wall'})}
+ function kit5(S){const f=S.boss.phase,rich=S.wb>=2;S.aN++;S.tok-=f===3?16:10;
+  if(S.tok<=0){S.tok=35;S.slow=5;S.ev.push('warn')}
+  const coins=(n,iv)=>S.tel.push({x:0,t:.8,k:'str',n,iv,v:200,kind:4,c:0});
+  if(f===1){coins(S.wb<1?6:4,.5);S.atk=2.8}
+  else if(f===2){if(rich||S.aN%2)wallTel(S);coins(rich?2:4,.5);S.atk=2.4}
+  else{wallTel(S);if(rich)wallTel(S);coins(5,.4);if(S.aN%2)S.tel.push({x:aim(S,1),t:1,k:'big'});S.atk=2.1}}
+ /* --- глава 6: Стиратель Реестра: окна «Разрешить?», кнопка «Отклонить», ложные окна, лазер --- */
+ const WLIM=f=>f===1?1.5:f===2?1.2:.9;
+ function addWin(S,real,d){if(S.wins.length>=3)return;const l=WLIM(S.boss.phase);S.wins.push({t:l,max:l,real,d:d||0})}
+ function erase(S){const p=S.p;let best=null,bd=1e9;S.pl.forEach((q,i)=>{if(q.st!=='ok'||(i<2&&S.pl[1-i].st!=='ok'))return;const d=Math.abs(q.x+q.w/2-p.x)+Math.abs(q.y-(p.y+E.PH))*1.5;if(d<bd){bd=d;best=q}});if(best){best.st='warn';best.t=.8;S.ev.push('warn')}}
+ function reject(S){if(!S||S.over)return;const l=S.wins.filter(w=>w.d<=0).sort((a,b)=>(b.real-a.real)||a.t-b.t);if(!l.length)return;const w=l[0];S.wins=S.wins.filter(x=>x!==w);
+  if(w.real){S.chg++;S.rj.push(w.max-w.t);if(S.rj.length>8)S.rj.shift();S.ev.push('shield');if(S.chg%5===0)dmg(S)}}
+ function kit6(S){const f=S.boss.phase,r=S.rj,fast=r.length>=3&&r.slice(-3).reduce((a,b)=>a+b,0)/3<WLIM(f)*.45;S.aN++;
+  const n=f===3?2+S.aN%2:1;for(let i=0;i<n;i++)addWin(S,1,i*.45);
+  if(fast)addWin(S,0,.3);
+  if(f>=2)S.tel.push({x:aim(S,1),t:1,k:'big'});
+  if(f===3&&S.aN%2===0){const rows=[S.gy-12,S.gy-112,S.gy-212];S.tel.push({x:0,y:rows[band(S,S.p.y+E.PH)],t:1,k:'las'})}
+  S.atk=f===2?3:3.4}
+ /* --- глава 7: Тень: Эхо (копия с задержкой 0,5 с), Подмена (гравитация), Тьма (порядок тёмных байтов) --- */
+ function newSeq(S){const o=[0,1,2];for(let i=2;i>0;i--){const j=Math.floor(S.rnd()*(i+1));[o[i],o[j]]=[o[j],o[i]]}S.seq={n:[2,3,4].map(i=>{const q=S.pl[i];return{x:q.x+q.w/2,y:q.y-14}}),ord:o,got:0,lit:-1,last:-1}}
+ function kit7(S){const f=S.boss.phase,p=S.p;S.aN++;
+  if(S.flip>0||S.fw>0){S.tel.push({x:aim(S,1),t:1,k:'up'});S.atk=2.2;return}
+  S.tel.push({x:S.boss.x,t:f===1?.7:.6,k:'fan'});
+  if(f===1&&S.idle>1.5)S.tel.push({x:p.x,t:.6,k:'fan2'});
+  if(f>=2&&S.aN%2)S.tel.push({x:aim(S,1),t:1,k:'big'});
+  S.atk=f===1?2.6:2.2}
+ const KITS={1:kit1,2:kit2,3:kit3,4:kit4,5:kit5,6:kit6,7:kit7};
  function attack(S){const k=KITS[S.bid]||kit1;k(S)}
  function dropPlat(S){
   /* ИИ: давит там, где игрок проводит больше всего времени (не чаще раза за период) */
@@ -73,26 +104,32 @@ const GameArena=(()=>{
   S.pl[idx].st='warn';S.pl[idx].t=1.2;S.ev.push('warn')}
  function step(S,dt,inp){
   if(S.over)return;inp=inp||{};const p=S.p,B=S.boss,W=S.W;
-  S.t+=dt;S.fair=Math.max(0,S.fair-dt);
+  S.t+=dt;S.fair=Math.max(0,S.fair-dt);S.slow=Math.max(0,S.slow-dt);
   B.phase=B.hp>70?1:B.hp>35?2:3;
   /* движение босса: медленно плывёт и тянется к игроку (скорость ограничена) */
   const tx=clamp(p.x*.5+W*.25+Math.sin(S.t*.5)*W*.2,50,W-50);B.x+=clamp(tx-B.x,-60*dt,60*dt);B.y=64+Math.sin(S.t*1.3)*6;
   /* «растерянность»: в фазе 3 раз в 8 с на 2 с ключ появляется ближе */
   B.conf=B.phase===3&&(S.t%8)<2?1:0;
+  /* Тень: цикл гравитации (предупреждение 1 с, потом 5 с вверх ногами, потолок безопасен) */
+  if(S.bid===7){
+   if(B.phase===2&&!S.flip&&!S.fw){S.fT-=dt;if(S.fT<=0){S.fw=1;S.ev.push('warn')}}
+   else if(S.fw>0){S.fw-=dt;if(S.fw<=0){S.fw=0;S.flip=5;S.fT=11}}
+   else if(S.flip>0){S.flip-=dt;if(S.flip<=0){S.flip=0;S.pl.forEach(q=>{q.st='ok'});const a=S.pl[0],b=S.pl[1];if(S.p.x>a.x+a.w-E.PW/2&&S.p.x<b.x+E.PW/2)S.p.x=S.p.x<W/2?a.x+a.w-E.PW:b.x+E.PW}}}
   /* игрок */
-  const gp=S.gy,PW=E.PW,PH=E.PH;p.vx=(inp.ax||0)*SPD;p.x=clamp(p.x+p.vx*dt,PW/2,W-PW/2);
+  const gp=S.gy,PW=E.PW,PH=E.PH;p.vx=(inp.ax||0)*SPD*(S.slow>0?.8:1);p.x=clamp(p.x+p.vx*dt,PW/2,W-PW/2);
+  if(S.bid===5)for(const w of S.walls)if(p.x+PW/2>w.x-7&&p.x-PW/2<w.x+7&&p.y+PH>w.y&&p.y<w.y+w.h){if(S.wb>0){S.wb--;w.t=0;S.ev.push('shield')}else p.x=p.x<w.x?w.x-7-PW/2:w.x+7+PW/2}
   if(inp.pressed)p.buf=.12;p.coy=p.on?.08:p.coy-dt;p.buf-=dt;
-  if(p.buf>0&&p.coy>0){p.vy=-E.JV;p.on=false;p.coy=0;p.buf=0;p.hold=E.HMAX;S.ev.push('jump')}
-  let g=E.G;if(inp.down&&p.vy<0&&p.hold>0){g=E.G*E.HG;p.hold-=dt}else if(!inp.down)p.hold=0;
-  const pb=p.y+PH;p.vy+=g*dt;p.y+=p.vy*dt;let on=false;
-  if(p.vy>=0)for(const q of S.pl){if(q.st==='gone')continue;
+  if(p.buf>0&&p.coy>0){p.vy=-E.JV*(S.flip>0?-1:1);p.on=false;p.coy=0;p.buf=0;p.hold=E.HMAX;S.ev.push('jump')}
+  let g=E.G;const sg=S.flip>0?-1:1;if(inp.down&&p.vy*sg<0&&p.hold>0){g=E.G*E.HG;p.hold-=dt}else if(!inp.down)p.hold=0;
+  const pb=p.y+PH;p.vy+=g*sg*dt;p.y+=p.vy*dt;let on=false;
+  if(S.flip>0){if(p.y<=100){p.y=100;p.vy=0;on=true}}else if(p.vy>=0)for(const q of S.pl){if(q.st==='gone')continue;
    if(pb<=q.y+3&&p.y+PH>=q.y&&p.x+PW/2>q.x&&p.x-PW/2<q.x+q.w){p.y=q.y-PH;p.vy=0;on=true;break}}
   p.on=on;p.inv=Math.max(0,p.inv-dt);
   if(p.y>S.H+30){fall(S);return}
   /* привычки игрока */
   S.hab[band(S,p.y+PH)]+=dt;S.hab=S.hab.map(v=>v*(1-dt*.03));if(on&&Math.abs(p.vx)<1)S.idle+=dt;else S.idle=0;
   /* платформы: метка → падение → возвращение */
-  S.fallT-=dt;if(S.fallT<=0){dropPlat(S);S.fallT=B.phase===3?9:12}
+  S.fallT-=dt;if(S.fallT<=0&&!(S.flip>0||S.fw>0)){dropPlat(S);S.fallT=B.phase===3?9:12}
   for(const q of S.pl){if(q.st==='warn'){q.t-=dt;if(q.t<=0){q.st='gone';q.t=3}}else if(q.st==='gone'){q.t-=dt;if(q.t<=0)q.st='ok'}}
   /* особенности глав */
   if(S.bid===3){
@@ -101,6 +138,26 @@ const GameArena=(()=>{
    S.hist=S.hist||[];S.hist.push({x:p.x,y:p.y});if(S.hist.length>180)S.hist.shift();
    if(B.phase>=2&&S.hist.length>=180){const g=S.hist[0];S.ghost=g;if(Math.abs(g.x-p.x)<PW&&Math.abs(g.y-p.y)<PH)hit(S)}else S.ghost=null}
   if(S.bid===4&&S.lag){const L=S.lag;L.t-=dt;if(L.t<=0)S.lag=null;else if(L.t<2.2){L.on=1;if(Math.abs(p.x-(L.x+L.w/2))<L.w/2+PW/2)p.x-=p.vx*dt*.3}}
+  if(S.bid===5){
+   for(const w of S.walls)w.t-=dt;S.walls=S.walls.filter(w=>w.t>0);
+   S.fk-=dt;if(S.fk<=0&&S.free.length<2){const q=S.pl[2+Math.floor(S.rnd()*3)];S.free.push({x:q.x+q.w*(.2+S.rnd()*.6),y:q.y-14,t:9});S.fk=6}
+   for(const f of S.free){f.t-=dt;if(Math.abs(f.x-p.x)<18&&Math.abs(f.y-(p.y+PH/2))<24){f.t=0;S.wb=Math.min(3,S.wb+1);S.tok=Math.min(100,S.tok+25);S.ev.push('byte')}}
+   S.free=S.free.filter(f=>f.t>0)}
+  if(S.bid===6){
+   for(const w of S.wins){if(w.d>0)w.d-=dt;else w.t-=dt}
+   const ex=S.wins.filter(w=>w.d<=0&&w.t<=0);S.wins=S.wins.filter(w=>!(w.d<=0&&w.t<=0));
+   for(const w of ex)if(w.real){S.rj.push(w.max);if(S.rj.length>8)S.rj.shift();erase(S)}
+   if(S.las){S.las.t-=dt;if(S.las.t<=0)S.las=null;else if(Math.abs(p.y+PH/2-S.las.y)<18)hit(S)}}
+  if(S.bid===7){
+   S.trapT-=dt;S.hs.push({x:p.x,y:p.y});if(S.hs.length>31)S.hs.shift();
+   if(B.phase===1&&S.hs.length>30){const g=S.hs[0];S.sd=g;let pa=0;for(let i=1;i<S.hs.length;i++)pa+=Math.abs(S.hs[i].x-S.hs[i-1].x)+Math.abs(S.hs[i].y-S.hs[i-1].y);S.sdA=pa>50;
+    if(S.sdA)for(const q of[g,S.hs[5]])if(Math.abs(q.x-p.x)<PW&&Math.abs(q.y-p.y)<PH){hit(S);break}}else{S.sd=null;S.sdA=false}
+   const cell=Math.floor(p.x/60)*3+band(S,p.y+PH);
+   if(cell!==S.cell){S.cell=cell;S.rt[cell]=(S.rt[cell]||0)+1;if(S.rt[cell]>=3&&S.trapT<=0&&!(S.flip>0||S.fw>0)){S.rt={};S.trapT=6;S.tel.push({x:clamp(p.x,16,W-16),t:1,k:'big'})}}
+   if(B.phase===3){S.dark=true;if(!S.seq)newSeq(S);const sq=S.seq,ph=S.t%4.2,sl=Math.floor(ph/1.4);sq.lit=ph-sl*1.4<1?sq.ord[sl]:-1;
+    sq.n.forEach((d,i)=>{const q=S.pl[i+2];d.x=q.x+q.w/2;d.y=q.y-14});
+    let tc=-1;sq.n.forEach((d,i)=>{if(Math.abs(d.x-p.x)<16&&Math.abs(d.y-(p.y+PH/2))<24)tc=i});
+    if(tc<0)sq.last=-1;else if(tc!==sq.last){sq.last=tc;if(tc===sq.ord[sq.got]){sq.got++;S.ev.push('byte');if(sq.got>=3){dmg(S);newSeq(S)}}else{sq.got=0;S.ev.push('warn')}}}}
   /* атаки: сначала предупреждение, потом снаряд */
   S.atk-=dt;if(S.atk<=0)attack(S);
   for(const a of S.tel){a.t-=dt;if(a.t>0)continue;
@@ -109,12 +166,15 @@ const GameArena=(()=>{
    else if(a.k==='row'){for(let i=0;i<6;i++){const x=(i+.5)*S.W/6;if(Math.abs(x-a.x)>48)shot(S,x,-10,0,130,12,1)}a.dead=1}
    else if(a.k==='blk'){shot(S,a.x,-30,0,300,26,1);a.dead=1}
    else if(a.k==='pkt'){shot(S,a.x,a.y,a.x<S.W/2?360:-360,0,7,2);a.dead=1}
-   else if(a.k==='str'){const x=aim(S,.8);shot(S,x,-10,0,220,7,3);a.c++;a.t=a.iv;if(a.c>=a.n)a.dead=1}}
+   else if(a.k==='wall'){S.walls.push({x:a.x,y:a.y-56,h:56,t:7});a.dead=1}
+   else if(a.k==='up'){shot(S,a.x,S.H+10,0,-140,13,1);a.dead=1}
+   else if(a.k==='las'){S.las={y:a.y,t:.3};a.dead=1}
+   else if(a.k==='str'){const x=aim(S,.8);shot(S,x,-10,0,a.v||220,a.kind===4?9:7,a.kind||3);a.c++;a.t=a.iv;if(a.c>=a.n)a.dead=1}}
   S.tel=S.tel.filter(a=>!a.dead);
   for(const s of S.sh){s.x+=s.vx*dt;s.y+=s.vy*dt;
    if(Math.abs(s.x-p.x)<s.r+PW/2&&Math.abs(s.y-(p.y+PH/2))<s.r+PH/2)hit(S)}
-  S.sh=S.sh.filter(s=>s.y<S.H+30&&s.x>-30&&s.x<W+30&&!(Math.abs(s.x-p.x)<s.r+PW/2&&Math.abs(s.y-(p.y+PH/2))<s.r+PH/2&&p.inv>0&&0));
+  S.sh=S.sh.filter(s=>s.y<S.H+30&&s.y>-60&&s.x>-30&&s.x<W+30&&!(Math.abs(s.x-p.x)<s.r+PW/2&&Math.abs(s.y-(p.y+PH/2))<s.r+PH/2&&p.inv>0&&0));
   /* ключ на самой высокой платформе (в фазе «растерянности» на средней) */
-  if(S.key){S.key.t-=dt;if(S.key.t<=0)S.key=null;else if(Math.abs(S.key.x-p.x)<16&&Math.abs(S.key.y-(p.y+PH/2))<24){S.key=null;B.hp=Math.max(0,B.hp-KEYHP);S.combo++;S.score+=100;S.bytes++;S.ev.push('fix');if(B.hp<=0){S.over='win';S.score+=1000;S.ev.push('win');return}S.kt=B.phase===1?7:B.phase===2?6:5}}
+  if(S.flip>0){}else if(S.key){S.key.t-=dt;if(S.key.t<=0)S.key=null;else if(Math.abs(S.key.x-p.x)<16&&Math.abs(S.key.y-(p.y+PH/2))<24){S.key=null;if(dmg(S))return;S.kt=B.phase===1?7:B.phase===2?6:5}}
   else{S.kt-=dt;if(S.kt<=0){const q=B.conf?S.pl[S.rnd()<.5?2:3]:S.pl[4];S.key={x:q.x+q.w*(.25+S.rnd()*.5),y:q.y-20,t:6}}}}
- return{create,step,layout,SPD}})();
+ return{create,step,layout,reject,SPD}})();

@@ -157,13 +157,20 @@ const Game=(()=>{
     if(warn){ctx.globalAlpha=.5;ctx.fillStyle=col.err;for(let x=q.x;x<q.x+q.w;x+=14)ctx.fillRect(x+sh,q.y-8,7,5);ctx.globalAlpha=1}});
    if(S.lag){const L=S.lag;ctx.globalAlpha=L.on?.28:.12+.1*Math.sin(t*12);ctx.fillStyle='#8aa4c8';ctx.fillRect(L.x,0,L.w,H);ctx.globalAlpha=1}
    if(S.ghost){ctx.globalAlpha=.45;ctx.fillStyle=col.err;ctx.fillRect(S.ghost.x-12,S.ghost.y,24,E.PH);ctx.globalAlpha=1}
+   if(S.dark){ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H)}
+   S.walls.forEach(w=>{ctx.globalAlpha=.55;ctx.fillStyle='#7fd6e8';ctx.fillRect(w.x-7,w.y,14,w.h);ctx.globalAlpha=1;ctx.strokeStyle='#bff';ctx.lineWidth=1.5;ctx.strokeRect(w.x-7,w.y,14,w.h);ctx.fillStyle='#bff';ctx.font='700 9px monospace';ctx.textAlign='center';ctx.fillText('$',w.x,w.y+14)});
+   S.free.forEach(f=>{const yy=f.y+Math.sin(t*4)*2;ctx.fillStyle='#9a9aa2';ctx.fillRect(f.x-6,yy-6,12,12);ctx.fillStyle=BGC[4];ctx.fillRect(f.x-2,yy-2,4,4)});
+   if(S.las){ctx.fillStyle=col.err;ctx.fillRect(0,S.las.y-5,W,10)}
+   if(S.sd){ctx.fillStyle='#8a6cff';ctx.globalAlpha=.55;ctx.fillRect(S.sd.x-12,S.sd.y,24,E.PH);ctx.globalAlpha=.3;if(S.hs[5])ctx.fillRect(S.hs[5].x-12,S.hs[5].y,24,E.PH);ctx.globalAlpha=1}
+   if(S.flip>0){ctx.fillStyle='#8a6cff';ctx.fillRect(0,100,W,2)}
+   if(S.fw>0){ctx.globalAlpha=.3+.3*Math.sin(t*30);ctx.strokeStyle='#8a6cff';ctx.lineWidth=6;ctx.strokeRect(3,3,W-6,H-6);ctx.globalAlpha=1}
    /* метки будущих снарядов */
    S.tel.forEach(a=>{ctx.globalAlpha=.4+.4*Math.abs(Math.sin(t*14));ctx.fillStyle=col.err;
-    if(a.k==='row'){for(let i=0;i<6;i++){const x=(i+.5)*W/6;if(Math.abs(x-a.x)>48)ctx.fillRect(x-6,0,12,5)}}else if(a.k==='blk'){ctx.fillRect(a.x-26,0,52,H*.5)}else if(a.k==='pkt'){ctx.fillRect(a.x<W/2?0:W-14,a.y-6,14,12)}else if(a.k==='big'||a.k==='fan2'){ctx.fillRect(a.x-2,0,4,H*.5);ctx.fillRect(a.x-9,0,18,6)}else if(a.k==='fan'){ctx.fillRect(B.x-9,B.y+34,18,5)}ctx.globalAlpha=1});
+    if(a.k==='row'){for(let i=0;i<6;i++){const x=(i+.5)*W/6;if(Math.abs(x-a.x)>48)ctx.fillRect(x-6,0,12,5)}}else if(a.k==='blk'){ctx.fillRect(a.x-26,0,52,H*.5)}else if(a.k==='pkt'){ctx.fillRect(a.x<W/2?0:W-14,a.y-6,14,12)}else if(a.k==='big'||a.k==='fan2'){ctx.fillRect(a.x-2,0,4,H*.5);ctx.fillRect(a.x-9,0,18,6)}else if(a.k==='fan'){ctx.fillRect(B.x-9,B.y+34,18,5)}else if(a.k==='wall'){ctx.fillRect(a.x-7,a.y-56,14,56)}else if(a.k==='up'){ctx.fillRect(a.x-2,H*.5,4,H*.5);ctx.fillRect(a.x-9,H-6,18,6)}else if(a.k==='las'){ctx.fillRect(0,a.y-2,W,4)}else if(a.k==='str'){ctx.fillRect(0,0,W,3)}ctx.globalAlpha=1});
    /* снаряды: обломки табличек, красные очереди, мелкие осколки */
-   S.sh.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);if(q.kind===1){ctx.rotate(t*3);ctx.fillStyle=col.tx2;ctx.fillRect(-q.r,-q.r*.7,q.r*2,q.r*1.4);ctx.fillStyle=col.err;ctx.fillRect(-3,-3,6,6)}else{ctx.fillStyle=col.err;ctx.beginPath();ctx.arc(0,0,q.r,0,7);ctx.fill()}ctx.restore()});
+   S.sh.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);if(q.kind===1){ctx.rotate(t*3);ctx.fillStyle=col.tx2;ctx.fillRect(-q.r,-q.r*.7,q.r*2,q.r*1.4);ctx.fillStyle=col.err;ctx.fillRect(-3,-3,6,6)}else{ctx.fillStyle=q.kind===4?'#e8b923':col.err;ctx.beginPath();ctx.arc(0,0,q.r,0,7);ctx.fill()}ctx.restore()});
    /* босс: ржавая арка-дверь на двух ногах, красное око, пустая рамка на груди */
-   {const j=B.phase>1&&Math.sin(t*37)>.92?2:0,x=B.x+j,y=B.y,id=S.bid,eye=B.conf?col.tx:col.err;ctx.save();ctx.translate(x,y);
+   {const j=B.phase>1&&Math.sin(t*37)>.92?2:0,x=B.x+j,y=B.y,id=S.bid,eye=B.conf?col.tx:col.err;ctx.save();ctx.translate(x,y);if(S.dark)ctx.globalAlpha=.3;
     if(id===1){ctx.fillStyle='#6b4a2e';ctx.fillRect(-34,-14,68,58);ctx.beginPath();ctx.arc(0,-14,34,Math.PI,0);ctx.fill();
      ctx.fillStyle=BGC[0];ctx.fillRect(-24,0,48,44);ctx.beginPath();ctx.arc(0,0,24,Math.PI,0);ctx.fill();
      ctx.strokeStyle=col.tx2;ctx.lineWidth=2;ctx.strokeRect(-14,12,28,22);
@@ -175,16 +182,26 @@ const Game=(()=>{
     else if(id===3){/* Хозяин кэша: высокий силуэт из миниатюр */
      ctx.fillStyle='#1b3a3a';ctx.fillRect(-22,-34,44,80);for(let i=0;i<6;i++){ctx.fillStyle=i%2?'#2e6b6b':'#4cc9c0';ctx.globalAlpha=.5;ctx.fillRect(-20+(i%2)*20,-32+i*13,18,11)}ctx.globalAlpha=1;
      ctx.fillStyle='#0b1c1c';ctx.fillRect(-12,-28,24,18);ctx.fillStyle=eye;ctx.fillRect(-7,-21,14,3)}
+    else if(id===5){/* Монарх: золотая корона над троном-окном «429» */
+     ctx.fillStyle='#6b5210';ctx.fillRect(-30,-4,60,52);ctx.fillStyle='#e8b923';ctx.beginPath();ctx.moveTo(-26,-8);ctx.lineTo(-26,-30);ctx.lineTo(-13,-16);ctx.lineTo(0,-34);ctx.lineTo(13,-16);ctx.lineTo(26,-30);ctx.lineTo(26,-8);ctx.closePath();ctx.fill();
+     ctx.fillStyle='#120d02';ctx.fillRect(-20,8,40,22);ctx.fillStyle=eye;ctx.font='700 14px monospace';ctx.textAlign='center';ctx.fillText('429',0,25)}
+    else if(id===6){/* Стиратель: красное окно-терминал */
+     ctx.fillStyle='#2a1612';ctx.fillRect(-36,-24,72,60);ctx.fillStyle='#e5736b';ctx.fillRect(-36,-24,72,10);ctx.fillStyle='#120a08';ctx.fillRect(-30,-10,60,40);
+     ctx.fillStyle=eye;ctx.font='700 11px monospace';ctx.textAlign='center';ctx.fillText('rm -r',0,6);ctx.fillText('/*',0,22);ctx.fillRect(-4+Math.sin(t*4)*14,31,8,3)}
+    else if(id===7){/* Тень: чёрный силуэт с фиолетовым контуром */
+     ctx.fillStyle='#000';ctx.strokeStyle='#8a6cff';ctx.lineWidth=2;ctx.fillRect(-28,-28,56,56);ctx.strokeRect(-28,-28,56,56);ctx.fillStyle='#fff';ctx.fillRect(-14,-10,8,8);ctx.fillRect(6,-10,8,8);
+     ctx.beginPath();ctx.moveTo(0,-28);ctx.lineTo(0,-38);ctx.stroke()}
     else{/* Таймаут и дальше: медуза из кабелей с мигающим индикатором */
      ctx.fillStyle='#24405a';ctx.beginPath();ctx.arc(0,0,36,Math.PI,0);ctx.fill();ctx.fillRect(-36,0,72,6);
      ctx.strokeStyle='#4c86c8';ctx.lineWidth=3;for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(i*10,6);ctx.quadraticCurveTo(i*10+Math.sin(t*3+i)*9,26,i*10+Math.sin(t*2+i)*6,44);ctx.stroke()}
      ctx.fillStyle=eye;ctx.globalAlpha=Math.sin(t*6)>0?1:.3;ctx.beginPath();ctx.arc(0,-8,7,0,7);ctx.fill();ctx.globalAlpha=1}
-    if(B.conf){ctx.fillStyle=col.tx;ctx.font='700 10px monospace';ctx.textAlign='center';ctx.fillText('404',0,-42)}
+    if(B.conf&&id===1){ctx.fillStyle=col.tx;ctx.font='700 10px monospace';ctx.textAlign='center';ctx.fillText('404',0,-42)}
     ctx.restore()}
    /* ключ: осколок таблички */
    if(S.key){const k=S.key,y=k.y+Math.sin(t*4)*3;ctx.save();ctx.translate(k.x,y);ctx.globalAlpha=k.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#34C759';ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(12,-13);ctx.lineTo(9,11);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.fillStyle='#0b1018';ctx.fillRect(-6,-1,12,3);ctx.restore()}
+   if(S.seq&&S.dark){S.seq.n.forEach((d,i)=>{const lit=S.seq.lit===i;ctx.fillStyle=lit?'#fff':'#2a2440';ctx.globalAlpha=lit?1:.7;ctx.fillRect(d.x-8,d.y-8,16,16);ctx.globalAlpha=1})}
    /* игрок */
-   {const p=S.p;if(!(p.inv>0&&Math.floor(t*14)%2)){ctx.save();ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+   {const p=S.p;if(!(p.inv>0&&Math.floor(t*14)%2)){ctx.save();ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
     ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
     ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();ctx.restore()}}
    /* HUD: полоса босса, сердца, управление */
@@ -192,6 +209,10 @@ const Game=(()=>{
    ctx.textAlign='center';ctx.fillStyle=col.tx2;ctx.font='600 11px '+col.font;ctx.fillText(GameStory.bosses[S.bid-1].name,W/2,34);
    for(let i=0;i<S.maxHearts;i++){ctx.fillStyle=i<S.hearts?col.err:col.line;ctx.fillRect(14+i*16,44,11,11)}
    ctx.textAlign='left';ctx.fillStyle=col.tx;ctx.font='700 14px '+col.font;ctx.fillText(String(S.score),14,36);
+   if(S.bid===5){ctx.fillStyle=col.line;ctx.fillRect(14,60,80,6);ctx.fillStyle='#e8b923';ctx.fillRect(14,60,80*Math.max(0,S.tok)/100,6);ctx.textAlign='left';ctx.fillStyle=col.tx2;ctx.font='600 10px '+col.font;ctx.fillText('токены  ◆ '+S.wb,14,78);if(S.slow>0){ctx.textAlign='center';ctx.fillStyle=col.err;ctx.fillText('Лимит исчерпан',W/2,60)}}
+   if(S.bid===6){let wi=0;S.wins.forEach(w=>{if(w.d>0)return;const y=70+wi++*40,x=W/2-80;ctx.fillStyle='#1b1411';ctx.fillRect(x,y,160,34);ctx.strokeStyle=col.tx2;ctx.lineWidth=1;ctx.strokeRect(x,y,160,34);ctx.fillStyle=w.real?'#e5736b':'#d98a78';ctx.fillRect(x+4,y+4,6,6);ctx.fillStyle=col.tx;ctx.font='600 9px monospace';ctx.textAlign='left';ctx.fillText('rm -r /реестр  Разрешить?',x+14,y+22);ctx.fillStyle=col.err;ctx.fillRect(x,y+30,160*Math.max(0,w.t)/w.max,4)});
+    ctx.textAlign='left';ctx.fillStyle=col.tx2;ctx.font='600 10px '+col.font;ctx.fillText('заряд '+(S.chg%5)+'/5',14,66)}
+   if(S.bid===6||S.bid===10){const rx=W-62,ry=H-150;ctx.globalAlpha=S.wins.some(w=>w.d<=0)?.95:.4;ctx.strokeStyle=col.err;ctx.lineWidth=2;ctx.beginPath();ctx.arc(rx,ry,30,0,7);ctx.stroke();ctx.fillStyle=col.err;ctx.textAlign='center';ctx.font='600 10px '+col.font;ctx.fillText('Отклонить',rx,ry+4);ctx.globalAlpha=1}
    const bx=stk?stk.ox:62,by=stk?stk.oy:H-62;ctx.strokeStyle=col.tx2;ctx.lineWidth=2;ctx.globalAlpha=stk?.9:.35;
    ctx.beginPath();ctx.arc(bx,by,34,0,7);ctx.stroke();ctx.fillStyle=col.tx2;ctx.beginPath();ctx.arc(bx+ax*26,by,14,0,7);ctx.fill();
    const jx=W-62,jy=H-62;ctx.globalAlpha=down?.9:.35;ctx.beginPath();ctx.arc(jx,jy,34,0,7);ctx.stroke();ctx.textAlign='center';ctx.font='600 11px '+col.font;ctx.fillText('прыжок',jx,jy+4);ctx.globalAlpha=1;
@@ -268,14 +289,14 @@ const Game=(()=>{
   const ptr={};
   const lp=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/sc,y:(e.clientY-r.top)/sc,w:r.width/sc}};
   const pdA=e=>{if(paused||ended)return;e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(x){}const q=lp(e);
-   if(q.x<q.w/2){ptr[e.pointerId]='s';stk={ox:q.x,oy:q.y,id:e.pointerId}}else{ptr[e.pointerId]='j';down=true;press=true}
+   if(q.x<q.w/2){ptr[e.pointerId]='s';stk={ox:q.x,oy:q.y,id:e.pointerId}}else if((S.bid===6||S.bid===10)&&Math.hypot(q.x-(S.W-62),q.y-(S.H-150))<40){ptr[e.pointerId]='r';GameArena.reject(S)}else{ptr[e.pointerId]='j';down=true;press=true}
    if(sv.snd&&!ac)beep(1,.001,'sine',.0001)};
   const pmA=e=>{if(ptr[e.pointerId]!=='s'||!stk)return;const q=lp(e);ax=Math.max(-1,Math.min(1,(q.x-stk.ox)/28));if(Math.abs(ax)<.25)ax=0};
-  const puA=e=>{const k=ptr[e.pointerId];if(!k)return;delete ptr[e.pointerId];if(k==='s'){ax=0;stk=null}else down=false};
+  const puA=e=>{const k=ptr[e.pointerId];if(!k)return;delete ptr[e.pointerId];if(k==='s'){ax=0;stk=null}else if(k==='j')down=false};
   if(mode==='boss'){cv.addEventListener('pointerdown',pdA);cv.addEventListener('pointermove',pmA);cv.addEventListener('pointerup',puA);cv.addEventListener('pointercancel',puA)}
   else{cv.addEventListener('pointerdown',pd);cv.addEventListener('pointerup',pu);cv.addEventListener('pointercancel',pu);cv.addEventListener('pointerleave',pu)}
   pb.onclick=()=>pause(!paused);
-  const kd=e=>{if(mode==='boss'){if(e.code==='ArrowLeft'||e.code==='KeyA')ax=-1;else if(e.code==='ArrowRight'||e.code==='KeyD')ax=1}
+  const kd=e=>{if(mode==='boss'&&e.code==='KeyR'&&S&&!paused&&!ended)GameArena.reject(S);if(mode==='boss'){if(e.code==='ArrowLeft'||e.code==='KeyA')ax=-1;else if(e.code==='ArrowRight'||e.code==='KeyD')ax=1}
    if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();if(!e.repeat&&!paused&&!ended){down=true;press=true}}else if(e.code==='Escape')pause(!paused)};
   const ku=e=>{if(e.code==='Space'||e.code==='ArrowUp')down=false;if(mode==='boss'&&(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD'))ax=0};
   const vis=()=>{if(document.hidden)pause(true)};
