@@ -9,7 +9,7 @@ const GameArena=(()=>{
   if(!S.pl)S.pl=P.map(()=>({st:'ok',t:0}));
   P.forEach((q,i)=>{const o=S.pl[i];o.x=q[0];o.y=q[1];o.w=q[2];o.floor=i<2})}
  function create(o){
-  const S={arena:true,mode:'boss',W:o.W,H:o.H,rnd:mul(o.seed||7),t:0,over:null,ev:[],score:0,bytes:0,combo:0,hearts:3,maxHearts:3,lost:0,
+  const S={bid:o.id||1,arena:true,mode:'boss',W:o.W,H:o.H,rnd:mul(o.seed||7),t:0,over:null,ev:[],score:0,bytes:0,combo:0,hearts:3,maxHearts:3,lost:0,
    boss:{hp:100,max:100,phase:1,x:o.W/2,y:64,conf:0},p:{x:o.W*.22,y:0,vx:0,vy:0,on:false,hold:0,buf:0,coy:0,inv:0},
    tel:[],sh:[],key:null,kt:3,atk:2,aN:0,fallT:8,hab:[0,0,0],idle:0,fair:0,hits:[],pl:null};
   layout(S);const p=S.p;p.y=S.gy-E.PH;p.on=true;return S}
@@ -27,7 +27,7 @@ const GameArena=(()=>{
   let best=null,bd=1e9;S.pl.forEach(q=>{if(q.st!=='ok')return;const d=Math.abs(q.x+q.w/2-p.x)+(S.gy-q.y)*1.5;if(d<bd){bd=d;best=q}});
   best=best||S.pl[4];p.x=best.x+best.w/2;p.y=best.y-E.PH;p.vy=0;p.on=true;S.ev.push('fall')}
  const shot=(S,x,y,vx,vy,r,kind)=>{if(S.sh.length<20)S.sh.push({x,y,vx,vy,r,kind:kind||0})};
- function attack(S){
+ function kit1(S){
   const B=S.boss,f=B.phase,p=S.p,bx=B.x;S.aN++;
   if(f===1){
    S.tel.push({x:aim(S,1),t:1,k:'big'});if(S.rnd()<.35)S.tel.push({x:aim(S,1)+(S.rnd()<.5?-70:70),t:1.2,k:'big'});S.atk=1.7}
@@ -39,6 +39,29 @@ const GameArena=(()=>{
    if(S.aN%2)S.tel.push({x:bx,t:.5,k:'fan'});else S.tel.push({x:aim(S,1),t:1,k:'big'});
    if(S.idle>1.5)S.tel.push({x:p.x,t:.6,k:'fan2'});
    S.atk=2.0}}
+ /* --- глава 2: Колосс Переполнения: ряды шаров с дырой и падающие стек-блоки --- */
+ function kit2(S){
+  const f=S.boss.phase,W=S.W;S.aN++;
+  const row=()=>{const hx=aim(S,1.2);S.tel.push({x:hx,t:.9,k:'row'})};
+  if(f===1){row();S.atk=2.2}
+  else if(f===2){S.tel.push({x:aim(S,1),t:1,k:'blk'});if(S.aN%2)row();S.atk=2.2}
+  else{row();S.tel.push({x:aim(S,1),t:1,k:'blk'});S.tel.push({x:S.boss.x,t:.5,k:'fan'});S.atk=1.9}}
+ /* --- глава 3: Stale: свежие/устаревшие платформы, копии игрока с задержкой 3 с --- */
+ function kit3(S){
+  const f=S.boss.phase;S.aN++;
+  S.tel.push({x:S.boss.x,t:.6,k:'fan'});
+  if(f>=2&&S.aN%2)S.tel.push({x:aim(S,1),t:1,k:'big'});
+  if(f===3)S.tel.push({x:0,t:.7,k:'str',n:4,iv:.4,c:0});
+  S.atk=f===1?2.5:2.1}
+ /* --- глава 4: Таймаут: 7 повторов серии пакетов по рельсам, лаг-зоны --- */
+ function kit4(S){
+  const f=S.boss.phase;S.rep=S.rep||0;
+  if(S.series>0){S.series--;const rows=[S.gy-12,S.gy-112,S.gy-212],y=rows[Math.floor(S.rnd()*3)];S.tel.push({x:S.rnd()<.5?0:S.W,y,t:.8,k:'pkt'});S.atk=.55;if(S.series===0)S.atk=5;return}
+  S.rep=Math.min(7,S.rep+1);S.series=1+S.rep;S.ev.push('warn');
+  if(f>=2){const x=aim(S,1);S.lag={x:x-45,w:90,t:3,on:0}}
+  S.atk=.8}
+ const KITS={1:kit1,2:kit2,3:kit3,4:kit4};
+ function attack(S){const k=KITS[S.bid]||kit1;k(S)}
  function dropPlat(S){
   /* ИИ: давит там, где игрок проводит больше всего времени (не чаще раза за период) */
   const p=S.p,tot=S.hab[0]+S.hab[1]+S.hab[2]+.001,b=S.hab.indexOf(Math.max(...S.hab));let idx;
@@ -71,11 +94,21 @@ const GameArena=(()=>{
   /* платформы: метка → падение → возвращение */
   S.fallT-=dt;if(S.fallT<=0){dropPlat(S);S.fallT=B.phase===3?9:12}
   for(const q of S.pl){if(q.st==='warn'){q.t-=dt;if(q.t<=0){q.st='gone';q.t=3}}else if(q.st==='gone'){q.t-=dt;if(q.t<=0)q.st='ok'}}
+  /* особенности глав */
+  if(S.bid===3){
+   S.inval=(S.inval||0)-dt;if(S.inval<=0){S.inval=9;S.pl.forEach((q,i)=>{q.stale=i<4&&S.rnd()<.5});S.ev.push('warn')}
+   for(const q of S.pl)if(q.stale&&q.st==='ok'&&p.on&&p.y+PH>=q.y-1&&p.y+PH<=q.y+3&&p.x+PW/2>q.x&&p.x-PW/2<q.x+q.w){q.sc=(q.sc||0)+dt;if(q.sc>.4){q.st='gone';q.t=3;q.sc=0}}else q.sc=0;
+   S.hist=S.hist||[];S.hist.push({x:p.x,y:p.y});if(S.hist.length>180)S.hist.shift();
+   if(B.phase>=2&&S.hist.length>=180){const g=S.hist[0];S.ghost=g;if(Math.abs(g.x-p.x)<PW&&Math.abs(g.y-p.y)<PH)hit(S)}else S.ghost=null}
+  if(S.bid===4&&S.lag){const L=S.lag;L.t-=dt;if(L.t<=0)S.lag=null;else if(L.t<2.2){L.on=1;if(Math.abs(p.x-(L.x+L.w/2))<L.w/2+PW/2)p.x-=p.vx*dt*.3}}
   /* атаки: сначала предупреждение, потом снаряд */
   S.atk-=dt;if(S.atk<=0)attack(S);
   for(const a of S.tel){a.t-=dt;if(a.t>0)continue;
    if(a.k==='big'){shot(S,a.x,-10,0,140,13,1);a.dead=1}
    else if(a.k==='fan'||a.k==='fan2'){const o=a.k==='fan'?B:{x:a.x,y:0};const ang=Math.atan2(p.y-o.y,p.x-o.x);for(const d of[-.28,0,.28])shot(S,o.x,o.y,Math.cos(ang+d)*330,Math.sin(ang+d)*330,5,2);a.dead=1}
+   else if(a.k==='row'){for(let i=0;i<6;i++){const x=(i+.5)*S.W/6;if(Math.abs(x-a.x)>48)shot(S,x,-10,0,130,12,1)}a.dead=1}
+   else if(a.k==='blk'){shot(S,a.x,-30,0,300,26,1);a.dead=1}
+   else if(a.k==='pkt'){shot(S,a.x,a.y,a.x<S.W/2?360:-360,0,7,2);a.dead=1}
    else if(a.k==='str'){const x=aim(S,.8);shot(S,x,-10,0,220,7,3);a.c++;a.t=a.iv;if(a.c>=a.n)a.dead=1}}
   S.tel=S.tel.filter(a=>!a.dead);
   for(const s of S.sh){s.x+=s.vx*dt;s.y+=s.vy*dt;

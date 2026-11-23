@@ -12,7 +12,7 @@ const Game=(()=>{
  const T=s=>typeof L==='function'?L(s):s;
  /* ---------- сохранение ---------- */
  let sv=load();
- function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(11,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true}}}
+ function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true}}}
  function save(){try{localStorage.setItem(KEY,JSON.stringify(sv))}catch(e){}}
  /* ---------- звук: короткие сигналы, создаются по первому нажатию ---------- */
  let ac=null;
@@ -49,8 +49,8 @@ const Game=(()=>{
   h.append(ico,mk('h1','',T('Байт-прыгун')),mk('p','gm-tag',T('Один тап — прыжок. Держи — прыгнешь выше.')));
   const st=mk('div','gm-stats');
   [[T('Байтов собрано'),sv.b],[T('Рекорд'),sv.best]].forEach(([k,v])=>{const c=mk('div','gm-stat');c.append(mk('b','',String(v)),mk('small','',k));st.append(c)});
-  const nx=sv.u>10?11:sv.u;
-  const go=btn(T('Играть')+(nx>10?' · '+T('Босс'):' · '+T('Уровень')+' '+nx),()=>{const run=()=>start(b,nx>10?'boss':'level',nx>10?10:nx);if(sv.seen)run();else{sv.seen=true;save();GameStoryUI.read(b,GameStory.prologue,run)}},'pri');
+  const nx=sv.u,isB=nx%10===0,bid=nx/10;
+  const go=btn(T('Играть')+(isB?' · '+T('Босс'):' · '+T('Уровень')+' '+nx),()=>{const run=()=>start(b,isB?'boss':'level',nx);if(sv.seen)run();else{sv.seen=true;save();GameStoryUI.read(b,GameStory.prologue,run)}},'pri');
   const hi=btn(T('История'),()=>GameStoryUI.book(b,sv.bosses|0,()=>menu(b)));
   const gl=btn(T(sv.gl?'Помехи: вкл':'Помехи: выкл'),()=>{sv.gl=!sv.gl;save();gl.textContent=T(sv.gl?'Помехи: вкл':'Помехи: выкл')},'ghost');
   const lv=btn(T('Уровни'),()=>levels(b));
@@ -61,16 +61,20 @@ const Game=(()=>{
   b.textContent='';
   const top=mk('div','gm-lt');top.append(mk('h3','',T('Уровни')));
   const back=btn('‹',()=>menu(b),'ghost sm');back.setAttribute('aria-label',T('В меню'));top.prepend(back);
-  const g=mk('div','gm-grid');
-  for(let i=1;i<=10;i++){
-   const c=mk('button','gm-lv'+(i>sv.u?' lock':''));c.type='button';c.disabled=i>sv.u;
-   c.append(mk('b','',String(i)));
-   const s=sv.st[i]|0,row=mk('span','gm-stars');for(let k=1;k<=3;k++)row.append(mk('i',k<=s?'on':'',''));c.append(row);
-   c.onclick=()=>start(b,'level',i);g.append(c)}
-  const bo=mk('button','gm-lv gm-boss'+(sv.u<11?' lock':''));bo.type='button';bo.disabled=sv.u<11;
-  bo.append(mk('b','',T('Босс')+' «404»'),mk('small','',sv.boss?'✓':(sv.u<11?T('Босс «Ошибка 404» откроется после 10-го уровня'):T('Собирай зелёные «фиксы», уворачивайся от багов'))));
-  bo.onclick=()=>start(b,'boss',10);
-  b.append(top,g,bo)}
+  b.append(top);
+  GameStory.chapters.forEach(ch=>{
+   const first=(ch.n-1)*10+1;
+   if(first>sv.u){const d=mk('div','gm-bk lock');d.append(mk('b','',ch.n+'. '+ch.name),mk('small','','Закрыто'));b.append(d);return}
+   b.append(mk('h4','gm-sec',ch.n+'. '+ch.name));
+   const g=mk('div','gm-grid');
+   for(let i=first;i<first+10;i++){
+    const isB=i%10===0,lk=i>sv.u;
+    const c=mk('button','gm-lv'+(isB?' gm-boss':'')+(lk?' lock':''));c.type='button';c.disabled=lk;
+    c.append(mk('b','',isB?T('Босс'):String(i)));
+    if(isB)c.append(mk('small','',(sv.bosses|0)>=ch.n?'✓':ch.boss.name));
+    else{const st=sv.st[i]|0,row=mk('span','gm-stars');for(let k=1;k<=3;k++)row.append(mk('i',k<=st?'on':'',''));c.append(row)}
+    c.onclick=()=>start(b,isB?'boss':'level',i);g.append(c)}
+   b.append(g)})}
  /* ---------- игра ---------- */
  function start(b,mode,Lv){
   if(!cur)return;
@@ -90,12 +94,12 @@ const Game=(()=>{
    return{W,H}}
   cur._S=()=>S;
   function reset(){
-   closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,seed:(Date.now()&0xffff)||7}):E.create({mode,L:Lv,W:z.W,H:z.H});ax=0;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
+   closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,id:Lv/10,seed:(Date.now()&0xffff)||7}):E.create({mode,L:Lv,W:z.W,H:z.H});ax=0;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
    if(mode==='boss'&&!introOn){introOn=true;paused=true;intro()}
    if(!raf)raf=requestAnimationFrame(loop)}
   /* анимация появления босса: затемнение, помехи, имя и короткий контекст; тап/кнопка «К бою» */
   function intro(){
-   const B=GameStory.bosses[0],C=GameStory.chapters[0];
+   const B=GameStory.bosses[S.bid-1],C=GameStory.chapters[S.bid-1];
    overlay(B.name,[B.code?'«'+B.code+'»':'',B.look.charAt(0).toUpperCase()+B.look.slice(1).replace(/\.$/,'')+'.',C.plot],[btn('К бою',()=>{closeOv();paused=false;last=0},'pri')]);
    ov.classList.add('gm-intro')}
   function closeOv(){if(ov){ov.remove();ov=null}}
@@ -110,21 +114,21 @@ const Game=(()=>{
   function finish(){
    ended=true;const win=S.over==='win',stars=E.stars(S);
    sv.b+=S.bytes;
-   if(mode==='level'&&win){sv.u=Math.max(sv.u,Math.min(11,Lv+1));sv.st[Lv]=Math.max(sv.st[Lv]|0,stars)}
-   if(mode==='boss'&&win){sv.boss=true;sv.bosses=Math.max(sv.bosses|0,1)}
+   if(mode==='level'&&win){sv.u=Math.max(sv.u,Math.min(100,Lv+1));sv.st[Lv]=Math.max(sv.st[Lv]|0,stars)}
+   if(mode==='boss'&&win){sv.boss=true;sv.bosses=Math.max(sv.bosses|0,Lv/10);sv.u=Math.max(sv.u,Math.min(100,Lv+1))}
    if(mode==='endless')sv.best=Math.max(sv.best,S.score);
    save();
    const lines=[T('Очки')+': '+S.score,T('Байты')+': '+S.bytes];
    if(mode!=='boss')lines.push(T('Путь')+': '+E.dist(S)+' м');
    if(mode==='endless')lines.push(T('Рекорд')+': '+sv.best);
    const bs=[];
-   if(win&&mode==='level'&&Lv<10)bs.push(btn(T('Дальше'),()=>start(b,'level',Lv+1),'pri'));
-   if(win&&mode==='level'&&Lv===10)bs.push(btn(T('Босс')+' «404»',()=>start(b,'boss',10),'pri'));
+   if(win&&mode==='level'&&Lv<100)bs.push(btn(Lv%10===9?T('Босс'):T('Дальше'),()=>start(b,Lv%10===9?'boss':'level',Lv+1),'pri'));
+   if(win&&mode==='boss'&&Lv<100)bs.push(btn(T('Дальше'),()=>start(b,'level',Lv+1),'pri'));
    bs.push(btn(T('Ещё раз'),reset,win?'':'pri'));
    if(mode==='level'||mode==='boss')bs.push(btn(T('К уровням'),()=>{stop();levels(b)},'ghost'));
    else bs.push(btn(T('В меню'),()=>{stop();cur._inPlay=false;menu(b)},'ghost'));
-   if(win&&mode==='boss')lines.push(GameStory.bosses[0].scene);
-   if(win&&mode==='level'&&Lv===10)lines.push('Дверь открыта. Впереди Потерянный Страж: «Ошибка 404».');
+   if(win&&mode==='boss')lines.push(GameStory.bosses[Lv/10-1].scene);
+   if(win&&mode==='level'&&Lv%10===9)lines.push('Дверь открыта. Впереди босс: '+GameStory.bosses[Math.floor(Lv/10)].name+'.');
    setTimeout(()=>{if(gone)return;overlay(win?(mode==='boss'?T('Босс побеждён!'):T('Уровень пройден!')):T('Баг победил'),lines.concat(win&&mode==='level'?['★'.repeat(stars)+'☆'.repeat(3-stars)]:[]),bs)},450)}
   function loop(ts){
    raf=0;if(gone)return;
@@ -138,31 +142,45 @@ const Game=(()=>{
    draw();
    raf=requestAnimationFrame(loop)}
   /* ---------- рисование ---------- */
+  const BGC=['#0b1018','#120f24','#0b1e1e','#0a1424','#1f180a','#1f1410','#05050a','#08140a','#0a1030','#000000'];
   function drawArena(){
    const W=S.W,H=S.H,gy=S.gy,t=S.t,B=S.boss;
    ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
-   ctx.fillStyle='#0b1018';ctx.fillRect(0,0,W,H);
+   ctx.fillStyle=BGC[Math.min(9,S.bid-1)];ctx.fillRect(0,0,W,H);
    /* фон: туман и падающие строки «File not found» */
    ctx.fillStyle='#16202e';for(let i=0;i<5;i++)ctx.fillRect(((i*83)%W)-10,gy-120-(i*37)%90,26+(i*19)%20,gy);
    ctx.font='600 10px monospace';ctx.fillStyle=col.tx2;ctx.textAlign='left';
    for(let i=0;i<7;i++){ctx.globalAlpha=.16;ctx.fillText('File not found',(i*61)%(W-70),((t*40+i*83)%(H+20))-10)}ctx.globalAlpha=1;
    /* платформы */
    S.pl.forEach(q=>{if(q.st==='gone')return;const warn=q.st==='warn',sh=warn&&Math.sin(t*30)>0?2:0;
-    ctx.fillStyle=col.s2;ctx.fillRect(q.x+sh,q.y,q.w,q.floor?H-q.y:10);ctx.fillStyle=warn?col.err:col.tx2;ctx.fillRect(q.x+sh,q.y,q.w,3);
+    ctx.fillStyle=col.s2;ctx.fillRect(q.x+sh,q.y,q.w,q.floor?H-q.y:10);ctx.fillStyle=warn?col.err:q.stale?'#777':S.bid===3?'#4cc9c0':col.tx2;ctx.fillRect(q.x+sh,q.y,q.w,3);
     if(warn){ctx.globalAlpha=.5;ctx.fillStyle=col.err;for(let x=q.x;x<q.x+q.w;x+=14)ctx.fillRect(x+sh,q.y-8,7,5);ctx.globalAlpha=1}});
+   if(S.lag){const L=S.lag;ctx.globalAlpha=L.on?.28:.12+.1*Math.sin(t*12);ctx.fillStyle='#8aa4c8';ctx.fillRect(L.x,0,L.w,H);ctx.globalAlpha=1}
+   if(S.ghost){ctx.globalAlpha=.45;ctx.fillStyle=col.err;ctx.fillRect(S.ghost.x-12,S.ghost.y,24,E.PH);ctx.globalAlpha=1}
    /* метки будущих снарядов */
    S.tel.forEach(a=>{ctx.globalAlpha=.4+.4*Math.abs(Math.sin(t*14));ctx.fillStyle=col.err;
-    if(a.k==='big'||a.k==='fan2'){ctx.fillRect(a.x-2,0,4,H*.5);ctx.fillRect(a.x-9,0,18,6)}else if(a.k==='fan'){ctx.fillRect(B.x-9,B.y+34,18,5)}ctx.globalAlpha=1});
+    if(a.k==='row'){for(let i=0;i<6;i++){const x=(i+.5)*W/6;if(Math.abs(x-a.x)>48)ctx.fillRect(x-6,0,12,5)}}else if(a.k==='blk'){ctx.fillRect(a.x-26,0,52,H*.5)}else if(a.k==='pkt'){ctx.fillRect(a.x<W/2?0:W-14,a.y-6,14,12)}else if(a.k==='big'||a.k==='fan2'){ctx.fillRect(a.x-2,0,4,H*.5);ctx.fillRect(a.x-9,0,18,6)}else if(a.k==='fan'){ctx.fillRect(B.x-9,B.y+34,18,5)}ctx.globalAlpha=1});
    /* снаряды: обломки табличек, красные очереди, мелкие осколки */
    S.sh.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);if(q.kind===1){ctx.rotate(t*3);ctx.fillStyle=col.tx2;ctx.fillRect(-q.r,-q.r*.7,q.r*2,q.r*1.4);ctx.fillStyle=col.err;ctx.fillRect(-3,-3,6,6)}else{ctx.fillStyle=col.err;ctx.beginPath();ctx.arc(0,0,q.r,0,7);ctx.fill()}ctx.restore()});
    /* босс: ржавая арка-дверь на двух ногах, красное око, пустая рамка на груди */
-   {const j=B.phase>1&&Math.sin(t*37)>.92?2:0,x=B.x+j,y=B.y;ctx.save();ctx.translate(x,y);
-    ctx.fillStyle='#6b4a2e';ctx.fillRect(-34,-14,68,58);ctx.beginPath();ctx.arc(0,-14,34,Math.PI,0);ctx.fill();
-    ctx.fillStyle='#0b1018';ctx.fillRect(-24,0,48,44);ctx.beginPath();ctx.arc(0,0,24,Math.PI,0);ctx.fill();
-    ctx.strokeStyle=col.tx2;ctx.lineWidth=2;ctx.strokeRect(-14,12,28,22);
-    ctx.fillStyle=B.conf?col.tx:col.err;ctx.beginPath();ctx.arc(0,-22,7,0,7);ctx.fill();
-    if(B.conf){ctx.fillStyle=col.tx;ctx.font='700 10px monospace';ctx.textAlign='center';ctx.fillText('404',0,-40)}
-    ctx.fillStyle='#4a3320';ctx.fillRect(-26,44,10,14+Math.sin(t*3)*3);ctx.fillRect(16,44,10,14-Math.sin(t*3)*3);ctx.restore()}
+   {const j=B.phase>1&&Math.sin(t*37)>.92?2:0,x=B.x+j,y=B.y,id=S.bid,eye=B.conf?col.tx:col.err;ctx.save();ctx.translate(x,y);
+    if(id===1){ctx.fillStyle='#6b4a2e';ctx.fillRect(-34,-14,68,58);ctx.beginPath();ctx.arc(0,-14,34,Math.PI,0);ctx.fill();
+     ctx.fillStyle=BGC[0];ctx.fillRect(-24,0,48,44);ctx.beginPath();ctx.arc(0,0,24,Math.PI,0);ctx.fill();
+     ctx.strokeStyle=col.tx2;ctx.lineWidth=2;ctx.strokeRect(-14,12,28,22);
+     ctx.fillStyle=eye;ctx.beginPath();ctx.arc(0,-22,7,0,7);ctx.fill();
+     ctx.fillStyle='#4a3320';ctx.fillRect(-26,44,10,14+Math.sin(t*3)*3);ctx.fillRect(16,44,10,14-Math.sin(t*3)*3)}
+    else if(id===2){/* Колосс: стопка окон-блоков, на лице окно «Подождите» */
+     for(let i=0;i<4;i++){ctx.fillStyle=i%2?'#3a2f6b':'#2c2352';ctx.fillRect(-38+i*4,-30+i*18,76-i*8,16);ctx.fillStyle='#8e7cf0';ctx.fillRect(-38+i*4,-30+i*18,76-i*8,3)}
+     ctx.fillStyle='#0b0a18';ctx.fillRect(-18,-6,36,20);ctx.strokeStyle='#8e7cf0';ctx.strokeRect(-18,-6,36,20);ctx.fillStyle=eye;ctx.fillRect(-8+Math.sin(t*5)*6,2,6,3)}
+    else if(id===3){/* Хозяин кэша: высокий силуэт из миниатюр */
+     ctx.fillStyle='#1b3a3a';ctx.fillRect(-22,-34,44,80);for(let i=0;i<6;i++){ctx.fillStyle=i%2?'#2e6b6b':'#4cc9c0';ctx.globalAlpha=.5;ctx.fillRect(-20+(i%2)*20,-32+i*13,18,11)}ctx.globalAlpha=1;
+     ctx.fillStyle='#0b1c1c';ctx.fillRect(-12,-28,24,18);ctx.fillStyle=eye;ctx.fillRect(-7,-21,14,3)}
+    else{/* Таймаут и дальше: медуза из кабелей с мигающим индикатором */
+     ctx.fillStyle='#24405a';ctx.beginPath();ctx.arc(0,0,36,Math.PI,0);ctx.fill();ctx.fillRect(-36,0,72,6);
+     ctx.strokeStyle='#4c86c8';ctx.lineWidth=3;for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(i*10,6);ctx.quadraticCurveTo(i*10+Math.sin(t*3+i)*9,26,i*10+Math.sin(t*2+i)*6,44);ctx.stroke()}
+     ctx.fillStyle=eye;ctx.globalAlpha=Math.sin(t*6)>0?1:.3;ctx.beginPath();ctx.arc(0,-8,7,0,7);ctx.fill();ctx.globalAlpha=1}
+    if(B.conf){ctx.fillStyle=col.tx;ctx.font='700 10px monospace';ctx.textAlign='center';ctx.fillText('404',0,-42)}
+    ctx.restore()}
    /* ключ: осколок таблички */
    if(S.key){const k=S.key,y=k.y+Math.sin(t*4)*3;ctx.save();ctx.translate(k.x,y);ctx.globalAlpha=k.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#34C759';ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(12,-13);ctx.lineTo(9,11);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.fillStyle='#0b1018';ctx.fillRect(-6,-1,12,3);ctx.restore()}
    /* игрок */
@@ -171,7 +189,7 @@ const Game=(()=>{
     ctx.fillStyle='#0b1018';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();ctx.restore()}}
    /* HUD: полоса босса, сердца, управление */
    ctx.fillStyle=col.line;ctx.fillRect(W*.2,10,W*.6,8);ctx.fillStyle=col.err;ctx.fillRect(W*.2,10,W*.6*(B.hp/B.max),8);
-   ctx.textAlign='center';ctx.fillStyle=col.tx2;ctx.font='600 11px '+col.font;ctx.fillText(GameStory.bosses[0].name,W/2,34);
+   ctx.textAlign='center';ctx.fillStyle=col.tx2;ctx.font='600 11px '+col.font;ctx.fillText(GameStory.bosses[S.bid-1].name,W/2,34);
    for(let i=0;i<S.maxHearts;i++){ctx.fillStyle=i<S.hearts?col.err:col.line;ctx.fillRect(14+i*16,44,11,11)}
    ctx.textAlign='left';ctx.fillStyle=col.tx;ctx.font='700 14px '+col.font;ctx.fillText(String(S.score),14,36);
    const bx=stk?stk.ox:62,by=stk?stk.oy:H-62;ctx.strokeStyle=col.tx2;ctx.lineWidth=2;ctx.globalAlpha=stk?.9:.35;
@@ -235,7 +253,7 @@ const Game=(()=>{
    const topY=18;
    ctx.fillText(String(S.score),14,topY+12);
    ctx.fillStyle=col.tx2;ctx.font='600 12px '+col.font;
-   ctx.fillText(mode==='boss'?T('Босс')+' «404»':mode==='endless'?T('Бесконечный режим'):T('Уровень')+' '+Lv,14,topY+30);
+   ctx.fillText(mode==='boss'?T('Босс'):mode==='endless'?T('Бесконечный режим'):T('Уровень')+' '+Lv,14,topY+30);
    ctx.fillText('◆ '+S.bytes,14,topY+46);
    if(S.combo>=10){ctx.fillStyle=col.tx;ctx.font='700 13px '+col.font;ctx.fillText('x2',14,topY+64)}
    if(mode==='level'){const f=Math.min(1,S.x/S.target);ctx.fillStyle=col.line;ctx.fillRect(0,0,W,4);ctx.fillStyle=col.tx;ctx.fillRect(0,0,W*f,4)}

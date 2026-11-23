@@ -33,7 +33,7 @@ with sync_playwright() as p:
     check('глава 2 закрыта до победы над боссом 1', pg.evaluate("[...document.querySelectorAll('.gm-bk.lock b')].some(b=>b.textContent.startsWith('2. Стек'))"))
     check('пролог больше не показывается второй раз', pg.evaluate("JSON.parse(localStorage.getItem('kairema.game.v1')).seen") is True)
     # --- бой с боссом: анимация появления, джойстик, арена ---
-    pg.evaluate("localStorage.setItem('kairema.game.v1',JSON.stringify({u:11,st:{},b:0,best:0,boss:false,snd:0,bosses:0,seen:true,gl:true}))")
+    pg.evaluate("localStorage.setItem('kairema.game.v1',JSON.stringify({u:10,st:{},b:0,best:0,boss:false,snd:0,bosses:0,seen:true,gl:true}))")
     pg.reload(); pg.wait_for_timeout(900)
     pg.evaluate("[...document.querySelectorAll('.gm-b button')].find(x=>x.textContent.startsWith('Играть')).click()"); pg.wait_for_timeout(800)
     check('босс: показана анимация появления с именем', pg.evaluate("!!document.querySelector('.gm-intro')") and 'Потерянный Страж' in pg.evaluate("document.querySelector('.gm-intro h3').textContent"))

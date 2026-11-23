@@ -12,13 +12,16 @@ const GameEngine=(()=>{
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
  /* сложность d от 0 (уровень 1) до 1 (уровень 10): растёт плавно, размер героя, высота прыжка и управление не меняются */
  const prm=d=>({v0:200+126*d,vmax:270+126*d,acc:.012,bug:.3+.35*d,pit:d<.05?0:.18+.3*d,mov:d>.5?.6*(d-.5):0,gap:80+130*d,two:d>.3?.35:0,pow:.25});
- const target=L=>6000+900*(L-1);
+ /* 100 уровней = 10 глав по 10 (10-й уровень главы = босс). Сложность d растёт по всей игре (0..1),
+    в 1-м уровне главы чуть легче, в 9-м чётных глав передышка. Подробности: docs/BOSSES.md */
+ const levelD=L=>{const c=Math.ceil(L/10),k=((L-1)%10)+1,i=(c-1)*9+Math.min(k,9)-1;let d=i/89;if(k===1)d-=.05;if(k===9&&c%2===0)d-=.12;return clamp(d,0,1)};
+ const target=L=>6000+Math.round(9000*levelD(L));
  function create(o){
   const S={mode:o.mode||'level',L:o.L||1,W:o.W||360,H:o.H||640,rnd:mul(o.seed==null?(Math.random()*1e9)|0:o.seed),
    x:0,speed:0,t:0,items:[],pits:[],genX:420,rest:0,score:0,bytes:0,spawned:0,combo:0,usedShield:false,ev:[],over:null,
    hearts:0,maxHearts:0,lost:0,boss:null,seg:0,last:'flat'};
   S.hearts=S.maxHearts=S.mode==='level'?5:3;
-  S.gy=S.H*GY;S.d=S.mode==='endless'?.25:(S.L-1)/9;S.P=prm(S.d);
+  S.gy=S.H*GY;S.d=S.mode==='endless'?.25:levelD(S.L);S.P=prm(S.d);
   S.p={y:S.gy-PH,vy:0,on:true,hold:0,buf:0,coy:.1,sh:false,mag:0,inv:0};
   if(S.mode==='boss')S.boss={hp:100,max:100,phase:1,atk:2.2,zone:7,fix:1.6,bob:0};
   else for(let i=0;i<5;i++)byte(S,200+i*40,0);
@@ -131,4 +134,4 @@ const GameEngine=(()=>{
 }
  const stars=S=>{if(S.over!=='win'||S.mode!=='level')return S.over==='win'?3:0;const pc=S.bytes/Math.max(1,S.spawned);return 1+(pc>=.7?1:0)+(pc>=.9&&S.lost<=1?1:0)};
  const dist=S=>Math.floor(S.x/10);
- return{create,step,stars,dist,target,prm,PX,PW,PH,GY,G,JV,HMAX,HG,solid,inPit}})();
+ return{create,step,stars,dist,target,prm,levelD,PX,PW,PH,GY,G,JV,HMAX,HG,solid,inPit}})();

@@ -35,4 +35,20 @@ for(let i=0;i<40;i++)CO.tick(40);c('ядро снижает качество п�
 {const S=AR.create({W:360,H:520,seed:3});S.p.x=S.W*.5;S.p.y=S.gy;S.p.on=false;for(let i=0;i<300&&S.lost===0;i++)AR.step(S,.016,{ax:0});c('арена: падение в щель = минус сердце и возврат на платформу',S.lost===1&&S.p.y<S.H&&S.hearts===2)}
 {const S=AR.create({W:360,H:520,seed:5});S.hearts=999;let top=0;for(let f=0;f<60*30;f++){AR.step(S,1/60,{ax:0});if(S.key&&S.key.y<S.gy-150)top++}c('арена: ключ появляется на самой высокой платформе',top>0)}
 {const S=AR.create({W:360,H:520,seed:5});S.p.on=true;S.p.y=S.gy-GE.PH;S.p.x=60;let mn=1e9;AR.step(S,.016,{ax:0,pressed:true,down:false});for(let i=0;i<60;i++){AR.step(S,.016,{ax:0});mn=Math.min(mn,S.p.y)}c('арена: тап = малый прыжок 55–80 px',S.gy-GE.PH-mn>55&&S.gy-GE.PH-mn<80)}
+
+/* ---- 100 уровней ---- */
+{let ok2=true,prev=-1;for(let c=1;c<=10;c++){const a=GE.levelD((c-1)*10+2),b=GE.levelD((c-1)*10+8);if(!(b>a))ok2=false;if(c>1&&GE.levelD((c-1)*10+8)<=GE.levelD((c-2)*10+8))ok2=false}
+ c('сложность растёт от главы к главе',ok2);
+ c('уровень 1 легче 99, длина 6000..15000',GE.levelD(1)<GE.levelD(99)&&GE.target(1)<=6100&&GE.target(99)<=15000&&GE.target(99)>12000);
+ const P=GE.prm(GE.levelD(99));c('скорость ≤ 420, яма ≤ 0,8 дальности большого прыжка',P.vmax<=420&&P.gap<=.8*304);
+ for(const L of [15,34,59,79,99]){const S=play(L,11);c('бот проходит уровень '+L+' ('+S.over+', потеряно '+S.lost+')',S.over==='win')}}
+
+/* ---- боссы глав 2–4: победимы, атаки с предупреждением, без аварий ---- */
+for(const id of [2,3,4]){const S=AR.create({W:360,H:520,seed:id,id});let tel=0,kinds={},seenPh={};S.hearts=999;
+ for(let f=0;f<60*260&&!S.over;f++){const k=S.key;if(k&&S.t>1){S.p.x=k.x;S.p.y=k.y-GE.PH/2}
+  AR.step(S,1/60,{ax:0});seenPh[S.boss.phase]=1;S.tel.forEach(a=>{kinds[a.k]=1});tel+=S.tel.length?1:0;S.ev.length=0;if(S.sh.length>20)throw new Error('снарядов больше 20')}
+ c('босс '+id+': победа ('+S.over+', t='+Math.round(S.t)+'), 3 фазы',S.over==='win'&&seenPh[1]&&seenPh[2]&&seenPh[3]);
+ c('босс '+id+': свои атаки '+Object.keys(kinds).join(','),(id===2?kinds.row&&kinds.blk:id===3?kinds.fan:kinds.pkt)&&tel>0)}
+{const S=AR.create({W:360,H:520,seed:1,id:4});S.hearts=999;let reps=0;for(let f=0;f<60*200;f++){AR.step(S,1/60,{ax:0});reps=Math.max(reps,S.rep||0);S.ev.length=0}c('Таймаут: до 7 повторов серии ('+reps+')',reps===7)}
+{const S=AR.create({W:360,H:520,seed:1,id:3});S.hearts=999;S.boss.hp=60;let st=false;for(let f=0;f<60*30;f++){AR.step(S,1/60,{ax:0});if(S.pl.some(q=>q.stale))st=true;S.ev.length=0}c('Stale: есть устаревшие платформы',st)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}
