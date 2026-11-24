@@ -27,6 +27,7 @@ const GameArena=(()=>{
   let best=null,bd=1e9;S.pl.forEach(q=>{if(q.st!=='ok')return;const d=Math.abs(q.x+q.w/2-p.x)+(S.gy-q.y)*1.5;if(d<bd){bd=d;best=q}});
   best=best||S.pl[4];p.x=best.x+best.w/2;p.y=best.y-E.PH;p.vy=0;p.on=true;S.ev.push('fall')}
  const shot=(S,x,y,vx,vy,r,kind)=>{if(S.sh.length<20)S.sh.push({x,y,vx,vy,r,kind:kind||0})};
+ /* --- глава 1: Потерянный Страж: медленные обломки, очереди, веера, «растерянность» 404 --- */
  function kit1(S){
   const B=S.boss,f=B.phase,p=S.p,bx=B.x;S.aN++;
   if(f===1){
@@ -65,6 +66,7 @@ const GameArena=(()=>{
  function nearPl(S,x){const p=S.p;let best=null,bd=1e9;S.pl.forEach(q=>{if(q.st!=='ok')return;const d=Math.abs(q.x+q.w/2-x)+Math.abs(q.y-(p.y+E.PH))*1.5;if(d<bd){bd=d;best=q}});return best}
  /* --- глава 5: Монарх Лимита: монеты-очереди, стеклянные стены-ценники, баланс токенов --- */
  function wallTel(S){if(S.walls.length+S.tel.filter(a=>a.k==='wall').length>=3)return;const x=aim(S,1),q=nearPl(S,x);if(q)S.tel.push({x:clamp(x,q.x+10,q.x+q.w-10),y:q.y,t:1,k:'wall'})}
+ /* --- глава 5: Монарх Лимита: монеты, стеклянные стены-ценники, баланс токенов --- */
  function kit5(S){const f=S.boss.phase,rich=S.wb>=2;S.aN++;S.tok-=f===3?16:10;
   if(S.tok<=0){S.tok=35;S.slow=5;S.ev.push('warn')}
   const coins=(n,iv)=>S.tel.push({x:0,t:.8,k:'str',n,iv,v:200,kind:4,c:0});
@@ -77,6 +79,7 @@ const GameArena=(()=>{
  function erase(S){const p=S.p;let best=null,bd=1e9;S.pl.forEach((q,i)=>{if(q.st!=='ok'||(i<2&&S.pl[1-i].st!=='ok'))return;const d=Math.abs(q.x+q.w/2-p.x)+Math.abs(q.y-(p.y+E.PH))*1.5;if(d<bd){bd=d;best=q}});if(best){best.st='warn';best.t=.8;S.ev.push('warn')}}
  function reject(S){if(!S||S.over)return;const l=S.wins.filter(w=>w.d<=0).sort((a,b)=>(b.real-a.real)||a.t-b.t);if(!l.length)return;const w=l[0];S.wins=S.wins.filter(x=>x!==w);
   if(w.real){S.chg++;S.rj.push(w.max-w.t);if(S.rj.length>8)S.rj.shift();S.ev.push('shield');if(S.chg%5===0)dmg(S)}}
+ /* --- глава 6: Стиратель Реестра: окна «Отклонить» (кнопка), ложные окна, заряд --- */
  function kit6(S){const f=S.boss.phase,r=S.rj,fast=r.length>=3&&r.slice(-3).reduce((a,b)=>a+b,0)/3<WLIM(f)*.45;S.aN++;
   const n=f===3?2+S.aN%2:1;for(let i=0;i<n;i++)addWin(S,1,i*.45);
   if(fast)addWin(S,0,.3);
@@ -85,6 +88,7 @@ const GameArena=(()=>{
   S.atk=f===2?3:3.4}
  /* --- глава 7: Тень: Эхо (копия с задержкой 0,5 с), Подмена (гравитация), Тьма (порядок тёмных байтов) --- */
  function newSeq(S){const o=[0,1,2];for(let i=2;i>0;i--){const j=Math.floor(S.rnd()*(i+1));[o[i],o[j]]=[o[j],o[i]]}S.seq={n:[2,3,4].map(i=>{const q=S.pl[i];return{x:q.x+q.w/2,y:q.y-14}}),ord:o,got:0,lit:-1,last:-1}}
+ /* --- глава 7: Тень: эхо-след, переворот гравитации, «Тьма» с тремя байтами по порядку --- */
  function kit7(S){const f=S.boss.phase,p=S.p;S.aN++;
   if(S.flip>0||S.fw>0){S.tel.push({x:aim(S,1),t:1,k:'up'});S.atk=2.2;return}
   S.tel.push({x:S.boss.x,t:f===1?.7:.6,k:'fan'});

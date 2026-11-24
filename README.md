@@ -4,7 +4,7 @@
 
 Игра родилась внутри приложения **Kairema** (`features/game`). Здесь она живёт отдельно, пока её доделывают. Когда будет готова, папку `features/game` копируют обратно в Kairema (см. `docs/RETURN_TO_KAIREMA.md`).
 
-Текущая версия: 0.8.1
+Текущая версия: 0.8.2
 
 ## Устройство
 
@@ -37,3 +37,7 @@ app/src/main/java/com/bytejumper/app/MainActivity.kt   оболочка: WebView
 - Игру правим только в `features/game/`. Заглушку `shim/` трогаем, только если игре понадобилась новая функция ядра (тогда её же нужно проверить в Kairema).
 - Версия в двух местах: `app/build.gradle.kts` (`versionName`, `versionCode`) и строка «Текущая версия» в этом файле. Запись в `docs/CHANGELOG.md`.
 - Тест в браузере: `python3 -I docs/tests/standalone.test.py` (нужны Python и Playwright с Chromium).
+
+
+## Для Клаудов
+Начни с `docs/CLAUDE_GUIDE.md`, затем `docs/MAP.md` (карта кода). После правок: `python3 docs/tools/make_map.py`.
