@@ -42,6 +42,15 @@ for(const W of [360,412]){const S=GE.create({mode:'level',L:2,seed:1,W,H:640});S
 {let okg=true;for(const L of LV){const S=GE.create({mode:'level',L,seed:1,W:360,H:640});for(const g of S.items.filter(i=>i.t==='gate')){let t=0,xx=0;const P=S.P,x=g.x-S.px;while(xx<x){const v=Math.min(P.v0+P.acc*xx,P.vmax);xx+=5;t+=5/v}
    const cyc=(t+g.ph)%g.per;const edge=Math.min(Math.abs(cyc-g.open),Math.abs(cyc),Math.abs(cyc-g.per));if(edge<.5)okg=false}}
  c('ворота: к приходу игрока состояние не меняется ±0,5 с',okg)}
+/* «неточный игрок»: тап у края с ошибкой по месту, цепочки платформ проходятся при любой ошибке в диапазоне */
+{let all=true,fails=[];for(const L of LV){const S0=GE.create({mode:'level',L,seed:1,W:360,H:640});
+  for(const pit of S0.pits.filter(p=>p.retry))for(const e1 of [0,12,26,40])for(const e2 of [6,20,34,48]){
+   const S=GE.create({mode:'level',L,seed:1,W:360,H:640});S.items=S.items.filter(i=>i.t==='door');S.x=pit.a-200;let t=0,xx=0;const P=S.P;while(xx<pit.a-200){const v=Math.min(P.v0+P.acc*xx,P.vmax);xx+=5;t+=5/v}S.t=t;
+   let n=0;while(n<900&&!S.over&&S.lost===0&&S.x+S.px<pit.b+60){const pw=S.x+S.px;let pr=false;
+    if(S.p.on){if(S.p.stand){if(pw>=S.p.stand.cx+S.p.stand.w-e2)pr=true}else if(pw>=pit.a-e1&&pw<pit.b)pr=true}
+    GE.step(S,1/60,{pressed:pr,down:false});n++}
+   if(S.lost>0){all=false;if(fails.length<5)fails.push(L+'@'+Math.round(pit.a)+' e1='+e1+' e2='+e2)}}}
+ c('цепочки платформ проходятся при ошибке прыжка ±30 px ('+(fails.join('; ')||'все')+')',all)}
 /* бот проходит все уровни без урона, на двух ширинах экрана */
 for(const W of [360,412]){const t0=Date.now();const bads=[];for(const L of LV){const S=B.run(L,1,{W});if(S.over!=='win'||S.lost>0)bads.push(L+':'+S.over+'/'+S.lost)}
  c('бот проходит 27 уровней без урона, W='+W+' ('+(bads.join(' ')||'все')+', '+Math.round((Date.now()-t0)/1000)+' с)',!bads.length)}

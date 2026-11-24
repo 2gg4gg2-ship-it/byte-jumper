@@ -103,23 +103,23 @@ const GameLevels=(()=>{
    p(g){g=g||80;const a=c+120;pits.push({a,b:a+g});arc(a+g/2,g+30,5,20,70+g*.3);c+=g+280},
    /* цепочка платформ над ямой: kind st/fall/mv/lift/blink/rise/fk или список F+S+F (свежая/устаревшая) */
    c(kind,n,w,gap,hs){
-    n=n|0||3;w=w||80;gap=gap==null?60:+gap;const H=String(hs==null?30:hs).split('-').map(Number),ks=String(kind).split('+'),N=ks.length>1?ks.length:n;
+    n=n|0||3;w=Math.max(110,w||110);gap=Math.min(34,gap==null?34:+gap);const H=String(hs==null?30:hs).split('-').map(n=>Math.round(Math.min(28,14+Math.max(0,n-26)*.3))),ks=String(kind).split('+'),N=ks.length>1?ks.length:n;
     const a=c+130;let x=a+gap;
     for(let i=0;i<N;i++){
      const k=ks.length>1?ks[i]:String(kind);let ww=w,h=H[i%H.length],q;
-     if(k==='S')ww=Math.round(w*1.4);
+     if(k==='S')ww=Math.round(w*1.3);
      const tc=tA(x+ww/2);
-     if(k==='fall')q=plat(x,ww,h,'fall');
+     if(k==='fall')q=plat(x,ww,h,'fall',{dl:.8});
      else if(k==='F')q=plat(x,ww,h,'st',{tone:'fresh'});
-     else if(k==='S')q=plat(x,ww,h,'fall',{dl:.38,tone:'stale'});
-     else if(k==='mv')q=plat(x,ww,h,'mv',{amp:26,sp:1.5,ph:-1.5*tc});
-     else if(k==='lift'){h=44;q=plat(x,ww,h,'lift',{amp:26,sp:1.5,ph:-1.5*tc})}
-     else if(k==='blink')q=plat(x,ww,h,'blink',{per:2.8,on:1.9,ph:mod(.95-tc,2.8)});
+     else if(k==='S')q=plat(x,ww,h,'fall',{dl:.6,tone:'stale'});
+     else if(k==='mv')q=plat(x,ww,h,'mv',{amp:14,sp:1.3,ph:-1.3*tc});
+     else if(k==='lift'){h=30;q=plat(x,ww,h,'lift',{amp:14,sp:1.3,ph:-1.3*tc})}
+     else if(k==='blink')q=plat(x,ww,h,'blink',{per:3,on:2.5,ph:mod(1.25-tc,3)});
      else if(k==='rise')q=plat(x,ww,h,'st',{rise:1});
      else q=plat(x,ww,h,'st');
      byte(x+ww/2,h+36);
      x+=ww;
-     if(k==='fk'){plat(x,44,h,'fake');x+=44}
+     if(k==='fk'){plat(x,30,h,'fake');x+=30}
      x+=gap}
     pits.push({a,b:x,retry:true});c=x+140},
    /* ступени над землёй: подъём и спуск, необязательный верхний путь; sb — под ними баг */
@@ -135,7 +135,7 @@ const GameLevels=(()=>{
    v(pat){const a=VP[pat]||VP.a;for(const q of a)it.push({t:'proj',x:c+120+q[0],at:c+120+q[0],h:q[1],sp:150,vx:0});row(c+60,c+120+a[a.length-1][0]+300,3,0);c+=120+a[a.length-1][0]+420},
    /* прыгуны: u — к твоему приходу в воздухе (иди под ним), d — на земле (перепрыгни) */
    h(modes,n){modes=String(modes||'u');n=n|0||modes.length;const per=1.1,amp=62;
-    for(let i=0;i<n;i++){const d=modes[i%modes.length]==='d',x=c+150+i*210;it.push({t:'hop',x,h:0,amp:d?52:amp,per,ph:mod((d?0:per/2)-tA(x),per)});if(i<n-1)row(x+70,x+140,2,0)}
+    for(let i=0;i<n;i++){const x=c+150+i*210;it.push({t:'hop',x,h:0,amp:72,per,ph:mod(per/2-tA(x),per)});if(i<n-1)row(x+70,x+140,2,0)}
     c+=150+n*210+100},
    L(){const x=c+170;it.push({t:'lost',x,h:0});arc(x,110,5,40,60);c+=340},
    n(){it.push({t:'lore',x:c+120,h:36,text:D.txt.lore});row(c+170,c+270,3,0);c+=300},

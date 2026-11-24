@@ -29,7 +29,6 @@ const GameLevelView=(()=>{
   if(q.k==='fake'){dashed(ctx,x,y,w,.4);return}
   let st='',al=1,oy=0;
   if(q.k==='blink'){const c=(S.t+q.ph)%q.per;if(c>=q.on){dashed(ctx,x,y,w,.25);return}if(c>q.on-.7){st='warn';if(Math.sin(t*30)>0)al=.4}}
-  if(q.rise){const k=Math.max(0,Math.min(1,(S.x+S.px+(W-S.px)-q.x)/70));al=k;oy=(1-k)*46}
   if(q.fs===1){st='warn';x+=Math.sin(t*60)*1.6}
   if(q.fs===2)al=Math.max(0,1-q.drop/160);
   if(q.tone==='stale')st='stale';else if(q.tone==='fresh')st='lit';

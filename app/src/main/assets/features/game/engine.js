@@ -132,13 +132,13 @@ const GameEngine=(()=>{
   p.vy+=g*dt;p.y+=p.vy*dt;
   /* опора: платформа (держит и носит игрока) или земля */
   let on=false;
-  if(p.stand){const q=p.stand;if(p.vy<0||!pOn(S,q)||pw+FOOT<q.cx||pw-FOOT>q.cx+q.w)p.stand=null;else{p.y=gy-q.cur-PH;p.vy=0;on=true}}
+  if(p.stand){const q=p.stand;if(p.vy<0||!pOn(S,q)||pw+14<q.cx||pw-14>q.cx+q.w)p.stand=null;else{p.y=gy-q.cur-PH;p.vy=0;on=true}}
   if(!on&&p.vy>=0){
    const f=p.y+PH;
    if(f>=gy&&solid(S,pw)&&f<gy+14){p.y=gy-PH;p.vy=0;on=true}
    else for(const q of S.plats){
     if(!pOn(S,q))continue;
-    if(pw+FOOT>=q.cx&&pw-FOOT<=q.cx+q.w&&f>=gy-q.cur&&feet0<=gy-q.p0+4){p.y=gy-q.cur-PH;p.vy=0;on=true;p.stand=q;if(q.k==='fall'&&!q.fs){q.fs=1;q.ft=0}break}}}
+    if(pw+14>=q.cx&&pw-14<=q.cx+q.w&&f>=gy-q.cur&&feet0<=gy-q.p0+9){p.y=gy-q.cur-PH;p.vy=0;on=true;p.stand=q;if(q.k==='fall'&&!q.fs){q.fs=1;q.ft=0}break}}}
   p.on=on;
   if(!p.on&&p.y+PH>gy+14&&inPit(S,pw)){fall(S);return}
   if(p.y>S.H+80){fall(S);return}
