@@ -13,7 +13,7 @@ const Game=(()=>{
  /* ---------- сохранение ---------- */
  let sv=load();
  if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);
- function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,tr:j.tr|0,form:Math.max(0,Math.min(3,j.form|0))}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,tr:0,form:0}}}
+ function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,lfs:Array.isArray(j.lfs)?j.lfs.filter(x=>Number.isInteger(x)&&x>0&&x<=100).slice(0,100):[],tr:j.tr|0,form:Math.max(0,Math.min(3,j.form|0))}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,lfs:[],tr:0,form:0}}}
  function save(){try{localStorage.setItem(KEY,JSON.stringify(sv))}catch(e){}}
  /* ---------- звук: короткие сигналы, создаются по первому нажатию ---------- */
  let ac=null;
@@ -29,6 +29,7 @@ const Game=(()=>{
  const SFX={jump:()=>beep(380,.11,'square',.04,720),byte:()=>beep(900,.06,'triangle',.05),gold:()=>{beep(900,.08,'triangle',.06);setTimeout(()=>beep(1350,.1,'triangle',.06),70)},
   hit:()=>beep(160,.22,'sawtooth',.07,60),shield:()=>beep(300,.16,'sine',.07,120),die:()=>beep(220,.4,'sawtooth',.08,40),power:()=>beep(520,.14,'sine',.06,1040),
   fix:()=>{beep(600,.08,'triangle',.07);setTimeout(()=>beep(900,.12,'triangle',.07),60)},win:()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.16,'triangle',.07),i*110)),
+  found:()=>{beep(700,.08,'triangle',.07);setTimeout(()=>beep(1050,.14,'triangle',.07),70)},lore:()=>beep(560,.18,'sine',.06,840),
   shot:()=>beep(200,.1,'square',.03,140),warn:()=>beep(440,.12,'square',.03),phase:()=>beep(330,.3,'sawtooth',.06,660)};
  const buzz=n=>{try{if(sv.snd&&navigator.vibrate)navigator.vibrate(n)}catch(e){}};
  /* ---------- экраны ---------- */
@@ -53,12 +54,20 @@ const Game=(()=>{
   [[T('Байтов собрано'),sv.b],[T('Рекорд'),sv.best]].forEach(([k,v])=>{const c=mk('div','gm-stat');c.append(mk('b','',String(v)),mk('small','',k));st.append(c)});
   const nx=sv.u,isB=nx%10===0,bid=nx/10;
   const go=btn(T('Играть')+(isB?' · '+T('Босс'):' · '+T('Уровень')+' '+nx),()=>{const run=()=>start(b,isB?'boss':'level',nx);if(sv.seen)run();else{sv.seen=true;save();GameStoryUI.read(b,GameStory.prologue,run)}},'pri');
+  const ar=btn('Архив жителей · '+(sv.lfs.length),()=>archive(b));
   const hi=btn(T('История'),()=>GameStoryUI.book(b,sv.bosses|0,()=>menu(b),sv));
   const gl=btn(T(sv.gl?'Помехи: вкл':'Помехи: выкл'),()=>{sv.gl=!sv.gl;save();gl.textContent=T(sv.gl?'Помехи: вкл':'Помехи: выкл')},'ghost');
   const lv=btn(T('Уровни'),()=>levels(b));
   const en=btn(T('Бесконечный режим'),()=>start(b,'endless',1));
   const sn=btn(T(sv.snd?'Звук: вкл':'Звук: выкл'),()=>{sv.snd=!sv.snd;save();sn.textContent=T(sv.snd?'Звук: вкл':'Звук: выкл');if(sv.snd)SFX.byte()},'ghost');
-  b.append(h,st,go,lv,en,hi,sn,gl)}
+  b.append(h,st,go,lv,en,hi,ar,sn,gl)}
+ /* Архив жителей: Потеряшки, найденные на уровнях (по одному на уровень) */
+ function archive(b){
+  b.textContent='';
+  const top=mk('div','gm-lt'),back=btn('‹',()=>menu(b),'ghost sm');back.setAttribute('aria-label',T('В меню'));top.append(back,mk('h3','','Архив жителей'));b.append(top);
+  b.append(mk('p','gm-hint','На каждом уровне прячется один Потеряшка: бледный баг с «!». Приземлись на него сверху, и он станет жителем. Найдено: '+sv.lfs.length+'.'));
+  const LO=typeof GameLevels!=='undefined'?GameLevels.LOST:{};
+  Object.keys(LO).map(Number).sort((x,y)=>x-y).forEach(n=>{const got=sv.lfs.includes(n),d=mk('div','gm-bk'+(got?'':' lock'));d.append(mk('b','',got?LO[n][0]+' · уровень '+n:'Уровень '+n+': ???'),mk('small','',got?'«'+LO[n][1]+'»':'Ещё не найден'));b.append(d)})}
  function levels(b){
   b.textContent='';
   const top=mk('div','gm-lt');top.append(mk('h3','',T('Уровни')));
@@ -87,7 +96,7 @@ const Game=(()=>{
   const pb=mk('button','gm-pb');pb.type='button';pb.setAttribute('aria-label',T('Пауза'));pb.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>';
   wrap.append(cv,pb);b.append(wrap);
   const ctx=cv.getContext('2d');
-  let ax=0,frz=false,stk=null,introOn=false,S=null,raf=0,last=0,acc=0,down=false,press=false,paused=false,ended=false,sc=1,dpr=1,col={},ov=null,gone=false,hint=3;
+  let ax=0,frz=false,stk=null,introOn=false,introLv=false,S=null,raf=0,last=0,acc=0,down=false,press=false,paused=false,ended=false,sc=1,dpr=1,col={},ov=null,gone=false,hint=3;
   const cs=()=>{const s=getComputedStyle(cur||document.documentElement);const g=n=>s.getPropertyValue(n).trim();col={bg:g('--bg')||'#0B0B0C',s1:g('--s1')||'#131315',s2:g('--s2')||'#1C1C1F',line:g('--line')||'#2B2B2F',tx:g('--tx')||'#EDEDEF',tx2:g('--tx2')||'#9A9AA2',err:g('--err')||'#e0262b'};col.font=getComputedStyle(document.body).fontFamily||'sans-serif'};
   function size(){
    const r=wrap.getBoundingClientRect(),w=Math.max(200,r.width),h=Math.max(200,r.height);
@@ -95,15 +104,23 @@ const Game=(()=>{
    sc=Math.min(w/360,h/520);const W=w/sc,H=h/sc;
    if(S&&S.arena){S.W=W;S.H=H;GameArena.layout(S)}else if(S){const og=S.gy;S.W=W;S.H=H;S.gy=H*E.GY;S.p.y+=S.gy-og}
    return{W,H}}
+  const lvOpt={Lv,mode,get col(){return col},font:null,fx:()=>{if(sv.gl)GameFX.draw(ctx,S.W,S.H,S.t,sv.end==='reboot'?0:sv.bosses|0,col.tx,GameCore.perf.q)}};
   cur._S=()=>S;
   function reset(){
    closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,id:Lv/10,seed:(Date.now()&0xffff)||7,bytes:sv.b}):E.create({mode,L:Lv,W:z.W,H:z.H});ax=0;frz=false;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
    if(mode==='boss'&&!introOn){introOn=true;paused=true;intro()}
+   if(mode==='level'&&!introLv){introLv=true;paused=true;lvIntro()}
    if(!raf)raf=requestAnimationFrame(loop)}
   /* анимация появления босса: затемнение, помехи, имя и короткий контекст; тап/кнопка «К бою» */
   function intro(){
    const B=GameStory.bosses[S.bid-1],C=GameStory.chapters[S.bid-1];
    overlay(B.name,[B.code?'«'+B.code+'»':'',B.look.charAt(0).toUpperCase()+B.look.slice(1).replace(/\.$/,'')+'.',C.plot],[btn('К бою',()=>{closeOv();paused=false;last=0},'pri')]);
+   ov.classList.add('gm-intro')}
+  /* вступление перед уровнем: сюжет и что нового; кнопка «Вперёд» */
+  function lvIntro(){
+   const C=GameStory.chapters[Math.min(9,Math.ceil(Lv/10)-1)],row=C.levels[(Lv-1)%10]||[],I=typeof GameLevels!=='undefined'?GameLevels.INTRO[Lv]:null;
+   const ls=[C.n+'. '+C.name];if(I){ls.push(I.s);ls.push('Новое: '+I.n)}else if(row[2])ls.push(row[2]);
+   overlay(T('Уровень')+' '+Lv+(row[1]?': '+row[1]:''),ls,[btn('Вперёд',()=>{closeOv();paused=false;last=0},'pri')]);
    ov.classList.add('gm-intro')}
   function closeOv(){if(ov){ov.remove();ov=null}}
   function overlay(title,lines,buttons){
@@ -119,12 +136,16 @@ const Game=(()=>{
    sv.b+=S.bytes;
    if(mode==='level'&&win){sv.u=Math.max(sv.u,Math.min(100,Lv+1));sv.st[Lv]=Math.max(sv.st[Lv]|0,stars)}
    if(mode==='boss'&&win){sv.boss=true;sv.bosses=Math.max(sv.bosses|0,Lv/10);sv.u=Math.max(sv.u,Math.min(100,Lv+1))}
+   if(mode==='level'&&win&&S.found&&!sv.lfs.includes(Lv)){sv.lfs.push(Lv);sv.lf=sv.lfs.length}
    if(mode==='endless')sv.best=Math.max(sv.best,S.score);
    save();
    if(mode==='boss'&&win&&Lv===100){setTimeout(()=>{if(!gone)finale()},450);return}
    const lines=[T('Очки')+': '+S.score,T('Байты')+': '+S.bytes];
    if(mode!=='boss')lines.push(T('Путь')+': '+E.dist(S)+' м');
    if(mode==='endless')lines.push(T('Рекорд')+': '+sv.best);
+   if(mode==='level'&&win&&typeof GameLevels!=='undefined'&&GameLevels.LOST[Lv]){const lo=GameLevels.LOST[Lv];
+    if(S.found)lines.push('Найден житель: '+lo[0]+' «'+lo[1]+'»');
+    else lines.push(sv.lfs.includes(Lv)?'Житель этого уровня уже в Архиве.':'На уровне прячется Потеряшка: бледный баг с «!». Приземлись на него сверху.')}
    const bs=[];
    if(win&&mode==='level'&&Lv<100)bs.push(btn(Lv%10===9?T('Босс'):T('Дальше'),()=>start(b,Lv%10===9?'boss':'level',Lv+1),'pri'));
    if(win&&mode==='boss'&&Lv<100)bs.push(btn(T('Дальше'),()=>start(b,'level',Lv+1),'pri'));
@@ -208,6 +229,7 @@ const Game=(()=>{
    if(sv.gl)GameFX.draw(ctx,W,H,S.t,sv.end==='reboot'?0:sv.bosses|0,col.tx,GameCore.perf.q)}
   function draw(){
    if(S.arena)return drawArena();
+   if(S.lv){lvOpt.dpr=dpr;lvOpt.sc=sc;return GameLevelView.draw(ctx,S,lvOpt)}
    const W=S.W,H=S.H,gy=S.gy,pw=S.x+E.PX;
    ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
    const th=GameArt.theme(mode,Lv);/* свой фон и цвет у каждого уровня (art.js) */

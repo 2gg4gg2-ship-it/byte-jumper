@@ -36,3 +36,8 @@
 ## Дополнение (0.7.2): Искра
 
 `spark/spark.png` пересобран (37 кадров), `spark.js` выбирает кадры по состоянию. Скрипт `docs/tools/make_spark_atlas.py` и `spark_base.png` нужны только для пересборки атласа, в игру не входят. Из `game.js` убраны наклоны героя по скорости.
+
+
+## С версии 0.8.0
+
+Новые файлы в той же папке: `levels.js` (после `engine.js`) и `levelview.js` (после `bossart.js`, до `game.js`). Порядок скриптов: shim, core, engine, levels, story, arena, fx, spark, art, bossart, levelview, game, storyui. В сохранении `kairema.game.v1` появилось поле `lfs` (номера уровней с найденным Потеряшкой).
