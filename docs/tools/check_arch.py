@@ -4,7 +4,7 @@
 import re, sys, pathlib
 R = pathlib.Path(__file__).resolve().parents[2]; G = R/'app/src/main/assets/features/game'; A = R/'app/src/main/assets'
 # файл -> (слой, глобальное имя). Новый файл игры ОБЯЗАТЕЛЬНО добавь сюда и в docs/ARCHITECTURE.md
-MOD = {'core.js': (0, 'GameCore'), 'engine.js': (1, 'GameEngine'), 'levels.js': (1, 'GameLevels'), 'story.js': (1, 'GameStory'),
+MOD = {'core.js': (0, 'GameCore'), 'engine.js': (1, 'GameEngine'), 'levels.js': (1, 'GameLevels'), 'flags.js': (1, 'GameFlags'), 'abilities.js': (1, 'GameAbilities'), 'story.js': (1, 'GameStory'),
        'arena.js': (1, 'GameArena'), 'fx.js': (2, 'GameFX'), 'spark.js': (2, 'GameSpark'), 'art.js': (2, 'GameArt'),
        'bossart.js': (2, 'GameBossArt'), 'levelview.js': (2, 'GameLevelView'), 'storyui.js': (3, 'GameStoryUI'), 'game.js': (3, 'Game')}
 # разрешённые зависимости: слой 1 (логика) знает только слой 0 и логику; слой 2 (рисование) знает 0 и 1 (читает константы/состояние) и своих;

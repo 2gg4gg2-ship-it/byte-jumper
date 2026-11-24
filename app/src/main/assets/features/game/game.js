@@ -13,7 +13,8 @@ const Game=(()=>{
  /* ---------- сохранение ---------- */
  let sv=load();
  if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);
- function load(){try{const j=JSON.parse(GameCore.store.read(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,lfs:Array.isArray(j.lfs)?j.lfs.filter(x=>Number.isInteger(x)&&x>0&&x<=100).slice(0,100):[],tr:j.tr|0,form:Math.max(0,Math.min(3,j.form|0))}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,lfs:[],tr:0,form:0}}}
+ function fxDraw(ctx,W,H,t,col){const q=GameFlags.fxQuality(sv.mode,GameCore.perf.q);if(q>0)GameFX.draw(ctx,W,H,t,sv.end==='reboot'?0:sv.bosses|0,col.tx,q)}
+function load(){let raw={};try{raw=JSON.parse(GameCore.store.read(KEY)||'{}')}catch(e){}return GameFlags.migrate(raw)}
  function save(){GameCore.store.write(KEY,JSON.stringify(sv))}
  /* ---------- звук: короткие сигналы, создаются по первому нажатию ---------- */
  let ac=null;
@@ -56,7 +57,7 @@ const Game=(()=>{
   const go=btn(T('Играть')+(isB?' · '+T('Босс'):' · '+T('Уровень')+' '+nx),()=>{const run=()=>start(b,isB?'boss':'level',nx);if(sv.seen)run();else{sv.seen=true;save();GameStoryUI.read(b,GameStory.prologue,run)}},'pri');
   const ar=btn('Архив жителей · '+(sv.lfs.length),()=>archive(b));
   const hi=btn(T('История'),()=>GameStoryUI.book(b,sv.bosses|0,()=>menu(b),sv));
-  const gl=btn(T(sv.gl?'Помехи: вкл':'Помехи: выкл'),()=>{sv.gl=!sv.gl;save();gl.textContent=T(sv.gl?'Помехи: вкл':'Помехи: выкл')},'ghost');
+  const gl=btn(T('Помехи: '+GameFlags.modeLabel(sv.mode)),()=>{sv.mode=GameFlags.nextMode(sv.mode);sv.gl=sv.mode!=='off';save();gl.textContent=T('Помехи: '+GameFlags.modeLabel(sv.mode))},'ghost');
   const lv=btn(T('Уровни'),()=>levels(b));
   const en=btn(T('Бесконечный режим'),()=>start(b,'endless',1));
   const sn=btn(T(sv.snd?'Звук: вкл':'Звук: выкл'),()=>{sv.snd=!sv.snd;save();sn.textContent=T(sv.snd?'Звук: вкл':'Звук: выкл');if(sv.snd)SFX.byte()},'ghost');
@@ -104,7 +105,7 @@ const Game=(()=>{
    sc=Math.min(w/360,h/520);const W=w/sc,H=h/sc;
    if(S&&S.arena){S.W=W;S.H=H;GameArena.layout(S)}else if(S){const og=S.gy;S.W=W;S.H=H;S.gy=H*E.GY;S.p.y+=S.gy-og}
    return{W,H}}
-  const lvOpt={Lv,mode,get col(){return col},font:null,fx:()=>{if(sv.gl)GameFX.draw(ctx,S.W,S.H,S.t,sv.end==='reboot'?0:sv.bosses|0,col.tx,GameCore.perf.q)}};
+  const lvOpt={Lv,mode,get col(){return col},font:null,fx:()=>fxDraw(ctx,S.W,S.H,S.t,col)};
   cur._S=()=>S;
   function reset(){
    closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,id:Lv/10,seed:(Date.now()&0xffff)||7,bytes:sv.b}):E.create({mode,L:Lv,W:z.W,H:z.H});ax=0;frz=false;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
@@ -227,7 +228,7 @@ const Game=(()=>{
    if(S.fh){ctx.textAlign='left';ctx.fillStyle='#d9dce0';ctx.font='italic 700 14px serif';ctx.fillText('♥ ♥ ♥',W-70,44);ctx.fillStyle=col.s2;ctx.fillRect(W/2-45,H-112,90,26);ctx.strokeStyle=col.tx2;ctx.lineWidth=1;ctx.strokeRect(W/2-45,H-112,90,26);ctx.fillStyle=col.tx;ctx.textAlign='center';ctx.font='italic 600 12px serif';ctx.fillText('Разрешить',W/2,H-95)}
    if([6,8,9,10].includes(S.bid))GameArt.rejectBtn(ctx,W-62,H-150,S.wins.some(w=>w.d<=0)||S.fz,S.fz||S.bid===9?'Замри':'Отклонить',col.font);
    GameArt.joy(ctx,stk?stk.ox:62,stk?stk.oy:H-62,ax,!!stk);GameArt.jump(ctx,W-62,H-62,down);
-   if(sv.gl)GameFX.draw(ctx,W,H,S.t,sv.end==='reboot'?0:sv.bosses|0,col.tx,GameCore.perf.q)}
+   fxDraw(ctx,W,H,S.t,col)}
   function draw(){
    if(S.arena)return drawArena();
    if(S.lv){lvOpt.dpr=dpr;lvOpt.sc=sc;return GameLevelView.draw(ctx,S,lvOpt)}
@@ -284,7 +285,7 @@ const Game=(()=>{
    GameArt.parts(ctx,S,S.t,th,GameCore.perf.q,E);
    /* HUD */
    GameArt.hud(ctx,S,W,H,S.t,{th,font:col.font,hearts:S.maxHearts>0,f:mode==='level'?Math.min(1,S.x/S.target):-1,label:mode==='boss'?T('Босс'):mode==='endless'?T('Бесконечный режим'):Lv+' · '+th.name});
-   if(sv.gl)GameFX.draw(ctx,W,H,S.t,sv.end==='reboot'?0:sv.bosses|0,col.tx,GameCore.perf.q)
+   fxDraw(ctx,W,H,S.t,col)
    if(hint>0&&mode!=='boss'&&Lv<=1){ctx.globalAlpha=Math.min(1,hint);ctx.fillStyle=col.tx;ctx.textAlign='center';ctx.font='600 14px '+col.font;ctx.fillText(T('Один тап — прыжок. Держи — прыгнешь выше.'),W/2,gy+60);ctx.globalAlpha=1}}
   /* ---------- управление ---------- */
   const pd=e=>{if(paused||ended)return;e.preventDefault();down=true;press=true;if(sv.snd&&!ac)beep(1,.001,'sine',.0001)};
