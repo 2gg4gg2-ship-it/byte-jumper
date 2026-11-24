@@ -6,8 +6,8 @@ const GameCore=(()=>{
  const perf={q:1,slow:0,fast:0,dpr:2};
  function tick(dtMs){
   if(dtMs>24){perf.slow++;perf.fast=0}else if(dtMs<18){perf.fast++;perf.slow=0}
-  if(perf.slow>30&&perf.q>.4){perf.q=Math.max(.4,perf.q-.2);perf.slow=0;return true}
-  if(perf.fast>240&&perf.q<1){perf.q=Math.min(1,perf.q+.2);perf.fast=0;return true}
+  if(perf.slow>45&&perf.q>.4){perf.q=Math.max(.4,perf.q-.2);perf.slow=0;perf.drops=(perf.drops||0)+1;return true}
+  if(perf.fast>900&&perf.q<1&&(perf.drops||0)<2){perf.q=Math.min(1,perf.q+.2);perf.fast=0;return true}
   return false}
  const dprFor=base=>Math.max(1,Math.min(base,perf.q>=.8?2:perf.q>=.6?1.5:1));
  /* фиксированный шаг 1/60 с: возвращает, сколько шагов выполнить (не больше 6) */

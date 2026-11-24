@@ -21,7 +21,7 @@ c('10 глав по 9 уровней + босс, 10 боссов с тексто
 let calls=0;const ctx=new Proxy({},{get:(t,k)=>k==='save'||k==='restore'?()=>{}:k==='fillText'||k==='fillRect'?()=>{calls++}:undefined,set:()=>true});
 FX.draw(ctx,360,600,1.3,0,'#fff',1);const c0=calls;FX.draw(ctx,360,600,1.3,10,'#fff',1);
 c('помех нет без боссов, много на 10',c0===0&&calls>20);c('помех при 1 боссе мало',(()=>{calls=0;FX.draw(ctx,360,600,1.3,1,'#fff',1);return calls>0&&calls<8})());
-for(let i=0;i<40;i++)CO.tick(40);c('ядро снижает качество при тормозах',CO.perf.q<1);
+for(let i=0;i<50;i++)CO.tick(40);c('ядро снижает качество при тормозах',CO.perf.q<1);
 
 /* ---- арена босса ---- */
 {const S=AR.create({W:360,H:520,seed:3});let warn=0,gone=0,seenPh={},tel=0;S.hearts=999;

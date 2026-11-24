@@ -9,7 +9,7 @@ const GameBossArt=(()=>{
   ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(x,y+h-Math.max(2,h*.08),w,Math.max(2,h*.08));ctx.fillRect(x+w-2,y,2,h);
   ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,h-1)}
  const grad=(ctx,y0,y1,a,b)=>{const g=ctx.createLinearGradient(0,y0,0,y1);g.addColorStop(0,a);g.addColorStop(1,b);return g};
- function glow(ctx,x,y,r,c,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,c.replace('1)',a+')'));g.addColorStop(1,c.replace('1)','0)'));ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)}
+ function glow(ctx,x,y,r,c,a){GameArt.glowDot(ctx,x,y,r,c.indexOf('224')>0?'#e0262b':'#f1f2f4',a)}
  const eyeGlow=(ctx,x,y,r,eye)=>glow(ctx,x,y,r,eye===RED?'rgba(224,38,43,1)':'rgba(241,242,244,1)',.5);
  function slit(ctx,x,y,w,h,eye){ctx.fillStyle='#050506';ctx.fillRect(x-w-3,y-3,w*2+6,h+6);eyeGlow(ctx,x,y+h/2,26,eye);ctx.fillStyle=eye;ctx.fillRect(x-w/2,y,w,h)}
  function draw(ctx,S,t){

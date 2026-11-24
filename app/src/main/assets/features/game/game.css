@@ -72,7 +72,7 @@
 .gm .gm-b>*:not(.gm-play){position:relative}
 .gm .gm-hero{padding:28px 8px 14px}
 .gm .gm-logo{border:0;background:none;width:auto;height:auto}
-.gm .gm-spark{width:128px!important;height:128px!important;margin:0 auto 4px;border-radius:50%;background:radial-gradient(circle at 50% 66%,rgba(255,255,255,.14),transparent 66%)!important;filter:drop-shadow(0 10px 18px rgba(0,0,0,.7));animation:gmFloat 3.6s ease-in-out infinite}
+.gm .gm-spark{width:128px!important;height:128px!important;margin:0 auto 4px;border-radius:50%;background:radial-gradient(circle at 50% 66%,rgba(255,255,255,.14),transparent 66%)!important;animation:gmFloat 3.6s ease-in-out infinite;will-change:transform}
 .gm .gm-hero h1{font-size:30px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#f1f2f4;margin-top:6px}
 .gm .gm-hero h1::after{content:"";display:block;width:34px;height:3px;background:#e0262b;margin:10px auto 0}
 .gm .gm-tag{color:var(--tx2);font-size:14px}
@@ -102,7 +102,7 @@
 .gm .gm-sec{color:#e0262b}
 .gm .gm-card{background:linear-gradient(180deg,#17171b,#0e0e11);border:1px solid #3a3b41;border-top:2px solid #e0262b;border-radius:10px;box-shadow:0 24px 70px rgba(0,0,0,.8)}
 .gm .gm-card h3{color:#f1f2f4;text-transform:uppercase;letter-spacing:.06em}
-.gm .gm-ov{background:rgba(5,5,6,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.gm .gm-ov{background:rgba(5,5,6,.88)}
 .gm .gm-pb{background:rgba(8,8,10,.78);border:1.5px solid rgba(241,242,244,.7);border-radius:6px;color:#f1f2f4;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
 .gm .gm-story .gm-st-t{color:#f1f2f4;text-transform:uppercase;letter-spacing:.06em}
 .gm .gm-st-d i.on{background:#e0262b}

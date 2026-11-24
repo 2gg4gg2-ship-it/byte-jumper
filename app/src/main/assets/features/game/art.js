@@ -21,43 +21,65 @@ const GameArt=(()=>{
  const idx=(mode,L)=>mode==='endless'?11:Math.max(0,((L|0)-1)%20);
  const theme=(mode,L)=>{const i=idx(mode,L),t=TH[i],sc=Math.floor(i/5);return{i,sc,seed:(L|0)%5+sc*7,top:t[0],bot:t[1],ac:t[2],far:t[3],near:t[4],m:t[5],name:t[6],act:sc>1?1:0}};
  const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')'};
- function glowDot(ctx,x,y,r,c,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,rgba(c,a));g.addColorStop(1,rgba(c,0));ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)}
+ /* ---- кэш: статичное рисуется один раз в невидимый холст, потом одной командой drawImage (раньше фон пересчитывался каждый кадр) ---- */
+ const cache=new Map();
+ const hasDoc=()=>typeof document!=='undefined';
+ const kOf=ctx=>{const m=ctx.getTransform&&ctx.getTransform();return m&&m.a>0?Math.round(m.a*50)/50:1};
+ function layer(key,w,h,k,paint){
+  const kk=key+'|'+w+'x'+h+'@'+k;let c=cache.get(kk);
+  if(!c){c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));const x=c.getContext('2d');x.scale(k,k);paint(x);cache.set(kk,c);if(cache.size>18)cache.delete(cache.keys().next().value)}
+  return c}
+ /* рисует кэшированный слой в (x,y); paint рисует в локальных координатах 0..w, 0..h; без document (тесты в node) рисует напрямую */
+ function blit(ctx,key,x,y,w,h,paint){
+  if(!hasDoc()){if(paint){ctx.save();ctx.translate(x,y);paint(ctx);ctx.restore()}return}
+  const c=paint?layer(key,w,h,kOf(ctx),paint):cache.get(key+'|'+w+'x'+h+'@'+kOf(ctx));if(c)ctx.drawImage(c,x,y,w,h)}
+ const blobs={};
+ function blob(c){let b=blobs[c];if(!b){b=document.createElement('canvas');b.width=b.height=64;const x=b.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,rgba(c,1));g.addColorStop(1,rgba(c,0));x.fillStyle=g;x.fillRect(0,0,64,64);blobs[c]=b}return b}
+ /* мягкое пятно света: готовый спрайт с прозрачностью вместо нового градиента на каждый вызов */
+ function glowDot(ctx,x,y,r,c,a){
+  if(!hasDoc()){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,rgba(c,a));g.addColorStop(1,rgba(c,0));ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);return}
+  const o=ctx.globalAlpha;ctx.globalAlpha=o*a;ctx.drawImage(blob(c),x-r,y-r,r*2,r*2);ctx.globalAlpha=o}
  /* скошенная рамка (углы срезаны), как у панелей интерфейса */
  function cham(ctx,x,y,w,h,c){c=Math.min(c,w/2,h/2);ctx.beginPath();ctx.moveTo(x+c,y);ctx.lineTo(x+w-c,y);ctx.lineTo(x+w,y+c);ctx.lineTo(x+w,y+h-c);ctx.lineTo(x+w-c,y+h);ctx.lineTo(x+c,y+h);ctx.lineTo(x,y+h-c);ctx.lineTo(x,y+c);ctx.closePath()}
- /* ряд разрушенных башен: рваные верхушки, окна, красные маяки */
+ /* полоса разрушенных башен рисуется один раз в длинный холст ровно на N башен и склеивается по кругу: прокрутка без швов.
+    Маяки (красные огни) пульсируют, поэтому они вынесены и рисуются каждый кадр отдельно (их единицы). */
+ function paintTowers(x,per,N,seed,color,hMin,hMax,win,beacon,hh,bl){
+  const gy=hh-2;x.fillStyle=color;
+  for(let i=-2;i<N+2;i++){
+   const gi=((i%N)+N)%N,r=hs(gi+seed*31),w=per*(.6+r*.85),h=hMin+hs(gi*7+seed)*(hMax-hMin),xx=i*per;
+   x.fillStyle=color;x.beginPath();x.moveTo(xx,gy+2);
+   const n=3+(r>.5?1:0);for(let j=0;j<=n;j++){const q=h*(j===0?.82+.18*hs(gi+j):.55+.45*hs(gi*3+j+seed));x.lineTo(xx+w*j/n,gy-q)}
+   x.lineTo(xx+w,gy+2);x.closePath();x.fill();
+   if(r>.72)x.fillRect(xx+w*.45,gy-h-16,2,16);
+   if(win>0&&w>per*.8){x.fillStyle=rgba('#f1f2f4',win*.75);for(let wy=gy-h*.7;wy<gy-8;wy+=12)for(let wx=xx+6;wx<xx+w-8;wx+=10)if(hs(gi*131+(wy|0)*3+(wx|0))>.78)x.fillRect(wx,wy,3,4)}
+   if(beacon&&r>.8&&i>=0&&i<N)bl.push([xx+w*.45+1,gy-h-16,gi])}}
+ const strips={};
  function towers(ctx,W,gy,sx,k,seed,color,hMin,hMax,per,win,beacon,t){
-  const span=per*14,off=((sx*k)%span+span)%span;ctx.fillStyle=color;
-  for(let i=-1;i<Math.ceil(W/per)+2;i++){
-   const gi=Math.floor(off/per)+i,x=i*per-(off%per),r=hs(gi+seed*31),w=per*(.6+r*.85),h=hMin+hs(gi*7+seed)*(hMax-hMin);
-   ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(x,gy+2);
-   const n=3+(r>.5?1:0);for(let j=0;j<=n;j++){const hh=h*(j===0?.82+.18*hs(gi+j):.55+.45*hs(gi*3+j+seed));ctx.lineTo(x+w*j/n,gy-hh)}
-   ctx.lineTo(x+w,gy+2);ctx.closePath();ctx.fill();
-   if(r>.72){ctx.fillRect(x+w*.45,gy-h-16,2,16)}
-   if(win>0&&w>per*.8){for(let wy=gy-h*.7;wy<gy-8;wy+=12){for(let wx=x+6;wx<x+w-8;wx+=10){const q=hs(gi*131+(wy|0)*3+(wx|0));if(q>.78){ctx.fillStyle=rgba('#f1f2f4',win*(.5+.5*Math.sin(t*1.1+q*30)));ctx.fillRect(wx,wy,3,4)}}}}
-   if(beacon&&r>.8){const pul=.35+.65*Math.max(0,Math.sin(t*2+gi));glowDot(ctx,x+w*.45+1,gy-h-16,16,C.red,.55*pul);ctx.fillStyle=rgba('#ff5a5e',.5+.5*pul);ctx.fillRect(x+w*.45-1,gy-h-18,4,4)}}}
- /* огромное кольцо вдали: тонкая рамка, штрихи, медленное вращение */
+  const N=Math.max(14,Math.ceil((W+per*2)/per)),span=N*per,hh=Math.ceil(hMax+30),off=((sx*k)%span+span)%span,key='tw|'+seed+color+per+hMin+hMax+win+beacon+'|'+N;
+  const bl=strips[key]||(strips[key]=[]);
+  if(!hasDoc()){ctx.save();ctx.translate(-off,gy-hh+2);paintTowers(ctx,per,N,seed,color,hMin,hMax,win,beacon,hh,[]);ctx.translate(span,0);paintTowers(ctx,per,N,seed,color,hMin,hMax,win,beacon,hh,[]);ctx.restore();return}
+  if(!cache.has(key+'|'+span+'x'+hh+'@'+kOf(ctx))){bl.length=0}
+  const c=layer(key,span,hh,kOf(ctx),x=>{bl.length=0;paintTowers(x,per,N,seed,color,hMin,hMax,win,beacon,hh,bl)});
+  const y0=gy-hh+2;ctx.drawImage(c,-off,y0,span,hh);if(span-off<W)ctx.drawImage(c,span-off,y0,span,hh);
+  for(const b of bl){for(let rep=0;rep<2;rep++){const bx=b[0]-off+rep*span;if(bx<-24||bx>W+24)continue;const pul=.35+.65*Math.max(0,Math.sin(t*2+b[2]));glowDot(ctx,bx,y0+b[1],16,C.red,.55*pul);ctx.fillStyle=rgba('#ff5a5e',.5+.5*pul);ctx.fillRect(bx-2,y0+b[1]-2,4,4)}}}
+ /* огромное кольцо вдали: две тонкие окружности (штриховое вращающееся кольцо убрано: оно было самой дорогой частью фона и почти не видно) */
  function ring(ctx,cx,cy,r,a,t,w){
   ctx.save();ctx.strokeStyle=rgba('#f1f2f4',a);ctx.lineWidth=w||8;ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.stroke();
-  ctx.lineWidth=1.5;ctx.strokeStyle=rgba('#f1f2f4',a*1.6);ctx.beginPath();ctx.arc(cx,cy,r-12,0,TAU);ctx.stroke();
-  if(ctx.setLineDash){ctx.setLineDash([16,12]);ctx.lineDashOffset=-t*8;ctx.lineWidth=3;ctx.strokeStyle=rgba('#f1f2f4',a*1.2);ctx.beginPath();ctx.arc(cx,cy,r+14,0,TAU);ctx.stroke();ctx.setLineDash([])}ctx.restore()}
- /* полоса тумана: мягкий градиент и два плывущих пятна */
+  ctx.lineWidth=1.5;ctx.strokeStyle=rgba('#f1f2f4',a*1.6);ctx.beginPath();ctx.arc(cx,cy,r-12,0,TAU);ctx.stroke();ctx.restore()}
+ /* полоса тумана: одна плитка шириной W (градиент по вертикали и три мягких пятна) в кэше, плывёт как картинка */
  function fog(ctx,W,y0,h,a,t,ph){
-  const g=ctx.createLinearGradient(0,y0,0,y0+h);g.addColorStop(0,'rgba(150,152,160,0)');g.addColorStop(.5,'rgba(150,152,160,'+a+')');g.addColorStop(1,'rgba(150,152,160,0)');ctx.fillStyle=g;ctx.fillRect(0,y0,W,h);
-  for(let i=0;i<2;i++){const x=((t*7*(1+i*.4)+ph*130+i*190)%(W+300))-150;glowDot(ctx,x,y0+h*.5,150,'#9a9ca3',a*.55)}}
- const scan={};
- function scanlines(ctx,W,H){
-  if(typeof document==='undefined')return;
-  if(!scan.c){const c=document.createElement('canvas');c.width=2;c.height=3;const x=c.getContext('2d');x.fillStyle='rgba(0,0,0,.22)';x.fillRect(0,0,2,1);scan.c=c;scan.m=new WeakMap()}
-  let p=scan.m.get(ctx);if(!p){p=ctx.createPattern&&ctx.createPattern(scan.c,'repeat');if(p)scan.m.set(ctx,p)}
-  if(p){ctx.fillStyle=p;ctx.fillRect(0,0,W,H)}}
- /* фон уровня: небо, кольцо, три слоя руин, туман, пылинки, виньетка, строки развёртки */
+  const dx=((t*9+ph*130)%W+W)%W;
+  blit(ctx,'fog|'+a+'|'+ph%3,-dx,y0,W,h,x=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(150,152,160,0)');g.addColorStop(.5,'rgba(150,152,160,'+a+')');g.addColorStop(1,'rgba(150,152,160,0)');x.fillStyle=g;x.fillRect(0,0,W,h);
+   for(let i=0;i<3;i++){const px=(i*W/3+ph*40)%W;for(const o of[-W,0,W])glowDot(x,px+o,h*.5,110,'#9a9ca3',a*.8)}});
+  blit(ctx,'fog|'+a+'|'+ph%3,W-dx,y0,W,h,null)}
+ /* фон уровня: небо и свет в кэше, слои руин (кэш), туман, пылинки; сверху один кэшированный слой «развёртки + виньетка» */
  function bg(ctx,W,H,gy,sx,t,th,q){
-  const sc=th.sc,red=sc===3,sd=th.seed;
-  const g=ctx.createLinearGradient(0,0,0,gy);g.addColorStop(0,th.top);g.addColorStop(1,th.bot);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  glowDot(ctx,W*.55,gy*.62,W*.9,red?'#e0262b':'#ffffff',red?.07:.05);
+  const sc=th.sc,red=sc===3,sd=th.seed;gy=Math.round(gy);
+  blit(ctx,'back|'+sc+th.top+th.bot,0,0,W,H,x=>{const g=x.createLinearGradient(0,0,0,gy);g.addColorStop(0,th.top);g.addColorStop(1,th.bot);x.fillStyle=g;x.fillRect(0,0,W,H);
+   glowDot(x,W*.55,gy*.62,W*.9,red?'#e0262b':'#ffffff',red?.07:.05);
+   if(red){const h=x.createLinearGradient(0,gy-170,0,gy);h.addColorStop(0,'rgba(224,38,43,0)');h.addColorStop(1,'rgba(224,38,43,.22)');x.fillStyle=h;x.fillRect(0,gy-170,W,170)}});
   if(sc===0||sc===2||sc===3)ring(ctx,W*.58+Math.sin(sx*.0015)*18,gy*.5,sc===2?gy*.46:gy*.38,sc===3?.05:.07,t,sc===2?10:7);
   if(sc===2){ring(ctx,W*.22,gy*.32,gy*.2,.045,-t,5);ctx.fillStyle=rgba('#f1f2f4',.035);for(let i=0;i<4;i++)ctx.fillRect(W*(.1+i*.25)-6,0,12,gy)}
-  if(red){const h=ctx.createLinearGradient(0,gy-170,0,gy);h.addColorStop(0,'rgba(224,38,43,0)');h.addColorStop(1,'rgba(224,38,43,.22)');ctx.fillStyle=h;ctx.fillRect(0,gy-170,W,170)}
   towers(ctx,W,gy,sx,.04,3+sd,th.far,60,sc===2?230:170,sc===2?46:72,sc===1?.16:0,sc===1||red,t);
   fog(ctx,W,gy-130,120,.1,t,sd);
   towers(ctx,W,gy,sx,.09,11+sd,sc===2?'#101013':th.near,34,sc===0?130:100,56,0,false,t);
@@ -66,27 +88,31 @@ const GameArt=(()=>{
   else if(sc===3)for(let i=0;i<5;i++){const x=((i*86+20-sx*.12)%(W+120)+W+120)%(W+120)-30,h=30+hs(i+sd)*60;ctx.fillStyle=th.near;ctx.beginPath();ctx.moveTo(x,gy+2);ctx.lineTo(x+9,gy-h);ctx.lineTo(x+18,gy+2);ctx.fill()}
   towers(ctx,W,gy,sx,.16,29+sd,th.near,22,70,50,0,false,t);
   fog(ctx,W,gy-56,60,.13,t,sd+2);
-  const n=Math.round(16*q);
-  for(let i=0;i<n;i++){const r=hs(i+500),x=((r*W-sx*(.2+r*.35)-t*(5+r*7))%(W+20)+W+20)%(W+20)-10,y=hs(i+90)*gy+Math.sin(t*.6+i)*7,s=1+(i%3);ctx.fillStyle=(red&&i%4===0)?rgba('#e0262b',.45):rgba('#f1f2f4',.1+.25*r);ctx.fillRect(x,y,s,s)}
-  scanlines(ctx,W,H);
-  const v=ctx.createRadialGradient(W/2,H*.45,Math.min(W,H)*.3,W/2,H*.5,Math.max(W,H)*.8);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H)}
+  const n=Math.round(16*q),o=ctx.globalAlpha;
+  for(let i=0;i<n;i++){const r=hs(i+500),x=((r*W-sx*(.2+r*.35)-t*(5+r*7))%(W+20)+W+20)%(W+20)-10,y=hs(i+90)*gy+Math.sin(t*.6+i)*7,s=1+(i%3);ctx.fillStyle=(red&&i%4===0)?'#e0262b':'#f1f2f4';ctx.globalAlpha=o*((red&&i%4===0)?.45:.1+.25*r);ctx.fillRect(x,y,s,s)}
+  ctx.globalAlpha=o;
+  blit(ctx,'over',0,0,W,H,x=>{const v=x.createRadialGradient(W/2,H*.45,Math.min(W,H)*.3,W/2,H*.5,Math.max(W,H)*.8);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');x.fillStyle=v;x.fillRect(0,0,W,H)})}
  /* «Свалка»: обломки табличек и каркас арки на горизонте */
  function ruinsExtra(ctx,W,gy,sx,t,th,q){
   for(let i=0;i<3;i++){const x=((i*150+60-sx*.12)%(W+180)+W+180)%(W+180)-50;ctx.fillStyle=th.near;ctx.fillRect(x,gy-70,5,70);ctx.fillRect(x+34,gy-58,5,58);ctx.fillRect(x-4,gy-76,48,7);ctx.strokeStyle=rgba('#f1f2f4',.12);ctx.lineWidth=1;ctx.strokeRect(x+8,gy-64,22,40)}}
  /* пустота ям (опасность: красное свечение снизу) и земля */
  function voidFill(ctx,W,H,gy,th,t){
-  const g=ctx.createLinearGradient(0,gy,0,H);g.addColorStop(0,'#050506');g.addColorStop(.55,'#08080a');g.addColorStop(1,'rgba(143,21,25,.55)');ctx.fillStyle=g;ctx.fillRect(0,gy,W,H-gy+4);
+  gy=Math.round(gy);blit(ctx,'void',0,gy,W,H-gy+4,x=>{const g=x.createLinearGradient(0,0,0,H-gy);g.addColorStop(0,'#050506');g.addColorStop(.55,'#08080a');g.addColorStop(1,'rgba(143,21,25,.55)');x.fillStyle=g;x.fillRect(0,0,W,H-gy+4)});
   ctx.fillStyle=rgba('#e0262b',.35+.15*Math.sin(t*3));ctx.fillRect(0,gy+1,W,2)}
+ /* земля: плитка шириной 960 px (кратна шагам швов 96, щелей 64 и 80) лежит в кэше и укладывается по миру; кромки ям рисуются поверх */
+ const TILE=960;
+ function paintGround(x,Hg){
+  const g=x.createLinearGradient(0,0,0,Hg);g.addColorStop(0,'#3a3b41');g.addColorStop(.06,'#25262a');g.addColorStop(.3,'#141417');g.addColorStop(1,'#050506');x.fillStyle=g;x.fillRect(0,0,TILE,Hg);
+  x.fillStyle='#9a9ca3';x.fillRect(0,0,TILE,2);
+  for(let X=0;X<TILE;X+=96){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(X,3,2,40);x.fillStyle='rgba(255,255,255,.06)';x.fillRect(X+2,3,1,40)}
+  for(let X=20;X<TILE;X+=64){x.fillStyle='rgba(241,242,244,.16)';x.fillRect(X-3,10,30,7);x.fillStyle='rgba(241,242,244,.85)';x.fillRect(X,12,24,3)}
+  for(let r=0,y=34;y<Hg;r++,y+=34){x.fillStyle='rgba(255,255,255,'+Math.max(.012,.06-r*.006)+')';x.fillRect(0,y,TILE,1);x.fillStyle='rgba(0,0,0,.35)';x.fillRect(0,y+1,TILE,2);
+   for(let X=0;X<TILE;X+=80){const q=hs((X/80)*13+r*7);if(q>.5){x.fillStyle='rgba(241,242,244,'+Math.max(.04,.2-r*.02)+')';x.fillRect(X,y+10,18+q*26,2)}if(q<.18){x.fillStyle='rgba(0,0,0,.4)';x.fillRect(X+8,y+3,3,30)}}}}
  function seg(ctx,a,b,gy,H,sx,th,t){
-  if(b<=a)return;
-  const g=ctx.createLinearGradient(0,gy,0,H);g.addColorStop(0,'#3a3b41');g.addColorStop(.06,'#25262a');g.addColorStop(.3,'#141417');g.addColorStop(1,'#050506');ctx.fillStyle=g;ctx.fillRect(a,gy,b-a,H-gy+4);
-  ctx.fillStyle='#9a9ca3';ctx.fillRect(a,gy,b-a,2);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(a,gy-1,b-a,1);
-  /* швы плит и световые щели, привязаны к миру, а не к экрану */
-  for(let x=Math.ceil((a+sx)/96)*96-sx;x<b;x+=96){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(x,gy+3,2,40);ctx.fillStyle='rgba(255,255,255,.06)';ctx.fillRect(x+2,gy+3,1,40)}
-  for(let x=Math.ceil((a+sx)/64)*64-sx+20;x<b-24;x+=64){if(x<a)continue;ctx.fillStyle='rgba(241,242,244,.16)';ctx.fillRect(x-3,gy+10,30,7);ctx.fillStyle='rgba(241,242,244,.85)';ctx.fillRect(x,gy+12,24,3)}
-  /* глубина земли: ряды плит со слабыми световыми щелями до самого низа экрана */
-  for(let r=0,y=gy+34;y<H;r++,y+=34){const al=Math.max(.012,.06-r*.006);ctx.fillStyle='rgba(255,255,255,'+al+')';ctx.fillRect(a,y,b-a,1);ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(a,y+1,b-a,2);
-   for(let x=Math.ceil((a+sx*(.9-r*.02))/80)*80-sx*(.9-r*.02);x<b;x+=80){const q=hs(Math.round((x+sx)/80)*13+r*7);if(q>.5){ctx.fillStyle='rgba(241,242,244,'+Math.max(.04,.2-r*.02)+')';ctx.fillRect(x,y+10,18+q*26,2)}if(q<.18){ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(x+8,y+3,3,30)}}}
+  if(b<=a)return;gy=Math.round(gy);const Hg=Math.ceil(H-gy+4);
+  ctx.save();ctx.beginPath();ctx.rect(a,gy,b-a,Hg);ctx.clip();
+  for(let X=Math.floor((a+sx)/TILE)*TILE-sx;X<b;X+=TILE)blit(ctx,'ground',X,gy,TILE,Hg,x=>paintGround(x,Hg));
+  ctx.restore();
   ctx.fillStyle='#c9ccd1';ctx.fillRect(a,gy,3,9);ctx.fillRect(b-3,gy,3,9)}
  /* предметы; true = нарисовано */
  const crystal=(ctx,r)=>{ctx.beginPath();ctx.moveTo(0,-r*1.25);ctx.lineTo(r*.9,-r*.2);ctx.lineTo(r*.55,r*.95);ctx.lineTo(-r*.55,r*.95);ctx.lineTo(-r*.9,-r*.2);ctx.closePath()};
@@ -123,7 +149,7 @@ const GameArt=(()=>{
   for(const o of a.p){o.l-=dt;o.x+=o.vx*dt;o.y+=o.vy*dt;o.vy+=160*dt;if(o.l>0){ctx.fillStyle=rgba(o.c,Math.min(.85,o.l*2.4));ctx.fillRect(o.x-1.5,o.y-1.5,3,3)}}a.p=a.p.filter(o=>o.l>0)}
  /* ---------- интерфейс: скошенные тёмные панели, белые сердца, кристалл байтов ---------- */
  const heart=(ctx,x,y,s)=>{ctx.beginPath();ctx.moveTo(x,y+s*.9);ctx.bezierCurveTo(x-s*1.3,y+s*.1,x-s*.7,y-s*.8,x,y-s*.3);ctx.bezierCurveTo(x+s*.7,y-s*.8,x+s*1.3,y+s*.1,x,y+s*.9);ctx.closePath()};
- function panel(ctx,x,y,w,h,c){cham(ctx,x,y,w,h,c||9);ctx.fillStyle='rgba(8,8,10,.74)';ctx.fill();ctx.strokeStyle='rgba(184,186,192,.5)';ctx.lineWidth=1.2;ctx.stroke()}
+ function panel(ctx,x,y,w,h,c){c=c||9;blit(ctx,'panel|'+w+'|'+h+'|'+c,x-2,y-2,w+4,h+4,q=>{cham(q,2,2,w,h,c);q.fillStyle='rgba(8,8,10,.74)';q.fill();q.strokeStyle='rgba(184,186,192,.5)';q.lineWidth=1.2;q.stroke()})}
  function hearts(ctx,x,y,S,t){
   for(let i=0;i<S.maxHearts;i++){const hx=x+i*19,on=i<S.hearts,low=S.hearts===1&&on;heart(ctx,hx,y,6.4);
    if(on){ctx.fillStyle=low?(Math.sin(t*8)>0?C.red:'#a81a1f'):'#f1f2f4';ctx.fill()}else{ctx.strokeStyle='rgba(241,242,244,.3)';ctx.lineWidth=1.3;ctx.stroke()}}}

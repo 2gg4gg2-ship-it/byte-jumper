@@ -4,6 +4,9 @@ const GameFX=(()=>{
     Все кадры одной длины и считаются по времени, без выделения памяти: нагрузка почти нулевая. */
  const strength=n=>Math.max(0,Math.min(1,n/10));
  const BITS='01{}<>/;=#$%'.split('');
+ /* символы помех заранее нарисованы в маленькие холсты: drawImage вместо fillText (текст на canvas дорогой) */
+ const gcache={};
+ function glyph(ch,col){if(typeof document==='undefined')return null;const k=ch+col;let c=gcache[k];if(!c){c=document.createElement('canvas');c.width=18;c.height=24;const x=c.getContext('2d');x.scale(2,2);x.font='600 11px monospace';x.fillStyle=col;x.fillText(ch,0,10);gcache[k]=c}return c}
  function draw(ctx,W,H,t,n,col,q){
   const k=strength(n);if(k<=0)return;
   const cnt=Math.round((2+26*k*k)*(q||1));
@@ -13,7 +16,7 @@ const GameFX=(()=>{
    const s=Math.floor(t*2.5+i*7.13),h=Math.sin(s*12.9898+i*78.233)*43758.5453,f=h-Math.floor(h);
    const g=Math.sin(s*4.1+i*9.7)*1e4,f2=g-Math.floor(g);
    ctx.globalAlpha=.06+.22*k*(1-((t*2.5+i*7.13)%1));
-   ctx.fillText(BITS[Math.floor(f*BITS.length)],f2*W,f*H)}
+   const gl=glyph(BITS[Math.floor(f*BITS.length)],col);if(gl)ctx.drawImage(gl,f2*W,f*H-10,9,12);else ctx.fillText(BITS[Math.floor(f*BITS.length)],f2*W,f*H)}
   /* горизонтальные «рваные» полосы, чем сильнее, тем чаще */
   const bands=Math.floor(k*4*(q||1));
   for(let b=0;b<bands;b++){

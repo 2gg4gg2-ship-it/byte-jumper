@@ -54,3 +54,7 @@ python3 docs/tools/sync_to_kairema.py kairema-app --apply    # скопиров�
 ## С версии 0.8.0
 
 Новые файлы в той же папке: `levels.js` (после `engine.js`) и `levelview.js` (после `bossart.js`, до `game.js`). Порядок скриптов: shim, core, engine, levels, story, arena, fx, spark, art, bossart, levelview, game, storyui. В сохранении `kairema.game.v1` появилось поле `lfs` (номера уровней с найденным Потеряшкой).
+
+## Дополнение (0.9.1): оптимизация
+
+art.js: кэш слоёв (layer/blit), спрайты свечения glowDot; fx.js: кэш символов; core.js: порог снижения качества 45 кадров, подъём только при <2 просадок; game.css без backdrop-filter. Сканлайны и вращающееся кольцо убраны намеренно. Без document (тесты в node) art.js рисует напрямую.
