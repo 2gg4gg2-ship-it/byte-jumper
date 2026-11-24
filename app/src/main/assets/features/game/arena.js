@@ -12,7 +12,10 @@ const GameArena=(()=>{
   const S={bid:o.id||1,arena:true,mode:'boss',W:o.W,H:o.H,rnd:mul(o.seed||7),t:0,over:null,ev:[],score:0,bytes:0,combo:0,hearts:3,maxHearts:3,lost:0,
    boss:{hp:100,max:100,phase:1,x:o.W/2,y:64,conf:0},p:{x:o.W*.22,y:0,vx:0,vy:0,on:false,hold:0,buf:0,coy:0,inv:0},
    tel:[],sh:[],key:null,kt:3,atk:2,aN:0,fallT:8,hab:[0,0,0],idle:0,fair:0,hits:[],pl:null,tok:100,slow:0,wb:0,walls:[],free:[],fk:5,wins:[],chg:0,rj:[],las:null,flip:0,fw:0,fT:10,dark:false,seq:null,hs:[],sd:null,sdA:false,rt:{},cell:-1,trapT:0,fear:{},lastK:0,mm:[],memc:0,fz:null,fzQ:0,fzK:1,fzG:0,fzS:0,fh:false,gh:[],rem:0,p4:0,t3:0,ck:0,tb:o.bytes|0};
-  layout(S);const p=S.p;p.y=S.gy-E.PH;p.on=true;return S}
+  layout(S);const p=S.p;p.y=S.gy-E.PH;p.on=true;
+  /* Stale: инвалидация, свежие байты, привычки игрока, пульс, копия */
+  S.sb=0;S.sbytes=[];S.sbT=2;S.pt=[0,0,0,0,0];S.pulseT=0;S.invW=0;S.nxt=[];S.inval=8+S.rnd()*2;
+  return S}
  function mul(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
  const band=(S,y)=>y>=S.gy-30?0:y>=S.gy-130?1:2;
@@ -47,14 +50,13 @@ const GameArena=(()=>{
   if(f===1){row();S.atk=2.2}
   else if(f===2){S.tel.push({x:aim(S,1),t:1,k:'blk'});if(S.aN%2)row();S.atk=2.2}
   else{row();S.tel.push({x:aim(S,1),t:1,k:'blk'});S.tel.push({x:S.boss.x,t:.5,k:'fan'});S.atk=1.9}}
- /* --- глава 3: Stale: свежие/устаревшие платформы, копии игрока с задержкой 3 с --- */
- function kit3(S){
-  const f=S.boss.phase;S.aN++;
-  S.tel.push({x:S.boss.x,t:.6,k:'fan'});
-  if(f>=2&&S.aN%2)S.tel.push({x:aim(S,1),t:1,k:'big'});
-  if(f===3)S.tel.push({x:0,t:.7,k:'str',n:4,iv:.4,c:0});
-  S.atk=f===1?2.5:2.1}
- /* --- глава 4: Таймаут: 7 повторов серии пакетов по рельсам, лаг-зоны --- */
+ /* --- глава 3: Stale: веера по 3 (фазы 1–2, раз в 2,5 с); фаза 3: веера и ровные очереди по очереди. Инвалидация, копия и байты: staleTick и step --- */
+function kit3(S){
+ const f=S.boss.phase;S.aN++;
+ if(f<3||S.aN%2)S.tel.push({x:S.boss.x,t:.5,k:'fan',v:340,r:4.5});
+ else S.tel.push({x:0,t:.7,k:'str',n:4,iv:.4,c:0,v:200});
+ S.atk=f===3?3:2.5}
+/* --- глава 4: Таймаут: 7 повторов серии пакетов по рельсам, лаг-зоны --- */
  function kit4(S){
   const f=S.boss.phase;S.rep=S.rep||0;
   if(S.series>0){S.series--;const rows=[S.gy-12,S.gy-112,S.gy-212],y=rows[Math.floor(S.rnd()*3)];S.tel.push({x:S.rnd()<.5?0:S.W,y,t:.8,k:'pkt'});S.atk=.55;if(S.series===0)S.atk=5;return}
@@ -123,7 +125,36 @@ const GameArena=(()=>{
   /* не роняем обе половины пола сразу */
   if(idx<2&&S.pl[1-idx].st!=='ok')return;
   S.pl[idx].st='warn';S.pl[idx].t=1.2;S.ev.push('warn')}
- function step(S,dt,inp){
+ /* --- Stale (глава 3): инвалидация раз в 8–10 с (за 1 с мигают зоны, которые сменятся); поднятые платформы: 1 устаревшая в фазе 1, 2 в фазах 2–3;
+   пол всегда свежий; ИИ ставит устаревшую платформу на то место, где игрок стоит дольше всего. Свежий байт появляется только на свежей платформе;
+   каждые 5 байтов — пульс (20 % HP). --- */
+const STALE_UP=[2,3,4];
+function staleTick(S,dt){
+ const p=S.p,PW=E.PW,PH=E.PH;
+ /* привычки: где игрок стоит (учитываем, пока он на платформе) */
+ if(p.on){const i=S.pl.findIndex(q=>q.st!=='gone'&&p.x>q.x&&p.x<q.x+q.w&&Math.abs(p.y+PH-q.y)<3);if(i>=0)S.pt[i]+=dt}
+ S.pt=S.pt.map(v=>v*(1-dt*.02));
+ S.pulseT=Math.max(0,S.pulseT-dt);
+ /* инвалидация: предупреждение за 1 с, потом смена */
+ S.inval-=dt;
+ if(S.inval<=1&&!S.invW){
+  S.invW=1;const n=S.boss.phase===1?1:2,pts=STALE_UP.map(i=>S.pt[i]),mx=Math.max(...pts);
+  const first=mx>=1?STALE_UP[pts.indexOf(mx)]:STALE_UP[Math.floor(S.rnd()*3)];
+  const pick=[first];if(n>1){const rest=STALE_UP.filter(i=>i!==first);pick.push(rest[Math.floor(S.rnd()*2)])}
+  S.nxt=pick;S.pl.forEach((q,i)=>{q.nx=STALE_UP.includes(i)&&pick.includes(i)!==!!q.stale});S.ev.push('warn');
+ }
+ if(S.inval<=0){S.inval=8+S.rnd()*2;S.invW=0;S.pl.forEach((q,i)=>{if(STALE_UP.includes(i))q.stale=S.nxt.includes(i);q.nx=false})}
+ /* свежие байты: на свежих платформах, не больше двух сразу; интервал растёт с фазой (2,8 / 2,4 / 2,0 с) */
+ S.sbT-=dt;
+ if(S.sbT<=0){S.sbT=[2.8,2.4,2][S.boss.phase-1]+(S.rnd()-.5)*.6;
+  const ok=S.pl.filter(q=>q.st==='ok'&&!q.stale);
+  if(ok.length&&S.sbytes.length<2){const q=ok[Math.floor(S.rnd()*ok.length)];S.sbytes.push({x:q.x+q.w*(.2+S.rnd()*.6),y:q.y-22,t:5.5})}}
+ /* сбор: каждые пять байтов — пульс */
+ S.sbytes=S.sbytes.filter(b=>{b.t-=dt;if(b.t<=0)return false;
+  if(Math.abs(b.x-p.x)<16&&Math.abs(b.y-(p.y+PH/2))<24){S.sb++;S.ev.push('byte');if(S.sb>=5){S.sb=0;S.pulseT=.6;S.ev.push('fix');dmg(S)}return false}
+  return true});
+}
+function step(S,dt,inp){
   if(S.over)return;inp=inp||{};const p=S.p,B=S.boss,W=S.W;
   S.t+=dt;S.fair=Math.max(0,S.fair-dt);S.slow=Math.max(0,S.slow-dt);
   B.phase=S.bid===8||S.bid===10?(B.hp>75?1:B.hp>50?2:B.hp>25?3:4):B.hp>70?1:B.hp>35?2:3;
@@ -150,12 +181,11 @@ const GameArena=(()=>{
   /* привычки игрока */
   S.hab[band(S,p.y+PH)]+=dt;S.hab=S.hab.map(v=>v*(1-dt*.03));if(on&&Math.abs(p.vx)<1)S.idle+=dt;else S.idle=0;
   /* платформы: метка → падение → возвращение */
-  S.fallT-=dt;if(S.fallT<=0&&!(S.flip>0||S.fw>0)&&!S.p4){dropPlat(S);S.fallT=S.bid===1?12:S.bid===10&&B.phase===2?6:B.phase===3?9:12}
+  S.fallT-=dt;if(S.fallT<=0&&!(S.flip>0||S.fw>0)&&!S.p4&&S.bid!==3){dropPlat(S);S.fallT=S.bid===1?12:S.bid===10&&B.phase===2?6:B.phase===3?9:12}
   for(const q of S.pl){if(q.st==='warn'){q.t-=dt;if(q.t<=0){q.st='gone';q.t=3}}else if(q.st==='gone'){q.t-=dt;if(q.t<=0)q.st='ok'}}
   /* особенности глав */
   if(S.bid===3){
-   S.inval=(S.inval||0)-dt;if(S.inval<=1&&S.inval>0&&!S.invW){S.invW=1;S.nextStale=S.pl.map((q,i)=>i<4&&S.rnd()<.5);S.ev.push('warn')}
-   if(S.inval<=0){S.inval=9;S.invW=0;S.pl.forEach((q,i)=>{q.stale=!!(S.nextStale&&S.nextStale[i])})}
+   staleTick(S,dt);
    for(const q of S.pl)if(q.stale&&q.st==='ok'&&p.on&&p.y+PH>=q.y-1&&p.y+PH<=q.y+3&&p.x+PW/2>q.x&&p.x-PW/2<q.x+q.w){q.sc=(q.sc||0)+dt;if(q.sc>(S.bid===3?.6:.4)){q.st='gone';q.t=3;q.sc=0}}else q.sc=0;
    S.hist=S.hist||[];S.hist.push({x:p.x,y:p.y});if(S.hist.length>180)S.hist.shift();
    if(B.phase>=2&&S.hist.length>=180){const g=S.hist[0];S.ghost=g;if(Math.abs(g.x-p.x)<PW&&Math.abs(g.y-p.y)<PH)hit(S)}else S.ghost=null}
@@ -202,7 +232,7 @@ const GameArena=(()=>{
   S.atk-=dt;if(S.atk<=0)attack(S);
   for(const a of S.tel){a.t-=dt;if(a.t>0)continue;
    if(a.k==='big'){shot(S,a.x,-10,0,140,13,1);a.dead=1}
-   else if(a.k==='fan'||a.k==='fan2'){const o=a.k==='fan'?B:{x:a.x,y:0};const ang=Math.atan2(p.y-o.y,p.x-o.x);for(const d of[-.28,0,.28])shot(S,o.x,o.y,Math.cos(ang+d)*330,Math.sin(ang+d)*330,5,2);a.dead=1}
+   else if(a.k==='fan'||a.k==='fan2'){const o=a.k==='fan'?B:{x:a.x,y:0};const ang=Math.atan2(p.y-o.y,p.x-o.x),sp=a.v||330,rr=a.r||5;for(const d of[-.28,0,.28])shot(S,o.x,o.y,Math.cos(ang+d)*sp,Math.sin(ang+d)*sp,rr,2);a.dead=1}
    else if(a.k==='row'){for(let i=0;i<6;i++){const x=(i+.5)*S.W/6;if(Math.abs(x-a.x)>48)shot(S,x,-10,0,130,12,1)}a.dead=1}
    else if(a.k==='blk'){shot(S,a.x,-30,0,300,26,1);a.dead=1}
    else if(a.k==='pkt'){shot(S,a.x,a.y,a.x<S.W/2?360:-360,0,7,2);a.dead=1}
@@ -217,6 +247,6 @@ const GameArena=(()=>{
    if(Math.abs(s.x-p.x)<s.r+PW/2&&Math.abs(s.y-(p.y+PH/2))<s.r+PH/2)hit(S)}
   S.sh=S.sh.filter(s=>s.y<S.H+30&&s.y>-60&&s.x>-30&&s.x<W+30&&!(Math.abs(s.x-p.x)<s.r+PW/2&&Math.abs(s.y-(p.y+PH/2))<s.r+PH/2&&p.inv>0&&0));
   /* ключ на самой высокой платформе (в фазе «растерянности» на средней) */
-  if(S.flip>0){}else if(S.key){S.key.t-=dt;if(S.key.t<=0)S.key=null;else if(Math.abs(S.key.x-p.x)<16&&Math.abs(S.key.y-(p.y+PH/2))<24){S.key=null;if(dmg(S))return;S.kt=B.phase===1?7:B.phase===2?6:5}}
+  if(S.bid===3){}else if(S.flip>0){}else if(S.key){S.key.t-=dt;if(S.key.t<=0)S.key=null;else if(Math.abs(S.key.x-p.x)<16&&Math.abs(S.key.y-(p.y+PH/2))<24){S.key=null;if(dmg(S))return;S.kt=B.phase===1?7:B.phase===2?6:5}}
   else{S.kt-=dt;if(S.kt<=0&&!S.p4){const q=B.conf?S.pl[S.rnd()<.5?2:3]:S.pl[4];S.key={x:q.x+q.w*(.25+S.rnd()*.5),y:q.y-20,t:6}}}}
  return{create,step,layout,reject,SPD}})();

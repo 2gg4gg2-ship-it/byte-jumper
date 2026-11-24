@@ -45,7 +45,7 @@ for(let i=0;i<50;i++)CO.tick(40);c('ядро снижает качество п�
 
 /* ---- боссы глав 2–4: победимы, атаки с предупреждением, без аварий ---- */
 for(const id of [2,3,4]){const S=AR.create({W:360,H:520,seed:id,id});let tel=0,kinds={},seenPh={};S.hearts=999;
- for(let f=0;f<60*260&&!S.over;f++){const k=S.key;if(k&&S.t>1){S.p.x=k.x;S.p.y=k.y-GE.PH/2}
+ for(let f=0;f<60*260&&!S.over;f++){const k=id===3?S.sbytes[0]:S.key;if(k&&S.t>1){S.p.x=k.x;S.p.y=k.y-GE.PH/2}
   AR.step(S,1/60,{ax:0});seenPh[S.boss.phase]=1;S.tel.forEach(a=>{kinds[a.k]=1});tel+=S.tel.length?1:0;S.ev.length=0;if(S.sh.length>20)throw new Error('снарядов больше 20')}
  c('босс '+id+': победа ('+S.over+', t='+Math.round(S.t)+'), 3 фазы',S.over==='win'&&seenPh[1]&&seenPh[2]&&seenPh[3]);
  c('босс '+id+': свои атаки '+Object.keys(kinds).join(','),(id===2?kinds.row&&kinds.blk:id===3?kinds.fan:kinds.pkt)&&tel>0)}
@@ -163,9 +163,12 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
  const fg=falls.slice(1).map((x,i)=>x-falls[i]);
  c('босс 1 фаза 3: падение платформы каждые 12 с (не 9)',fg.length>=2&&fg.every(x=>Math.abs(x-12)<1.2));
 }
-{const S=AR.create({W:360,H:520,seed:21,id:3});S.hearts=999;S.p.inv=1e9;S.boss.hp=100;S.boss.phase=1;S.fallT=99;S.atk=99;
- S.key={x:S.p.x,y:S.p.y+12,t:6};AR.step(S,1/60,{ax:0});
- c('босс 3: ключ снимает 20 % HP (всего 5 ключей)',Math.abs(S.boss.hp-80)<.01);
+{const S=AR.create({W:360,H:520,seed:21,id:3});S.hearts=999;S.p.inv=1e9;S.boss.hp=100;S.boss.phase=1;S.fallT=99;S.atk=99;S.inval=99;S.sbT=99;
+  const take=()=>{S.sbytes=[{x:S.p.x,y:S.p.y+12,t:6}];AR.step(S,1/60,{ax:0});S.ev.length=0};
+  for(let i=0;i<4;i++)take();
+  c('босс 3: четыре свежих байта ещё не пульс (HP 100, счётчик 4)',S.boss.hp===100&&S.sb===4);
+  take();
+  c('босс 3: пятый байт = пульс 20 % (HP 80), счётчик сброшен',Math.abs(S.boss.hp-80)<.01&&S.sb===0);
  const S2=AR.create({W:360,H:520,seed:21,id:3});S2.hearts=999;S2.p.inv=1e9;S2.boss.hp=100;S2.boss.phase=1;S2.fallT=99;S2.atk=99;
  let warnAt=-1,swapAt=-1,before=null;
  for(let f=0;f<60*12;f++){S2.p.inv=1e9;const pre=S2.nextStale;AR.step(S2,1/60,{ax:0});S2.ev.length=0;
@@ -174,4 +177,24 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
   if(swapAt>=0)break}
  c('босс 3: предупреждение инвалидации за ~1 с до смены зон ('+(swapAt-warnAt).toFixed(2)+' с)',warnAt>0&&swapAt>0&&Math.abs((swapAt-warnAt)-1)<.1);
 }
+
+/* ---- Stale (глава 3), по дизайну: пол, привычки ИИ, копия, веер, байты на свежих платформах ---- */
+{const S=AR.create({W:360,H:520,seed:5,id:3});S.hearts=999;S.boss.hp=60;let floorStale=false;
+ for(let f=0;f<60*70;f++){S.p.inv=1e9;AR.step(S,1/60,{ax:0});S.ev.length=0;if(S.pl[0].stale||S.pl[1].stale)floorStale=true}
+ c('Stale: пол всегда свежий',!floorStale);
+ const T=AR.create({W:360,H:520,seed:5,id:3});T.hearts=999;T.boss.hp=20;T.atk=1e9;T.fallT=1e9;T.sbT=1e9;let oneFresh=true;
+ for(let f=0;f<60*70;f++){T.p.inv=1e9;AR.step(T,1/60,{ax:0});T.ev.length=0;if(T.pl.slice(2).every(q=>q.stale))oneFresh=false}
+ c('Stale, фаза 3: среди поднятых платформ всегда есть свежая',oneFresh)}
+{const S=AR.create({W:360,H:520,seed:9,id:3});S.hearts=999;S.boss.hp=100;S.atk=1e9;S.fallT=1e9;S.sbT=1e9;const q=S.pl[3];let warnT=-1;
+ for(let f=0;f<60*12&&warnT<0;f++){S.p.inv=1e9;S.p.x=q.x+q.w/2;S.p.y=q.y-GE.PH;S.p.on=true;S.p.vy=0;AR.step(S,1/60,{ax:0});S.ev.length=0;if(S.invW)warnT=S.t}
+ c('Stale ИИ: устаревает платформа, где игрок стоит дольше всего',warnT>0&&S.nxt.includes(3))}
+{const S=AR.create({W:360,H:520,seed:3,id:3});S.hearts=3;S.boss.hp=50;S.atk=1e9;S.fallT=1e9;S.inval=1e9;S.sbT=1e9;let f=0;
+ while(S.hearts===3&&f<60*6){AR.step(S,1/60,{ax:0});S.ev.length=0;f++}
+ c('Stale, фаза 2: копия бьёт того, кто стоит там, где был 3 с назад ('+f+' шагов)',S.hearts===2&&f>=178&&f<=200)}
+{const S=AR.create({W:360,H:520,seed:4,id:3});S.hearts=999;S.p.inv=1e9;S.atk=0;S.fallT=1e9;S.inval=1e9;S.sbT=1e9;AR.step(S,1/60,{ax:0});const tl=S.tel.find(a=>a.k==='fan');
+ c('Stale: веер предупреждает 0,5 с и летит 340 px/с ('+(tl?tl.t.toFixed(2):'нет')+' с)',!!tl&&tl.t>.45&&tl.t<=.5&&tl.v===340)}
+{const S=AR.create({W:360,H:520,seed:6,id:3});S.hearts=999;S.p.inv=1e9;S.boss.hp=60;S.atk=1e9;S.fallT=1e9;S.sbT=0;let bad=0,born=0;
+ for(let f=0;f<60*40;f++){S.p.inv=1e9;const before=new Set(S.sbytes);AR.step(S,1/60,{ax:0});S.ev.length=0;
+  for(const b of S.sbytes){if(before.has(b))continue;born++;const q=S.pl.find(q=>q.st!=='gone'&&b.x>q.x&&b.x<q.x+q.w&&Math.abs(b.y+22-q.y)<1);if(!q||q.stale)bad++}}
+ c('Stale: свежий байт появляется только на свежей платформе ('+born+' появлений, нарушений '+bad+')',born>5&&bad===0)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}

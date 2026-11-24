@@ -180,6 +180,11 @@ function load(){let raw={};try{raw=JSON.parse(GameCore.store.read(KEY)||'{}')}ca
    raf=requestAnimationFrame(loop)}
   /* ---------- рисование ---------- */
   const BGC=['#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#050506'];
+  /* Stale, фаза 2: копия игрока идёт его путём с задержкой 3 с; след из красных точек показывает, куда она придёт; сама копия тусклая с красными глазами */
+  function drawCopy(ctx,S,t){const g=S.ghost,h=S.hist;ctx.save();
+   for(let i=0;i<h.length;i+=12){ctx.globalAlpha=.1+.5*i/h.length;ctx.fillStyle=col.err;ctx.fillRect(h[i].x-3,h[i].y+E.PH/2-3,6,6)}
+   ctx.globalAlpha=.5;ctx.fillStyle='#5a5c63';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(g.x-10,g.y,20,E.PH,6);else ctx.rect(g.x-10,g.y,20,E.PH);ctx.fill();
+   ctx.globalAlpha=.85;ctx.fillStyle=col.err;ctx.fillRect(g.x-6,g.y+6,4,3);ctx.fillRect(g.x+2,g.y+6,4,3);ctx.restore()}
   function drawArena(){
    const W=S.W,H=S.H,gy=S.gy,t=S.t,B=S.boss;
    ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
@@ -190,10 +195,10 @@ function load(){let raw={};try{raw=JSON.parse(GameCore.store.read(KEY)||'{}')}ca
    for(let i=0;i<7;i++){ctx.globalAlpha=.16;ctx.fillText('File not found',(i*61)%(W-70),((t*40+i*83)%(H+20))-10)}ctx.globalAlpha=1}
    /* платформы */
    S.pl.forEach(q=>{if(q.st==='gone')return;const warn=q.st==='warn',sh=warn&&Math.sin(t*30)>0?2:0;
-    GameArt.plat(ctx,q.x+sh,q.y,q.w,q.floor?H-q.y:10,warn?'warn':q.stale?'stale':S.bid===3||(S.bid===10&&S.p4&&q===S.pl[4])?'lit':'');
+    const st=warn?'warn':q.nx?(Math.sin(t*20)>0?'lit':'stale'):q.stale?'stale':(S.bid===3||(S.bid===10&&S.p4&&q===S.pl[4]))?'lit':'';GameArt.plat(ctx,q.x+sh,q.y,q.w,q.floor?H-q.y:10,st);
     if(warn){ctx.globalAlpha=.5;ctx.fillStyle=col.err;for(let x=q.x;x<q.x+q.w;x+=14)ctx.fillRect(x+sh,q.y-8,7,5);ctx.globalAlpha=1}});
    if(S.lag){const L=S.lag;ctx.globalAlpha=L.on?.28:.12+.1*Math.sin(t*12);ctx.fillStyle='#8a8d93';ctx.fillRect(L.x,0,L.w,H);ctx.globalAlpha=1}
-   if(S.ghost){ctx.globalAlpha=.45;ctx.fillStyle=col.err;ctx.fillRect(S.ghost.x-12,S.ghost.y,24,E.PH);ctx.globalAlpha=1}
+   if(S.ghost)drawCopy(ctx,S,t);
    if(S.dark){ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H)}
    S.walls.forEach(w=>{ctx.globalAlpha=.55;ctx.fillStyle='#c9ccd1';ctx.fillRect(w.x-7,w.y,14,w.h);ctx.globalAlpha=1;ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.strokeRect(w.x-7,w.y,14,w.h);ctx.fillStyle='#fff';ctx.font='700 9px monospace';ctx.textAlign='center';ctx.fillText('$',w.x,w.y+14)});
    S.free.forEach(f=>{const yy=f.y+Math.sin(t*4)*2;ctx.fillStyle='#b8bac0';ctx.fillRect(f.x-6,yy-6,12,12);ctx.fillStyle=BGC[4];ctx.fillRect(f.x-2,yy-2,4,4)});
@@ -214,6 +219,10 @@ function load(){let raw={};try{raw=JSON.parse(GameCore.store.read(KEY)||'{}')}ca
    {const j=B.phase>1&&Math.sin(t*37)>.92?2:0;ctx.save();ctx.translate(B.x+j,B.y);if(S.dark)ctx.globalAlpha=.3;GameBossArt.draw(ctx,S,t);ctx.restore()}
    /* ключ: осколок таблички */
    if(S.key){const k=S.key,y=k.y+Math.sin(t*4)*3;ctx.save();ctx.translate(k.x,y);ctx.globalAlpha=k.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#f1f2f4';ctx.shadowColor='rgba(255,255,255,.8)';ctx.shadowBlur=12;ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(12,-13);ctx.lineTo(9,11);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#0a0a0c';ctx.fillRect(-6,-1,12,3);ctx.restore()}
+   /* Stale: свежие байты (белый квадрат с тёмным ядром), пульс при каждом пятом, мерцание поля в фазе 3 */
+   if(S.bid===3){S.sbytes.forEach(b=>{ctx.save();ctx.translate(b.x,b.y+Math.sin(t*4+b.x)*2);ctx.globalAlpha=b.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#f1f2f4';ctx.shadowColor='rgba(255,255,255,.8)';ctx.shadowBlur=10;ctx.fillRect(-6,-6,12,12);ctx.shadowBlur=0;ctx.fillStyle='#0a0a0c';ctx.fillRect(-2,-2,4,4);ctx.restore()});
+    if(S.pulseT>0){const k=1-S.pulseT/.6;ctx.strokeStyle='rgba(255,255,255,'+(1-k).toFixed(2)+')';ctx.lineWidth=3;ctx.beginPath();ctx.arc(B.x,B.y,20+k*140,0,6.2832);ctx.stroke()}
+    if(B.phase===3&&Math.sin(t*23)>.9){ctx.fillStyle='rgba(255,255,255,.05)';ctx.fillRect(0,0,W,H)}}
    if(S.seq&&S.dark){S.seq.n.forEach((d,i)=>{const lit=S.seq.lit===i;ctx.fillStyle=lit?'#fff':'#2c2d30';ctx.globalAlpha=lit?1:.7;ctx.fillRect(d.x-8,d.y-8,16,16);ctx.globalAlpha=1})}
    /* игрок */
    {const p=S.p,bl=p.inv>0&&Math.floor(t*14)%2;if(!bl||GameSpark.ready()){ctx.save();if(bl)ctx.globalAlpha=.45;ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:0);
@@ -221,6 +230,7 @@ function load(){let raw={};try{raw=JSON.parse(GameCore.store.read(KEY)||'{}')}ca
     ctx.fillStyle='#0a0a0c';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill()}ctx.restore()}}
    /* HUD: панель героя, полоса босса, управление */
    GameArt.arenaHud(ctx,S,W,H,t,{font:col.font,name:GameStory.bosses[S.bid-1].name,frac:B.hp/B.max});
+   if(S.bid===3){ctx.textAlign='left';ctx.fillStyle=col.tx2;ctx.font='600 10px '+col.font;ctx.fillText('байты до пульса',14,184);for(let i=0;i<5;i++){ctx.fillStyle=i<S.sb?'#f1f2f4':col.line;ctx.fillRect(120+i*14,176,10,10)}}
    if(S.bid===5){ctx.fillStyle=col.line;ctx.fillRect(14,164,80,6);ctx.fillStyle='#f1f2f4';ctx.fillRect(14,164,80*Math.max(0,S.tok)/100,6);ctx.textAlign='left';ctx.fillStyle=col.tx2;ctx.font='600 10px '+col.font;ctx.fillText('токены  ◆ '+S.wb,14,184);if(S.slow>0){ctx.textAlign='center';ctx.fillStyle=col.err;ctx.fillText('Лимит исчерпан',W/2+40,184)}}
    if(S.bid===6){let wi=0;S.wins.forEach(w=>{if(w.d>0)return;const y=196+wi++*40,x=W/2-80;ctx.fillStyle='#121214';ctx.fillRect(x,y,160,34);ctx.strokeStyle=col.tx2;ctx.lineWidth=1;ctx.strokeRect(x,y,160,34);ctx.fillStyle=w.real?'#e0262b':'#c4c6cb';ctx.fillRect(x+4,y+4,6,6);ctx.fillStyle=col.tx;ctx.font='600 9px monospace';ctx.textAlign='left';ctx.fillText('rm -r /реестр  Разрешить?',x+14,y+22);ctx.fillStyle=col.err;ctx.fillRect(x,y+30,160*Math.max(0,w.t)/w.max,4)});
     ctx.textAlign='left';ctx.fillStyle=col.tx2;ctx.font='600 10px '+col.font;ctx.fillText('заряд '+(S.chg%5)+'/5',14,184)}
