@@ -27,16 +27,15 @@ function run(L,allowHold){
   for(let i=0;i<3&&!S.over;i++){const j0=S.jn||0,x0=S.x;slice(S,b.first[i]||0,allowHold);for(let k=j0;k<(S.jn||0);k++)jumps.push({x:Math.round(x0),hold:(b.first[i]|0)>0&&allowHold})}
   n++}
  return {S,jumps}}
-const Ls=(process.argv[2]||'31,32,33,34,35,36,37,38,39,41,42,43,44,45,46,47,48,49').split(',').map(Number);
-const rows=[];
-for(const L of Ls){
- const full=run(L,true);const tap=run(L,false);
- const idle=[];let lastT=0;
- // окна без прыжка: по времени между соседними прыжками полного бота
- const J=full.jumps;for(let i=1;i<J.length;i++){const dx=J[i].x-J[i-1].x;if(dx>0)idle.push(dx)}
- const maxGap=idle.length?Math.max(...idle):0;
- const F=GE.create({mode:'level',L,seed:1,W:360,H:640});const hz=F.items.filter(i=>['bug','wall','gate','hop','proj','zone'].includes(i.t)).length+F.pits.length;
- rows.push({L,full:full.S.over+'/'+full.S.lost,tap:tap.S.over+'/'+tap.S.lost,tapDiedAt:tap.S.over==='dead'||tap.S.lost>0?Math.round(tap.S.x):'-',hz,jumps:J.length,maxGapPx:Math.round(maxGap),tapOk:tap.S.over==='win'&&tap.S.lost===0,tapLost:tap.S.lost})}
-for(const r of rows)console.log(r.L,'полный',r.full,'| короткий',r.tap,'на x',r.tapDiedAt,'| препятствий',r.hz,'| прыжков',r.jumps,'| макс. путь без прыжка',r.maxGapPx,'px',r.tapOk?'  ← ЛЁГКИЙ (короткий проходит)':'');
-console.log('короткий бот проходит: '+rows.filter(r=>r.tapOk).length+' из '+rows.length);
-if(process.argv.includes('--json'))console.log(JSON.stringify(rows));
+module.exports={run,pick,slice,GE,GL,HAZ:['bug','wall','gate','hop','proj','zone','spike','mov']};
+if(require.main===module){
+ const Ls=(process.argv[2]||'31,32,33,34,35,36,37,38,39,41,42,43,44,45,46,47,48,49').split(',').map(Number);
+ const rows=[];
+ for(const L of Ls){
+  const full=run(L,true),tap=run(L,false);
+  const J=full.jumps;let maxGap=0;for(let i=1;i<J.length;i++)maxGap=Math.max(maxGap,J[i].x-J[i-1].x);
+  const F=GE.create({mode:'level',L,seed:1,W:360,H:640});const hz=F.items.filter(i=>module.exports.HAZ.includes(i.t)).length+F.pits.length;
+  rows.push({L,full:full.S.over+'/'+full.S.lost,tap:tap.S.over+'/'+tap.S.lost,tapDiedAt:(tap.S.over==='dead'||tap.S.lost>0)?Math.round(tap.S.x):'-',hz,jumps:J.length,maxGapPx:Math.round(maxGap),tapOk:tap.S.over==='win'&&tap.S.lost===0})}
+ for(const r of rows)console.log(r.L,'полный',r.full,'| короткий',r.tap,'на x',r.tapDiedAt,'| препятствий',r.hz,'| прыжков',r.jumps,'| макс. путь без прыжка',r.maxGapPx,'px',r.tapOk?'  ← ЛЁГКИЙ':'');
+ console.log('короткий бот проходит: '+rows.filter(r=>r.tapOk).length+' из '+rows.length);
+}

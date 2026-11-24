@@ -152,7 +152,9 @@ const GameEngine=(()=>{
     if(pw>=it.at-170)it.wn=1;
     if(pw>=it.at){it.go=1;it.wn=0;it.x=S.x+S.W+30;it.vx=-it.sp;S.ev.push('shot')}
     continue}
-   if(it.vx)it.x+=it.vx*dt;
+   /* блок-рельс едет по ровной земле туда-сюда (уровни 31+) */
+  if(k==='mov')it.x=it.bx+it.amp*Math.sin(S.t*it.sp+it.ph);
+  if(it.vx)it.x+=it.vx*dt;
    if(k==='zone'){it.age+=dt;continue}
    const y=gy-it.h;
    if((k==='byte'||k==='gold')&&p.mag>0){const dx=pw-it.x,dy=(p.y+PH/2)-y,d=Math.hypot(dx,dy);if(d<170&&d>1){it.x+=dx/d*620*dt;it.h-=dy/d*620*dt}}
@@ -172,9 +174,11 @@ const GameEngine=(()=>{
     /* Потеряшка: безопасен, превращается в жителя, если приземлиться на него сверху */
     if(Math.abs(it.x-pw)<10+PW/2&&py1>Y-22&&py0<Y&&p.vy>0&&feet0<=Y-12){
      it.dead=1;S.found=true;p.vy=-340;p.on=false;p.stand=null;S.score+=200;S.ev.push('found');S.note={text:'Потеряшка стал жителем!',ttl:3,kind:'tip'}}}
-   else if(k==='bug'||k==='proj'||k==='wall'||k==='hop'||k==='gate'){
+   else if(k==='bug'||k==='proj'||k==='wall'||k==='hop'||k==='gate'||k==='spike'||k==='mov'){
     let w=8,h=14,Yb=Y;
     if(k==='bug'){w=it.big?11:9;h=it.big?30:22}
+    else if(k==='spike'){w=7;h=12}
+    else if(k==='mov'){w=10;h=30}
     else if(k==='wall'){h=it.hh}
     else if(k==='hop'){w=9;h=22;Yb=gy-hopE(S,it)}
     else if(k==='gate'){if(gateSt(S,it)!==2)continue;h=it.hh}

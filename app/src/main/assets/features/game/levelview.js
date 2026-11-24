@@ -48,6 +48,9 @@ const GameLevelView=(()=>{
    if(k==='door'&&S.doorOpen>0){const op=S.doorOpen;glow(ctx,x,gy-32,70,'#ffffff',.25+.5*op);ctx.fillStyle='rgba(255,255,255,'+(.2+.6*op)+')';ctx.fillRect(x-20,gy-60,40,56)}
    return}
   if(k==='wall'){const h=it.hh;glow(ctx,x,gy-h/2,h*.8,C.red,dark?.5:.28);ctx.fillStyle=C.red;ctx.fillRect(x-8,gy-h,16,h);ctx.fillStyle='rgba(5,5,6,.55)';for(let j=6;j<h;j+=14){ctx.beginPath();ctx.moveTo(x-8,gy-j);ctx.lineTo(x+8,gy-j-8);ctx.lineTo(x+8,gy-j-3);ctx.lineTo(x-8,gy-j+5);ctx.fill()}ctx.fillStyle='#f1f2f4';ctx.fillRect(x-10,gy-h-3,20,3);return}
+  /* шипы «битых файлов» и блок, который едет по рельсам (уровни 31+) */
+  if(k==='spike'){if(dark)glow(ctx,x,gy-8,26,C.red,.4);ctx.fillStyle='#e8e9ec';ctx.beginPath();ctx.moveTo(x-7,gy);ctx.lineTo(x,gy-12);ctx.lineTo(x+7,gy);ctx.closePath();ctx.fill();ctx.fillStyle=C.red;ctx.fillRect(x-2,gy-9,4,2);return}
+  if(k==='mov'){glow(ctx,x,gy-15,40,C.red,dark?.45:.25);ctx.fillStyle='#16161a';ctx.fillRect(x-10,gy-30,20,30);ctx.fillStyle=C.red;ctx.fillRect(x-10,gy-30,20,2);ctx.fillRect(x-10,gy-2,20,2);ctx.fillStyle='#8a8c93';ctx.fillRect(x-1,gy-22,2,14);return}
   if(k==='proj'){glow(ctx,x,y,24,C.red,.5);ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t*9)*.12);ctx.fillStyle='#e8e9ec';ctx.fillRect(-10,-7,20,14);ctx.fillStyle='#5a5c63';ctx.fillRect(-7,-3,11,2);ctx.fillRect(-7,1,8,2);ctx.fillStyle=C.red;ctx.beginPath();ctx.arc(6,3,3,0,TAU);ctx.fill();ctx.restore();return}
   if(k==='hop'){const e=GameEngine.hopE(S,it),by=gy-e;
    ctx.globalAlpha=.3;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(x,gy+1,10*(1-e/140),3,0,0,TAU);ctx.fill();
