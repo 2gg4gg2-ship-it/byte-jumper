@@ -103,23 +103,23 @@ const GameLevels=(()=>{
    p(g){g=g||80;const a=c+120;pits.push({a,b:a+g});arc(a+g/2,g+30,5,20,70+g*.3);c+=g+280},
    /* цепочка платформ над ямой: kind st/fall/mv/lift/blink/rise/fk или список F+S+F (свежая/устаревшая) */
    c(kind,n,w,gap,hs){
-    n=n|0||3;w=Math.max(110,w||110);gap=Math.min(34,gap==null?34:+gap);const H=String(hs==null?30:hs).split('-').map(n=>Math.round(Math.min(28,14+Math.max(0,n-26)*.3))),ks=String(kind).split('+'),N=ks.length>1?ks.length:n;
+    n=n|0||3;w=Math.max(112,Math.min(w||112,116));gap=Math.min(40,gap==null?38:+gap);const H=String(hs==null?30:hs).split('-').map(n=>Math.round(Math.min(40,16+Math.max(0,n-26)*.6))),ks=String(kind).split('+'),N=ks.length>1?ks.length:n;
     const a=c+130;let x=a+gap;
     for(let i=0;i<N;i++){
      const k=ks.length>1?ks[i]:String(kind);let ww=w,h=H[i%H.length],q;
-     if(k==='S')ww=Math.round(w*1.3);
+     if(k==='S')ww=Math.round(w*1.3);if(i===0)ww=Math.max(ww,136);
      const tc=tA(x+ww/2);
-     if(k==='fall')q=plat(x,ww,h,'fall',{dl:.8});
+     if(k==='fall')q=plat(x,ww,h,'fall',{dl:.55});
      else if(k==='F')q=plat(x,ww,h,'st',{tone:'fresh'});
-     else if(k==='S')q=plat(x,ww,h,'fall',{dl:.6,tone:'stale'});
-     else if(k==='mv')q=plat(x,ww,h,'mv',{amp:14,sp:1.3,ph:-1.3*tc});
-     else if(k==='lift'){h=30;q=plat(x,ww,h,'lift',{amp:14,sp:1.3,ph:-1.3*tc})}
-     else if(k==='blink')q=plat(x,ww,h,'blink',{per:3,on:2.5,ph:mod(1.25-tc,3)});
+     else if(k==='S')q=plat(x,ww,h,'fall',{dl:.45,tone:'stale'});
+     else if(k==='mv')q=plat(x,ww,h,'mv',{amp:20,sp:1.4,ph:-1.4*tc});
+     else if(k==='lift'){h=34;q=plat(x,ww,h,'lift',{amp:20,sp:1.4,ph:-1.4*tc})}
+     else if(k==='blink')q=plat(x,ww,h,'blink',{per:3,on:2.1,ph:mod(1.05-tc,3)});
      else if(k==='rise')q=plat(x,ww,h,'st',{rise:1});
      else q=plat(x,ww,h,'st');
      byte(x+ww/2,h+36);
      x+=ww;
-     if(k==='fk'){plat(x,30,h,'fake');x+=30}
+     if(k==='fk'){plat(x,38,h,'fake');x+=38}
      x+=gap}
     pits.push({a,b:x,retry:true});c=x+140},
    /* ступени над землёй: подъём и спуск, необязательный верхний путь; sb — под ними баг */

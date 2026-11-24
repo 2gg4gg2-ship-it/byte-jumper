@@ -36,7 +36,7 @@ const GameLevelView=(()=>{
   if(q.k==='lift'||q.k==='mv'){ctx.fillStyle='rgba(241,242,244,.7)';const m=x+w/2;if(q.k==='lift'){ctx.fillRect(m-1,y+oy-9,2,6);ctx.beginPath();ctx.moveTo(m-4,y+oy-8);ctx.lineTo(m,y+oy-13);ctx.lineTo(m+4,y+oy-8);ctx.fill()}else ctx.fillRect(m-9,y+oy-8,18,2)}
   ctx.globalAlpha=1}
  /* ---------- предметы, которых нет в GameArt ---------- */
- function item(ctx,S,it,W,gy,t,font,dark){
+ function item(ctx,S,it,W,gy,t,font,dark,th){
   const k=it.t,C=A().C,glow=A().glowDot;let x=it.x-S.x;
   if(k==='proj'&&!it.go){if(it.wn){const y=gy-it.h-7,a=.5+.5*Math.abs(Math.sin(t*14));ctx.globalAlpha=a;glow(ctx,W-18,y,26,C.red,.6);ctx.fillStyle=C.red;ctx.beginPath();ctx.moveTo(W-6,y);ctx.lineTo(W-22,y-9);ctx.lineTo(W-22,y+9);ctx.closePath();ctx.fill();ctx.fillStyle='#f1f2f4';ctx.fillRect(W-36,y-5,9,10);ctx.fillRect(W-38,y-8,13,2);ctx.globalAlpha=1}return}
   if(x<-60||x>W+80)return;
@@ -44,7 +44,7 @@ const GameLevelView=(()=>{
   if(k==='byte'||k==='gold'||k==='bug'||k==='door'||k==='shield'||k==='magnet'){
    if(k==='bug'&&dark)glow(ctx,x,gy-14,34,C.red,.5);
    if(k==='byte'&&dark)glow(ctx,x,y,30,'#ffffff',.35);
-   A().item(ctx,it,x,y,gy,t,S.H);
+   A().item(ctx,it,x,y,gy,t,S.H,th);
    if(k==='door'&&S.doorOpen>0){const op=S.doorOpen;glow(ctx,x,gy-32,70,'#ffffff',.25+.5*op);ctx.fillStyle='rgba(255,255,255,'+(.2+.6*op)+')';ctx.fillRect(x-20,gy-60,40,56)}
    return}
   if(k==='wall'){const h=it.hh;glow(ctx,x,gy-h/2,h*.8,C.red,dark?.5:.28);ctx.fillStyle=C.red;ctx.fillRect(x-8,gy-h,16,h);ctx.fillStyle='rgba(5,5,6,.55)';for(let j=6;j<h;j+=14){ctx.beginPath();ctx.moveTo(x-8,gy-j);ctx.lineTo(x+8,gy-j-8);ctx.lineTo(x+8,gy-j-3);ctx.lineTo(x-8,gy-j+5);ctx.fill()}ctx.fillStyle='#f1f2f4';ctx.fillRect(x-10,gy-h-3,20,3);return}
@@ -73,12 +73,12 @@ const GameLevelView=(()=>{
   GameArt.bg(ctx,W,H,gy,S.x,t,th,q);extra(ctx,S,W,H,gy,t,ch);
   GameArt.voidFill(ctx,W,H,gy,th,t);
   const pits=S.pits.slice().sort((a,b)=>a.a-b.a);let cx=-10;
-  for(const p of pits){const a=p.a-S.x,b=p.b-S.x;if(b<-20||a>W+20){cx=Math.max(cx,b);continue}GameArt.seg(ctx,cx,Math.min(a,W+10),gy,H,S.x,th,t);cx=Math.max(cx,b)}
+  for(const p of pits){const a=p.a-S.x,b=p.b-S.x;if(b<-20)continue;if(a>W+20)break;GameArt.seg(ctx,cx,Math.min(a,W+10),gy,H,S.x,th,t);cx=Math.max(cx,b)}
   GameArt.seg(ctx,cx,W+10,gy,H,S.x,th,t);
   if(dark){const p=S.p,g=ctx.createRadialGradient(S.px,p.y+12,30,S.px,p.y+12,200);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.86)');ctx.fillStyle=g;ctx.fillRect(0,0,W,gy);
    for(const p2 of pits){const a=p2.a-S.x,b=p2.b-S.x;ctx.fillStyle=C.red;ctx.fillRect(a-2,gy,3,10);ctx.fillRect(b-1,gy,3,10)}}
   for(const pl of S.plats)plat(ctx,S,pl,W,gy,t);
-  for(const it of S.items)if(it.t!=='tip')item(ctx,S,it,W,gy,t,font,dark);
+  for(const it of S.items)if(it.t!=='tip')item(ctx,S,it,W,gy,t,font,dark,th);
   /* игрок: тень на земле или платформе, герой из spark.js */
   const p=S.p;let sy=gy;for(const pl of S.plats){if(pl.dead||pl.k==='fake'||S.px+8<pl.cx-S.x||S.px-8>pl.cx-S.x+pl.w)continue;const ty=gy-pl.cur;if(ty>=p.y+24-4&&ty<sy)sy=ty}
   GameArt.shadow(ctx,S.px,sy,p.y,24);

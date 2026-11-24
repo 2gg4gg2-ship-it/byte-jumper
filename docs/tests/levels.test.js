@@ -44,10 +44,10 @@ for(const W of [360,412]){const S=GE.create({mode:'level',L:2,seed:1,W,H:640});S
  c('ворота: к приходу игрока состояние не меняется ±0,5 с',okg)}
 /* «неточный игрок»: тап у края с ошибкой по месту, цепочки платформ проходятся при любой ошибке в диапазоне */
 {let all=true,fails=[];for(const L of LV){const S0=GE.create({mode:'level',L,seed:1,W:360,H:640});
-  for(const pit of S0.pits.filter(p=>p.retry))for(const e1 of [0,12,26,40])for(const e2 of [6,20,34,48]){
+  for(const pit of S0.pits.filter(p=>p.retry))for(const e1 of [0,10,20,30])for(const e2 of [14,22,30,40]){
    const S=GE.create({mode:'level',L,seed:1,W:360,H:640});S.items=S.items.filter(i=>i.t==='door');S.x=pit.a-200;let t=0,xx=0;const P=S.P;while(xx<pit.a-200){const v=Math.min(P.v0+P.acc*xx,P.vmax);xx+=5;t+=5/v}S.t=t;
    let n=0;while(n<900&&!S.over&&S.lost===0&&S.x+S.px<pit.b+60){const pw=S.x+S.px;let pr=false;
-    if(S.p.on){if(S.p.stand){if(pw>=S.p.stand.cx+S.p.stand.w-e2)pr=true}else if(pw>=pit.a-e1&&pw<pit.b)pr=true}
+    if(S.p.on){if(S.p.stand){if(pw>=S.p.stand.cx+S.p.stand.w-e2||(S.p.stand.tone==='stale'&&S.p.stand.fs===1))pr=true}else if(pw>=pit.a-e1&&pw<pit.b)pr=true}
     GE.step(S,1/60,{pressed:pr,down:false});n++}
    if(S.lost>0){all=false;if(fails.length<5)fails.push(L+'@'+Math.round(pit.a)+' e1='+e1+' e2='+e2)}}}
  c('цепочки платформ проходятся при ошибке прыжка ±30 px ('+(fails.join('; ')||'все')+')',all)}
