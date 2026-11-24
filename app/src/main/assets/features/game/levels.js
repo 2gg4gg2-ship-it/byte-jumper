@@ -91,24 +91,24 @@ Object.assign(LOST,{31:['Рельс','Я тоже еду, но не знаю к�
   28:{seq:'t:a f v:b f l f b f v:d f L f l f n:a f v:c f W f p:80 f l',txt:{a:'Золото манит. Но смотри под ноги.'}},
   29:{seq:'t:a f c:F+S+F f b f h:u,2 f n:a f k f W f g:jump f L f c:blink,3,80,56,34 f v:c',txt:{a:'Свежее имя. Мемо где-то рядом.'}}};
 Object.assign(DEF,{
- 31:{seq:'t:a f c:mv,3,110,36,30 f b f c:mv,4,100,40,36 f L f b f p:70 f c:mv,3,110,36,30 f bb:200 f',txt:{a:'Рельсы несут платформу. Прыгай, когда она рядом.'}},
- 32:{seq:'t:a f:2 b f:2 b f:2 b f:2 p:60 f:2 b f:2 b f:2 L f:2 b f:2 b f:2',txt:{a:'Баги стоят ровно. Прыгай в такт.'}},
- 33:{seq:'t:a f v:c f L f v:b f p:70 f v:c f bb:200 f v:b f',txt:{a:'Пакеты летят на двух высотах. Выбери линию.'}},
- 34:{seq:'t:a f h:d,2 f b f h:ud,2 f L f W f h:u,2 f p:70 f h:d,3',txt:{a:'Призраки на земле и в воздухе. Жди, пока они далеко.'}},
- 35:{seq:'t:a f n:a f c:st,3,110,34,30 f b f h:u,2 f L f bb:200 f p:70 f W f',txt:{a:'Мост открыт. Иди ровно.'}},
- 36:{seq:'t:a f b f n:a f W f L f bb:200 f c:fall,3,110,34,30 f p:70 f',txt:{a:'Тихий участок. Иди, не оглядывайся.'}},
- 37:{dark:1,seq:'t:a f b f p:70 f W f b f c:st,3,110,34,30 f L f bb:200 f p:80 f B f',txt:{a:'Темно. Ориентируйся по свету байтов.'}},
- 38:{seq:'t:a f b f k f p:70 f W f k f L f bb:200 f k f b f p:60 f',txt:{a:'Точка отката возвращает сердце.'}},
- 39:{seq:'t:a f f p:60 f s:3,80,34 f f L f f n:a f f t:b f f',txt:{a:'Тихо. Опасностей почти нет.',b:'Шаги. Где-то рядом.'}},
- 41:{seq:'t:a f c:S+F+S+F f b f c:fall,4,100,34,30 f L f p:80 f c:S+S+F f bb:200 f',txt:{a:'Облачные плиты тают после касания.'}},
- 42:{seq:'t:a f b f l f L f c:st,3,110,34,30 f bb:200 f p:90 f',txt:{a:'Золотой мост стоит байтов. Можно и поверху.'}},
- 43:{seq:'t:a f g:pass f b f g:jump f n:a f L f g:pass f g:jump f p:70 f bb:200 f',txt:{a:'Двери открываются по очереди. Выбирай.'}},
- 44:{seq:'t:a f c:blink,3,110,34,30 f b f c:blink,4,100,34,34 f L f W f c:blink,4,100,34,30 f p:70 f',txt:{a:'Звенящие плиты. Шагай мимо них.'}},
- 45:{seq:'t:a f g:pass f g:jump f n:a f g:pass f v:a f L f g:jump f W f',txt:{a:'Три пути, и каждый ведёт вперёд.'}},
- 46:{seq:'t:a f b f v:d f L f b f p:70 f bb:200 f W f',txt:{a:'Витрина. Не подходи к ней близко.'}},
- 47:{seq:'t:a f i f b f i f c:st,3,110,34,30 f L f p:70 f i f bb:200 f',txt:{a:'Сбрасывай вес в контейнерах.'}},
- 48:{wt:1,seq:'t:a f:3 b f:3 p:70 f:3 i f:3 W f:3 b f:3 i f L f:3 p:80 f:3 bb:200 f:3 i f',txt:{a:'Вес растёт. Контейнеры его сбрасывают.'}},
- 49:{seq:'t:a f v:b f v:c f b f g:jump f n:a f L f v:a f p:70 f W f',txt:{a:'Договоры летят. Перепрыгивай низкие.'}}});
+ 31:{sp:1.2,seq:'t:a b b f:1 b b b c:mv,3,110,36,30 b b b f:1 p:60 b bb:120 c:mv,4,100,40,36 b b b f:1 W b b L bb:120 p:70 b b c:mv,3,110,36,30 bb:150 b b W b bb:120 b b f:1 p:80 b b c:mv,4,100,40,36 b bb:120 b b f:1',txt:{a:'Рельсы несут платформу. Прыгай, когда она рядом.'}},
+ 32:{sp:1.2,seq:'t:a b b b b p:60 b b b b b W b b b b L b bb:120 b b b b b p:70 b bb:120 b b b b bb:120 b b',txt:{a:'Баги стоят ровно. Прыгай в такт.'}},
+ 33:{sp:1.2,seq:'t:a v:c b b v:b p:70 v:c bb:150 v:b L v:c p:80 v:b b bb:120 v:c b b v:b',txt:{a:'Пакеты летят на двух высотах. Выбери линию.'}},
+ 34:{sp:1.2,seq:'t:a h:d,2 b b h:ud,2 L b b W b b h:u,2 p:70 b b h:d,3 bb:150 b b h:ud,3 W b b p:80 b b b b h:ud,2',txt:{a:'Призраки на земле и в воздухе. Жди, пока они далеко.'}},
+ 35:{sp:1.2,seq:'t:a n:a c:st,3,110,34,30 b b h:u,2 L b bb:150 b b p:70 b b W b b c:st,3,110,34,30 h:ud,2 b b b p:80 b bb:120',txt:{a:'Мост открыт. Иди ровно.'}},
+ 36:{sp:1.2,seq:'t:a b b n:a W b b L b bb:150 b b c:fall,3,110,34,30 p:70 b b b W b bb:120 b b c:fall,4,100,34,30 p:80 b b b',txt:{a:'Тихий участок. Иди, не оглядывайся.'}},
+ 37:{dark:1,sp:1.2,seq:'t:a b b p:70 b b W b b b c:st,3,110,34,30 L b bb:150 b b p:80 b b B W b b b p:70 b bb:120 b b b',txt:{a:'Темно. Ориентируйся по свету байтов.'}},
+ 38:{sp:1.2,seq:'t:a b b k p:70 b b W b b b k L b bb:150 b b k b b p:60 b b W b bb:120 b b b k',txt:{a:'Точка отката возвращает сердце.'}},
+ 39:{sp:1.2,seq:'t:a b b p:60 b b s:3,80,34 L b b n:a b b W b bb:150 b b t:b p:70 b b b',txt:{a:'Тихо. Опасностей почти нет.',b:'Шаги. Где-то рядом.'}},
+ 41:{sp:1.2,seq:'t:a c:S+F+S+F b b c:fall,4,100,34,30 L b b p:80 b b c:S+S+F bb:150 b b c:fall,3,100,34,30 W b b b c:S+F+S p:70 b b',txt:{a:'Облачные плиты тают после касания.'}},
+ 42:{sp:1.2,seq:'t:a b b l L b b c:st,3,110,34,30 bb:150 b b p:90 b b W b b b l c:st,3,110,34,30 bb:120 b b p:80 b b',txt:{a:'Золотой мост стоит байтов. Можно и поверху.'}},
+ 43:{sp:1.2,seq:'t:a g:pass b b g:jump n:a L b b g:pass g:jump p:70 b bb:150 b b g:pass b b g:jump W b b',txt:{a:'Двери открываются по очереди. Выбирай.'}},
+ 44:{sp:1.2,seq:'t:a c:blink,3,110,34,30 b b c:st,4,100,34,34 L b b W b b c:blink,4,100,34,30 p:70 b b b c:st,3,110,34,30 bb:120 b b c:blink,3,110,34,30',txt:{a:'Звенящие плиты. Шагай мимо них.'}},
+ 45:{sp:1.2,seq:'t:a g:pass g:jump n:a g:pass v:a L b b g:jump W b b g:pass b b v:b g:jump p:70 b b',txt:{a:'Три пути, и каждый ведёт вперёд.'}},
+ 46:{sp:1.2,seq:'t:a b b v:d L b b b p:70 b bb:150 b b W b b v:c b b p:80 b bb:120 b b',txt:{a:'Витрина. Не подходи к ней близко.'}},
+ 47:{sp:1.2,seq:'t:a i b b i c:st,3,110,34,30 L b b p:70 b b i bb:150 b b W b b b i p:80 b b',txt:{a:'Сбрасывай вес в контейнерах.'}},
+ 48:{wt:1,sp:1.2,seq:'t:a b b p:70 b b i W b b b i L b b p:80 b bb:150 b b i b b W b b p:70 b b',txt:{a:'Вес растёт. Контейнеры его сбрасывают.'}},
+ 49:{sp:1.2,seq:'t:a v:b v:c b b g:jump n:a L b b v:a p:70 b b W b b v:c g:pass b bb:120 b b',txt:{a:'Договоры летят. Перепрыгивай низкие.'}}});
  /* тексты записей (лор) */
  const LORE={6:{a:'Обломок таблички «/home/». Бит мрачнеет: «Положи на место. Потом».'},
   8:{a:'Бит тихо: «Кайрем строил не стены, а двери».'},
@@ -132,6 +132,8 @@ Object.assign(LORE,{
  const num=v=>/^-?\d+(\.\d+)?$/.test(v)?+v:v;
  function build(S){
   const D=DEF[S.L],P=S.P,PXs=S.px,it=S.items,pits=S.pits,pl=S.plats;
+  /* sp — скорость уровня относительно сложности (предел реакции 420 px/с) */
+  if(D.sp){P.v0=Math.min(P.v0*D.sp,400);P.vmax=Math.min(P.vmax*D.sp,420)}
   S.def=D;D.txt=Object.assign({},D.txt,{lore:LORE[S.L]?LORE[S.L].a:''});
   let c=380;
   /* время, за которое игрок дойдёт до мировой точки x (скорость не зависит от нажатий) */
