@@ -4,7 +4,7 @@
 
 Игра родилась внутри приложения **Kairema** (`features/game`). Здесь она живёт отдельно, пока её доделывают. Когда будет готова, папку `features/game` копируют обратно в Kairema (см. `docs/RETURN_TO_KAIREMA.md`).
 
-Текущая версия: 0.8.2
+Текущая версия: 0.8.3
 
 ## Устройство
 
@@ -40,4 +40,4 @@ app/src/main/java/com/bytejumper/app/MainActivity.kt   оболочка: WebView
 
 
 ## Для Клаудов
-Начни с `docs/CLAUDE_GUIDE.md`, затем `docs/MAP.md` (карта кода). После правок: `python3 docs/tools/make_map.py`.
+Начни с `docs/CLAUDE_GUIDE.md`, затем `docs/ARCHITECTURE.md` (слои) и `docs/MAP.md` (карта кода). После правок: `python3 docs/tools/make_map.py`.

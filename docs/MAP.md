@@ -1,6 +1,6 @@
 # Карта кода «Байт-прыгуна»
 
-Это файл для Клауда: как быстро найти нужный код. Нижний блок между `AUTO:START` и `AUTO:END` создаётся скриптом: **не правь его руками**, после любых правок кода запускай `python3 docs/tools/make_map.py`, потом `python3 docs/tools/make_map.py --check` (должно быть «MAP.md актуален»).
+Это файл для Клауда: как быстро найти нужный код. Правила слоёв: `docs/ARCHITECTURE.md`. Нижний блок между `AUTO:START` и `AUTO:END` создаётся скриптом: **не правь его руками**, после любых правок кода запускай `python3 docs/tools/make_map.py`, потом `python3 docs/tools/make_map.py --check` (должно быть «MAP.md актуален»).
 
 ## Быстрый поиск: «хочу изменить X, куда идти»
 
@@ -32,7 +32,7 @@
 - Пути `app/src/main/assets/features/game/*` нельзя менять: игру позже вернут в Kairema (`docs/RETURN_TO_KAIREMA.md`).
 
 <!-- AUTO:START -->
-Версия в сборке: **0.8.2** (versionCode 15). Файл: `app/build.gradle.kts`.
+Версия в сборке: **0.8.3** (versionCode 16). Файл: `app/build.gradle.kts`.
 
 ### Индекс файлов игры и оболочки (`app/src/main/assets`)
 
@@ -133,6 +133,7 @@
 
 ### Документы (`docs`)
 
+- `ARCHITECTURE.md`: Архитектура «Байт-прыгуна»
 - `BOSSES.md`: Боссы и сложность уровней (проект механик)
 - `CHANGELOG.md`: История версий
 - `CLAUDE_GUIDE.md`: Руководство для Клауда: как работать с «Байт-прыгуном»
