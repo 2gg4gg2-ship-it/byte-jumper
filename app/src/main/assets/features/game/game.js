@@ -193,7 +193,7 @@ const Game=(()=>{
    if(S.key){const k=S.key,y=k.y+Math.sin(t*4)*3;ctx.save();ctx.translate(k.x,y);ctx.globalAlpha=k.t<1.5&&Math.sin(t*20)>0?.4:1;ctx.fillStyle='#f1f2f4';ctx.shadowColor='rgba(255,255,255,.8)';ctx.shadowBlur=12;ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(12,-13);ctx.lineTo(9,11);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#0a0a0c';ctx.fillRect(-6,-1,12,3);ctx.restore()}
    if(S.seq&&S.dark){S.seq.n.forEach((d,i)=>{const lit=S.seq.lit===i;ctx.fillStyle=lit?'#fff':'#2c2d30';ctx.globalAlpha=lit?1:.7;ctx.fillRect(d.x-8,d.y-8,16,16);ctx.globalAlpha=1})}
    /* игрок */
-   {const p=S.p,bl=p.inv>0&&Math.floor(t*14)%2;if(!bl||GameSpark.ready()){ctx.save();if(bl)ctx.globalAlpha=.45;ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+   {const p=S.p,bl=p.inv>0&&Math.floor(t*14)%2;if(!bl||GameSpark.ready()){ctx.save();if(bl)ctx.globalAlpha=.45;ctx.translate(p.x,p.y+E.PH/2);ctx.rotate(S.flip>0?Math.PI:0);
     if(!GameSpark.draw(ctx,S,t,'arena',E)){ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
     ctx.fillStyle='#0a0a0c';ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill()}ctx.restore()}}
    /* HUD: панель героя, полоса босса, управление */
@@ -251,7 +251,7 @@ const Game=(()=>{
    /* игрок */
    GameArt.shadow(ctx,E.PX,gy,S.p.y,E.PH);
    {const p=S.p,blink=p.inv>0&&Math.floor(t*14)%2;
-    if(!blink||GameSpark.ready()){ctx.save();if(blink)ctx.globalAlpha=.45;ctx.translate(E.PX,p.y+E.PH/2);ctx.rotate(p.on?0:Math.max(-.35,Math.min(.35,p.vy/2400)));
+    if(!blink||GameSpark.ready()){ctx.save();if(blink)ctx.globalAlpha=.45;ctx.translate(E.PX,p.y+E.PH/2);
      if(!GameSpark.draw(ctx,S,t,'level',E)){ctx.fillStyle=col.tx;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(-12,-12,24,24,7);else ctx.rect(-12,-12,24,24);ctx.fill();
      ctx.fillStyle=col.bg;ctx.beginPath();ctx.arc(-4.5,-2,3,0,7);ctx.arc(4.5,-2,3,0,7);ctx.fill();
      ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(0,-17);ctx.stroke();ctx.beginPath();ctx.arc(0,-18,2,0,7);ctx.fillStyle=col.tx;ctx.fill()}

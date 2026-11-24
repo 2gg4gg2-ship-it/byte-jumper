@@ -119,7 +119,7 @@ const GameArt=(()=>{
   const a=S._art||(S._art={p:[],lt:S.t,on:true,by:S.bytes,rt:0});const dt=Math.max(0,Math.min(.1,S.t-a.lt));a.lt=S.t;const p=S.p,x=E.PX,fy=p.y+E.PH;
   if(p.on&&!a.on&&a.p.length<40*q)for(let i=0;i<7;i++)a.p.push({x:x+(i-3)*3,y:fy,vx:(i-3)*22,vy:-30-Math.random()*26,l:.45,c:'#b8bac0'});
   a.on=p.on;a.rt-=dt;if(p.on&&a.rt<=0&&a.p.length<40*q){a.rt=.07/Math.max(.4,q);a.p.push({x:x-6,y:fy-1,vx:-50-Math.random()*40,vy:-10-Math.random()*16,l:.3,c:'#8a8c93'})}
-  if(S.bytes>a.by&&a.p.length<44*q)for(let i=0;i<8;i++){const g=i/8*TAU;a.p.push({x:x+10,y:p.y+8,vx:Math.cos(g)*70,vy:Math.sin(g)*70,l:.4,c:'#ffffff'})}a.by=S.bytes;
+  if(S.bytes>a.by&&a.p.length<44*q)for(let i=0;i<5;i++){const g=-1.3+i*.65;a.p.push({x:x+18,y:p.y+2,vx:Math.cos(g)*60,vy:Math.sin(g)*60,l:.28,c:'#ffffff'})}a.by=S.bytes;
   for(const o of a.p){o.l-=dt;o.x+=o.vx*dt;o.y+=o.vy*dt;o.vy+=160*dt;if(o.l>0){ctx.fillStyle=rgba(o.c,Math.min(.85,o.l*2.4));ctx.fillRect(o.x-1.5,o.y-1.5,3,3)}}a.p=a.p.filter(o=>o.l>0)}
  /* ---------- интерфейс: скошенные тёмные панели, белые сердца, кристалл байтов ---------- */
  const heart=(ctx,x,y,s)=>{ctx.beginPath();ctx.moveTo(x,y+s*.9);ctx.bezierCurveTo(x-s*1.3,y+s*.1,x-s*.7,y-s*.8,x,y-s*.3);ctx.bezierCurveTo(x+s*.7,y-s*.8,x+s*1.3,y+s*.1,x,y+s*.9);ctx.closePath()};

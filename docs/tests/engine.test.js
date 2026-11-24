@@ -128,6 +128,13 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
   const S=AR.create({W:360,H:520,seed:1,id:1,bytes:0});GA.parts(ctx,S,S.t,th,1,GE);GA.hud(ctx,{score:5,bytes:3,combo:12,hearts:3,maxHearts:5},360,640,1,{th,font:'sans-serif',hearts:true,f:.4,label:'3 · Архивариус'});
   ok2=ok2&&GA.arenaBg(ctx,{bid:1,gy:430},360,520,1)&&GA.arenaBg(ctx,{bid:2,gy:430},360,520,1)&&[3,4,5,6,7,8,9,10].every(id=>GA.arenaBg(ctx,{bid:id,gy:430},360,520,1)===true)}catch(e){ok2=false;console.log(e.message)}
  c('графика: предметы, земля, интерфейс, частицы и арены 1–10 рисуются без ошибок',ok2)}
+{const fs=require('fs'),path=require('path'),dir=path.join(__dirname,'../../app/src/main/assets/features/game');
+ const sj=fs.readFileSync(path.join(dir,'spark.js'),'utf8'),atl=JSON.parse(sj.match(/const ATL=(\{.*?\});\n/s)[1]);
+ const need=['idle','idle_b','front','front_b','front_h','front_a','front_x','front_s',...[0,1,2,3,4,5,6,7].map(i=>'r'+i),...[0,1,2,3,4,5,6,7].map(i=>'r'+i+'_x')];
+ c('Искра: в атласе есть все кадры бега, прыжка, урона, моргания и выражений на фронтальном виде',need.every(n=>atl.f[n]));
+ const png=fs.readFileSync(path.join(dir,'spark/spark.png')),W=png.readUInt32BE(16),H=png.readUInt32BE(20);
+ c('Искра: все кадры лежат внутри картинки атласа',Object.values(atl.f).every(f=>f[0]+f[2]<=W&&f[1]+f[3]<=H));
+ c('Искра: рисование без вращения и сжатия кадра (прыжок берёт позы бега)',!/ctx\.rotate\(lean|sy\*=|sx\*=/.test(sj));}
 {const fs=require('fs'),path=require('path'),dir=path.join(__dirname,'../../app/src/main/assets/features/game');let bad2=[];
  for(const f of['art.js','bossart.js','game.js','game.css','fx.js','spark.js']){const txt=fs.readFileSync(path.join(dir,f),'utf8');for(const m of txt.matchAll(/#([0-9a-fA-F]{6})\b/g)){const n=parseInt(m[1],16),r=n>>16,g=(n>>8)&255,b=n&255,mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx-mn<18)continue;
    let h;if(mx===r)h=((g-b)/(mx-mn)+6)%6*60;else if(mx===g)h=((b-r)/(mx-mn)+2)*60;else h=((r-g)/(mx-mn)+4)*60;
