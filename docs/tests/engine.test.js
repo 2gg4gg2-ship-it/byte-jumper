@@ -148,4 +148,30 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
  c('ядро: хранилище работает без localStorage (память)',(()=>{C2.store.write('k','{"a":1}');return C2.store.json('k',null).a===1&&C2.store.read('нет')===null&&C2.store.json('нет',7)===7})());
  c('ядро: статистика кадров считает худший',(()=>{for(let i=0;i<120;i++)C2.frame(i===5?50:16);return C2.stats.worst>=50})());
  c('ядро: фиксированный шаг не больше 6 за кадр',C2.steps(0,1).n===6)}
+/* ---- боссы 1–3 по BOSSES.md (шаг: правки механик) ---- */
+{const S=AR.create({W:360,H:520,seed:11,id:1});S.hearts=999;S.p.inv=1e9;S.boss.phase=1;S.boss.hp=90;let big=0,lastT=null,gaps=[];S.fallT=99;
+ const sim=(sec)=>{for(let f=0;f<60*sec;f++){S.p.inv=1e9;AR.step(S,1/60,{ax:0});S.ev.length=0}};
+ const S1=AR.create({W:360,H:520,seed:11,id:1});S1.hearts=999;S1.boss.phase=1;S1.boss.hp=90;const t0=[];let prev=0;
+ for(let f=0;f<60*12;f++){S1.p.inv=1e9;const n=S1.tel.length;AR.step(S1,1/60,{ax:0});S1.ev.length=0;if(S1.tel.length>n&&S1.tel[S1.tel.length-1].k==='big')t0.push(S1.t)}
+ const d=t0.slice(1).map((x,i)=>x-t0[i]);const avg=d.reduce((a,b)=>a+b,0)/d.length;
+ c('босс 1 фаза 1: залп обломков примерно каждые 1,6 с ('+avg.toFixed(2)+')',d.length>=4&&Math.abs(avg-1.6)<.25);
+ const S2=AR.create({W:360,H:520,seed:11,id:1});S2.boss.phase=2;S2.boss.hp=60;S2.atk=99;S2.fallT=99;AR.step(S2,1/60,{ax:0});
+ S2.atk=0;AR.step(S2,1/60,{ax:0});const str=S2.tel.find(a=>a.k==='str');
+ c('босс 1 фаза 2: три красные зоны подряд, не пять',!!str&&str.n===3);
+ const S3=AR.create({W:360,H:520,seed:11,id:1});S3.hearts=999;S3.boss.phase=3;S3.boss.hp=20;S3.p.x=10;let falls=[],was=0;
+ for(let f=0;f<60*40;f++){S3.p.inv=1e9;AR.step(S3,1/60,{ax:0});S3.ev.length=0;const w=S3.pl.some(q=>q.st==='warn');if(w&&!was)falls.push(S3.t);was=w}
+ const fg=falls.slice(1).map((x,i)=>x-falls[i]);
+ c('босс 1 фаза 3: падение платформы каждые 12 с (не 9)',fg.length>=2&&fg.every(x=>Math.abs(x-12)<1.2));
+}
+{const S=AR.create({W:360,H:520,seed:21,id:3});S.hearts=999;S.p.inv=1e9;S.boss.hp=100;S.boss.phase=1;S.fallT=99;S.atk=99;
+ S.key={x:S.p.x,y:S.p.y+12,t:6};AR.step(S,1/60,{ax:0});
+ c('босс 3: ключ снимает 20 % HP (всего 5 ключей)',Math.abs(S.boss.hp-80)<.01);
+ const S2=AR.create({W:360,H:520,seed:21,id:3});S2.hearts=999;S2.p.inv=1e9;S2.boss.hp=100;S2.boss.phase=1;S2.fallT=99;S2.atk=99;
+ let warnAt=-1,swapAt=-1,before=null;
+ for(let f=0;f<60*12;f++){S2.p.inv=1e9;const pre=S2.nextStale;AR.step(S2,1/60,{ax:0});S2.ev.length=0;
+  if(S2.invW&&warnAt<0){warnAt=S2.t;before=S2.pl.map(q=>!!q.stale)}
+  if(warnAt>=0&&swapAt<0&&!S2.invW){swapAt=S2.t}
+  if(swapAt>=0)break}
+ c('босс 3: предупреждение инвалидации за ~1 с до смены зон ('+(swapAt-warnAt).toFixed(2)+' с)',warnAt>0&&swapAt>0&&Math.abs((swapAt-warnAt)-1)<.1);
+}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}

@@ -31,10 +31,10 @@ const GameArena=(()=>{
  function kit1(S){
   const B=S.boss,f=B.phase,p=S.p,bx=B.x;S.aN++;
   if(f===1){
-   S.tel.push({x:aim(S,1),t:1,k:'big'});if(S.rnd()<.35)S.tel.push({x:aim(S,1)+(S.rnd()<.5?-70:70),t:1.2,k:'big'});S.atk=1.7}
+   S.tel.push({x:aim(S,1),t:1,k:'big'});if(S.rnd()<.35)S.tel.push({x:aim(S,1)+(S.rnd()<.5?-70:70),t:1.2,k:'big'});S.atk=S.bid===1?1.6:1.7}
   else if(f===2){
    if(S.aN%3===0)S.tel.push({x:aim(S,1),t:1,k:'big'});
-   else S.tel.push({x:0,t:.7,k:'str',n:5,iv:.35,c:0});
+   else S.tel.push({x:0,t:.7,k:'str',n:S.bid===1?3:5,iv:.35,c:0});
    S.atk=2.4}
   else{
    if(S.aN%2)S.tel.push({x:bx,t:.5,k:'fan'});else S.tel.push({x:aim(S,1),t:1,k:'big'});
@@ -62,7 +62,7 @@ const GameArena=(()=>{
   if(f>=2){const x=aim(S,1);S.lag={x:x-45,w:90,t:3,on:0}}
   S.atk=.8}
  /* --- общие помощники боссов 5–7 --- */
- function dmg(S){const B=S.boss;B.hp=Math.max(0,B.hp-KEYHP);S.combo++;S.score+=100;S.bytes++;S.ev.push('fix');if(B.hp<=0){S.over='win';S.score+=1000;S.ev.push('win');return true}return false}
+ function dmg(S){const B=S.boss;B.hp=Math.max(0,B.hp-(S.bid===3?20:KEYHP));S.combo++;S.score+=100;S.bytes++;S.ev.push('fix');if(B.hp<=0){S.over='win';S.score+=1000;S.ev.push('win');return true}return false}
  function nearPl(S,x){const p=S.p;let best=null,bd=1e9;S.pl.forEach(q=>{if(q.st!=='ok')return;const d=Math.abs(q.x+q.w/2-x)+Math.abs(q.y-(p.y+E.PH))*1.5;if(d<bd){bd=d;best=q}});return best}
  /* --- глава 5: Монарх Лимита: монеты-очереди, стеклянные стены-ценники, баланс токенов --- */
  function wallTel(S){if(S.walls.length+S.tel.filter(a=>a.k==='wall').length>=3)return;const x=aim(S,1),q=nearPl(S,x);if(q)S.tel.push({x:clamp(x,q.x+10,q.x+q.w-10),y:q.y,t:1,k:'wall'})}
@@ -150,12 +150,13 @@ const GameArena=(()=>{
   /* привычки игрока */
   S.hab[band(S,p.y+PH)]+=dt;S.hab=S.hab.map(v=>v*(1-dt*.03));if(on&&Math.abs(p.vx)<1)S.idle+=dt;else S.idle=0;
   /* платформы: метка → падение → возвращение */
-  S.fallT-=dt;if(S.fallT<=0&&!(S.flip>0||S.fw>0)&&!S.p4){dropPlat(S);S.fallT=S.bid===10&&B.phase===2?6:B.phase===3?9:12}
+  S.fallT-=dt;if(S.fallT<=0&&!(S.flip>0||S.fw>0)&&!S.p4){dropPlat(S);S.fallT=S.bid===1?12:S.bid===10&&B.phase===2?6:B.phase===3?9:12}
   for(const q of S.pl){if(q.st==='warn'){q.t-=dt;if(q.t<=0){q.st='gone';q.t=3}}else if(q.st==='gone'){q.t-=dt;if(q.t<=0)q.st='ok'}}
   /* особенности глав */
   if(S.bid===3){
-   S.inval=(S.inval||0)-dt;if(S.inval<=0){S.inval=9;S.pl.forEach((q,i)=>{q.stale=i<4&&S.rnd()<.5});S.ev.push('warn')}
-   for(const q of S.pl)if(q.stale&&q.st==='ok'&&p.on&&p.y+PH>=q.y-1&&p.y+PH<=q.y+3&&p.x+PW/2>q.x&&p.x-PW/2<q.x+q.w){q.sc=(q.sc||0)+dt;if(q.sc>.4){q.st='gone';q.t=3;q.sc=0}}else q.sc=0;
+   S.inval=(S.inval||0)-dt;if(S.inval<=1&&S.inval>0&&!S.invW){S.invW=1;S.nextStale=S.pl.map((q,i)=>i<4&&S.rnd()<.5);S.ev.push('warn')}
+   if(S.inval<=0){S.inval=9;S.invW=0;S.pl.forEach((q,i)=>{q.stale=!!(S.nextStale&&S.nextStale[i])})}
+   for(const q of S.pl)if(q.stale&&q.st==='ok'&&p.on&&p.y+PH>=q.y-1&&p.y+PH<=q.y+3&&p.x+PW/2>q.x&&p.x-PW/2<q.x+q.w){q.sc=(q.sc||0)+dt;if(q.sc>(S.bid===3?.6:.4)){q.st='gone';q.t=3;q.sc=0}}else q.sc=0;
    S.hist=S.hist||[];S.hist.push({x:p.x,y:p.y});if(S.hist.length>180)S.hist.shift();
    if(B.phase>=2&&S.hist.length>=180){const g=S.hist[0];S.ghost=g;if(Math.abs(g.x-p.x)<PW&&Math.abs(g.y-p.y)<PH)hit(S)}else S.ghost=null}
   if(S.lag){const L=S.lag;L.t-=dt;if(L.t<=0)S.lag=null;else if(L.t<2.2){L.on=1;if(Math.abs(p.x-(L.x+L.w/2))<L.w/2+PW/2)p.x-=p.vx*dt*.3}}
