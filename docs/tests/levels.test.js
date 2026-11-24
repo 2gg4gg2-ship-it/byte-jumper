@@ -1,8 +1,8 @@
 /* Тесты уровней 1–29: node docs/tests/levels.test.js  (долго: бот ищет путь лучом, ~1 мин) */
 const B=require('./bot.js'),GE=B.GE,GL=B.GL;
 let ok=0,bad=[];const c=(n,v)=>{v?(ok++,console.log('ok  ',n)):(bad.push(n),console.log('FAIL',n))};
-const LV=[];for(let L=1;L<=29;L++)if(L%10)LV.push(L);
-c('27 проработанных уровней со сценарием и вступлением',LV.every(L=>GL.has(L)&&GL.INTRO[L]&&GL.INTRO[L].s&&GL.INTRO[L].n)&&LV.length===27);
+const LV=[];for(let L=1;L<=49;L++)if(L%10)LV.push(L);
+c('45 проработанных уровней со сценарием и вступлением',LV.every(L=>GL.has(L)&&GL.INTRO[L]&&GL.INTRO[L].s&&GL.INTRO[L].n)&&LV.length===45);
 c('у каждого уровня свой Потеряшка (имя и фраза)',LV.every(L=>GL.LOST[L]&&GL.LOST[L][0]&&GL.LOST[L][1]));
 /* структура */
 for(const L of LV){
@@ -53,5 +53,5 @@ for(const W of [360,412]){const S=GE.create({mode:'level',L:2,seed:1,W,H:640});S
  c('цепочки платформ проходятся при ошибке прыжка ±30 px ('+(fails.join('; ')||'все')+')',all)}
 /* бот проходит все уровни без урона, на двух ширинах экрана */
 for(const W of [360,412]){const t0=Date.now();const bads=[];for(const L of LV){const S=B.run(L,1,{W});if(S.over!=='win'||S.lost>0)bads.push(L+':'+S.over+'/'+S.lost)}
- c('бот проходит 27 уровней без урона, W='+W+' ('+(bads.join(' ')||'все')+', '+Math.round((Date.now()-t0)/1000)+' с)',!bads.length)}
+ c('бот проходит 45 уровней без урона, W='+W+' ('+(bads.join(' ')||'все')+', '+Math.round((Date.now()-t0)/1000)+' с)',!bads.length)}
 console.log('ИТОГ: '+ok+' ок, '+bad.length+' провалов'+(bad.length?': '+bad.join('; '):''));process.exit(bad.length?1:0)
