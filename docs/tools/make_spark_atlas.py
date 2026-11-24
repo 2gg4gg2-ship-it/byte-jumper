@@ -59,6 +59,12 @@ for name,img,w,h,ax in cells:
     rows.append((name,img,cx,ry,w,h,ax));cx+=w+4;rh=max(rh,h)
 out=Image.new('RGBA',(base.size[0],ry+rh+4),(0,0,0,0));out.paste(base,(0,0))
 for name,img,x,y,w,h,ax in rows:out.paste(img,(x,y));F[name]=[x,y,w,h,ax]
+# опорные точки бега: для кадров r0..r7 (и r*_x) запоминаем центр глаз [..., ey, ex]. Игра ставит голову на постоянную высоту и в постоянную точку,
+# иначе голова «дрожит» (по замеру разброс до ±5 px на кадре 128 px, потому что утверждённые кадры нарисованы без общей линии земли)
+for i in range(8):
+    x,y,w,h,ax=BASE['r%d'%i];e=eyes_of(A[y:y+h,x:x+w].copy());ey=round(sum((c+d)/2 for a,b,c,d in e)/2,1);ex=round(sum((a+b)/2 for a,b,c,d in e)/2,1)
+    for n in('r%d'%i,'r%d_x'%i):
+        if n in F:F[n]=F[n][:5]+[ey,ex]
 out.save(D+'spark/spark.png',optimize=True);ATL['f']=F
 open(SJ,'w',encoding='utf-8').write(src[:m.start(1)]+json.dumps(ATL,ensure_ascii=False)+src[m.end(1):])
 print(out.size,len(F),'кадров')
