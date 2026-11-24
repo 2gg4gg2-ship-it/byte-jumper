@@ -13,8 +13,8 @@ const Game=(()=>{
  /* ---------- сохранение ---------- */
  let sv=load();
  if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);
- function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,lfs:Array.isArray(j.lfs)?j.lfs.filter(x=>Number.isInteger(x)&&x>0&&x<=100).slice(0,100):[],tr:j.tr|0,form:Math.max(0,Math.min(3,j.form|0))}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,lfs:[],tr:0,form:0}}}
- function save(){try{localStorage.setItem(KEY,JSON.stringify(sv))}catch(e){}}
+ function load(){try{const j=JSON.parse(GameCore.store.read(KEY)||'{}');return{u:Math.min(100,Math.max(1,j.u|0||1)),st:j.st&&typeof j.st==='object'?j.st:{},b:j.b|0,best:j.best|0,boss:!!j.boss,snd:j.snd!==0,bosses:Math.min(10,j.bosses|0||(j.boss?1:0)),seen:!!j.seen,gl:j.gl!==0,end:typeof j.end==='string'?j.end:'',ends:Array.isArray(j.ends)?j.ends.filter(x=>typeof x==='string').slice(0,4):[],lf:j.lf|0,lfs:Array.isArray(j.lfs)?j.lfs.filter(x=>Number.isInteger(x)&&x>0&&x<=100).slice(0,100):[],tr:j.tr|0,form:Math.max(0,Math.min(3,j.form|0))}}catch(e){return{u:1,st:{},b:0,best:0,boss:false,snd:true,bosses:0,seen:false,gl:true,end:'',ends:[],lf:0,lfs:[],tr:0,form:0}}}
+ function save(){GameCore.store.write(KEY,JSON.stringify(sv))}
  /* ---------- звук: короткие сигналы, создаются по первому нажатию ---------- */
  let ac=null;
  function beep(f,d,type,vol,f2){
@@ -167,14 +167,15 @@ const Game=(()=>{
    box.append(col);b.append(box);box.classList.add('in')}
   function loop(ts){
    raf=0;if(gone)return;
-   if(!last)last=ts;let dt=Math.min((ts-last)/1000,.05);if(GameCore.tick(dt*1000))size();last=ts;
-   if(!paused&&!ended){
+   if(!last)last=ts;let dt=Math.min((ts-last)/1000,.05);GameCore.frame((ts-last)||16.7);if(GameCore.tick(dt*1000))size();last=ts;
+   if(GameCore.fatal()){paused=true;raf=0;overlay(T('Сбой'),[T('Игра остановлена из-за ошибки. Прогресс сохранён.')],[btn(T('В меню'),()=>{GameCore.resetErrors();stop();menu(b)},'pri')]);return}
+   if(!paused&&!ended){GameCore.guard(()=>{
     acc+=dt;let n=0;
     while(acc>=1/60&&n<6){if(S.arena)GameArena.step(S,1/60,{ax,down,pressed:press,frz});else E.step(S,1/60,{down,pressed:press});press=false;acc-=1/60;n++;
      for(const e of S.ev){if(SFX[e])SFX[e]();if(e==='hit'||e==='die')buzz(e==='die'?60:30)}S.ev.length=0;
      if(S.over){finish();break}}
-    if(hint>0)hint-=dt}
-   draw();
+    if(hint>0)hint-=dt});}
+   GameCore.guard(draw,'draw');
    raf=requestAnimationFrame(loop)}
   /* ---------- рисование ---------- */
   const BGC=['#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#0a0a0c','#050506'];

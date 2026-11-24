@@ -140,4 +140,12 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
    let h;if(mx===r)h=((g-b)/(mx-mn)+6)%6*60;else if(mx===g)h=((b-r)/(mx-mn)+2)*60;else h=((r-g)/(mx-mn)+4)*60;
    const red=(h<12||h>348);if(!red)bad2.push(f+' #'+m[1]+' hue '+Math.round(h))}}
  c('палитра: в коде игры нет цветных (фиолетовых, розовых, синих, зелёных, жёлтых) оттенков, только серые и красный'+(bad2.length?' '+bad2.slice(0,6).join('; '):''),bad2.length===0)}
+
+/* ---- ядро: страж ошибок, хранилище, статистика ---- */
+{const C2=ld('core.js','GameCore');
+ c('ядро: guard ловит ошибку и пишет в журнал',(()=>{C2.guard(()=>{throw new Error('x')},'t');return C2.errors.length===1&&C2.errors[0].m==='x'})());
+ c('ядро: 5 ошибок подряд = fatal, успех сбрасывает',(()=>{C2.resetErrors();for(let i=0;i<4;i++)C2.guard(()=>{throw 1});const a=C2.fatal();C2.guard(()=>1);for(let i=0;i<5;i++)C2.guard(()=>{throw 1});return !a&&C2.fatal()})());
+ c('ядро: хранилище работает без localStorage (память)',(()=>{C2.store.write('k','{"a":1}');return C2.store.json('k',null).a===1&&C2.store.read('нет')===null&&C2.store.json('нет',7)===7})());
+ c('ядро: статистика кадров считает худший',(()=>{for(let i=0;i<120;i++)C2.frame(i===5?50:16);return C2.stats.worst>=50})());
+ c('ядро: фиксированный шаг не больше 6 за кадр',C2.steps(0,1).n===6)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}

@@ -1,5 +1,18 @@
 # Как вернуть игру в Kairema
 
+## Быстрый способ (с 0.9.0): одна команда
+Игра независима (свой репозиторий, свой APK, `shim/` вместо ядра Kairema) и в то же время вставляется в Kairema без переписывания: код один и тот же, меняется только оболочка.
+```
+git clone --depth 1 https://github.com/2gg4gg2-ship-it/kairema-app     # свежий Kairema
+python3 docs/tools/sync_to_kairema.py kairema-app            # пробный запуск: что изменится
+python3 docs/tools/sync_to_kairema.py kairema-app --apply    # скопировать игру и переписать блок <script> в ui/index.html
+```
+Скрипт копирует все файлы `features/game` (и `spark/`), ставит скрипты в правильном порядке и отказывается работать, если в блоке игры стоят чужие скрипты. Дальше вручную: тесты Kairema, версия в 3 местах, CHANGELOG/NOTES/MAP (`docs/CLAUDE_GUIDE.md` Kairema). Скрипт проверен на копии `ui/` Kairema; запуск внутри настоящего Kairema на телефоне не проверялся.
+
+Игра требует от хозяина только функции из `shim/shim.js` (`$ $$ el esc raf ic L i18nAdd Hooks SCREENS app toast sub page`); Kairema их даёт. Если игра начнёт требовать новое, добавь его в `shim.js` и в ядро Kairema (это единственное место связи).
+
+Старая инструкция по шагам вручную ниже (на случай, если скрипт не подошёл).
+
 Игра лежит в `app/src/main/assets/features/game/` с тем же путём и именами, что и в Kairema (`app/src/main/assets/ui/features/game/`). Заглушка `shim/` в Kairema не нужна: все её функции там уже есть.
 
 ## Шаги

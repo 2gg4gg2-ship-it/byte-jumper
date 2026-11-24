@@ -27,6 +27,7 @@ for p in sorted(G.glob('*.js')):
         elif layer == 2 and gl == 3: bad.append(f'{p.name}: рисование (слой 2) не должно знать {g}: экраны вызывают рисование, не наоборот')
     if layer <= 1:
         for d in DOM:
+            if p.name == 'core.js' and d == r'\blocalStorage\b': continue  # единственное исключение: безопасное хранилище store (с try/catch и запасом в памяти)
             if re.search(d, code): bad.append(f'{p.name}: логика не должна трогать DOM/браузер ({d})')
 # порядок скриптов: зависимость должна загружаться раньше (проверяем прямые упоминания)
 order = [pathlib.Path(s).name for s in re.findall(r'<script src="([^"]+)"', (A/'index.html').read_text(encoding='utf-8'))]

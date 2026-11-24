@@ -36,6 +36,9 @@ CI (`.github/workflows/build.yml`) берёт любой `./*.zip` из корн
 - Версия при каждой отдаче (в трёх местах): `app/build.gradle.kts` (строки со знаком `=`: `versionCode = N`, `versionName = "X.Y.Z"`; после правки проверь `grep`), `README.md`, строка сверху в `docs/CHANGELOG.md`. Потом `python3 docs/tools/make_map.py`.
 - Отправь zip вложением (не простынёй кода). Скажи владельцу залить его в **корень** репозитория: `https://github.com/2gg4gg2-ship-it/byte-jumper/upload/main` (не в папку `.github/workflows`). После сборки версия в приложении должна совпасть.
 
+## 5а. Вставка в Kairema
+`python3 docs/tools/sync_to_kairema.py <путь_к_kairema> [--apply]`, подробности в `docs/RETURN_TO_KAIREMA.md`. Источник правды об игре этот репозиторий; в Kairema игру руками не правят.
+
 ## 6. Честность
 В конце два списка: **Проверено** (что реально запускал и видел) и **Не проверено** (сборка APK, игра на телефоне, ощущение управления, баланс). Не пиши «готово» про то, что не запускал.
 

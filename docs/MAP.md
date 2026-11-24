@@ -32,7 +32,7 @@
 - Пути `app/src/main/assets/features/game/*` нельзя менять: игру позже вернут в Kairema (`docs/RETURN_TO_KAIREMA.md`).
 
 <!-- AUTO:START -->
-Версия в сборке: **0.8.3** (versionCode 16). Файл: `app/build.gradle.kts`.
+Версия в сборке: **0.9.0** (versionCode 17). Файл: `app/build.gradle.kts`.
 
 ### Индекс файлов игры и оболочки (`app/src/main/assets`)
 
@@ -41,11 +41,11 @@
 | `features/game/arena.js` | 222 | АРЕНА БОССА: логика без DOM. |
 | `features/game/art.js` | 189 | ГРАФИКА «БАЙТ-ПРЫГУНА» (0.7.1): строгая палитра чёрный / серый / белый, красный только для опасности и акцентов ===== Всё рисуется кодом на canvas, картинок нет, сеть не  |
 | `features/game/bossart.js` | 73 | РИСУНКИ БОССОВ (0.7.1): десять тел в одной палитре: серый металл, красное око, белые блики ===== Только рисование (canvas), без логики и DOM. |
-| `features/game/core.js` | 15 | МАЛЕНЬКОЕ ЯДРО ИГРЫ: фиксированный шаг, самонастройка качества, единый ввод |
+| `features/game/core.js` | 32 | ЯДРО ИГРЫ (слой 0): фиксированный шаг, авто-качество, страж ошибок, безопасное хранилище, статистика кадров ===== Ядро ничего не знает об игре и не трогает DOM. |
 | `features/game/engine.js` | 192 | ИГРА «Байт-прыгун»: движок (чистая логика, без DOM) ===== Тут физика, уровни, генератор участков, баги, бонусы и босс «Ошибка 404». |
 | `features/game/fx.js` | 27 | ЭФФЕКТ «ПОМЕХИ»: с каждым побеждённым боссом на экране больше глюков |
 | `features/game/game.css` | 113 | Игра «Байт-прыгун»: меню, уровни, плашка «Нет сети». Цвета только из токенов, поэтому работает в тёмной и светлой теме. |
-| `features/game/game.js` | 335 | ИГРА «Байт-прыгун»: экраны, рисование, звук, сохранение ===== Офлайн-игра внутри приложения: пока нет сети или просто для отдыха. |
+| `features/game/game.js` | 336 | ИГРА «Байт-прыгун»: экраны, рисование, звук, сохранение ===== Офлайн-игра внутри приложения: пока нет сети или просто для отдыха. |
 | `features/game/levels.js` | 154 | УРОВНИ 1–29: сценарии, у каждого уровня своя изюминка (чистая логика, без DOM) ===== Уровень = строка блоков: f плоско, b/B баг, bb два бага, W высокая стена (держи прыжо |
 | `features/game/levelview.js` | 106 | РИСОВАНИЕ УРОВНЕЙ (режим «уровень»): новые препятствия, платформы, подсказки ===== Фон, земля, байты, баги, HUD и герой берутся из GameArt / GameSpark (общий стиль 0.7.x: |
 | `features/game/spark.js` | 63 | ИСКРА: утверждённая графика героя (атлас spark/spark.png, чёрно-белая) и выбор кадра по состоянию ===== Кадры из утверждённых листов автора: idle, r0–r7 (бег), e0–e3 (эво |
@@ -74,7 +74,7 @@
 | `arena.js` | `GameArena` | create,step,layout,reject,SPD}})(); |
 | `art.js` | `GameArt` | theme,bg,voidFill,seg,item,shadow,parts,hud,arenaHud,arenaBg,plat,joy,jump,rejectBtn,glowDot,cham,panel,rgba,hs,TH,C,SC}})(); |
 | `bossart.js` | `GameBossArt` | draw}})(); |
-| `core.js` | `GameCore` | perf,tick,dprFor,steps}})(); |
+| `core.js` | `GameCore` | perf,tick,dprFor,steps,frame,stats:st,guard,fatal,resetErrors,errors,store}})(); |
 | `engine.js` | `GameEngine` | create,step,stars,dist,target,prm,levelD,PX,PW,PH,GY,G,JV,HMAX,HG,solid,inPit,gateSt,hopE}})(); |
 | `fx.js` | `GameFX` | draw,shake,strength}})(); |
 | `game.js` | `Game` | open,state:()=>sv,setForm:v=>{sv.form=Math.max(0,Math.min(3,v\|0));if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);save()}}})(); |
@@ -92,10 +92,10 @@
 - **`arena.js`**: `layout` L6, `create` L11, `mul` L16, `clamp` L17, `band` L18, `aim` L20, `hit` L22, `fall` L26, `shot` L29, `kit1` L31, `kit2` L44, `row` L46, `kit3` L51, `kit4` L58, `dmg` L65, `nearPl` L66, `wallTel` L68, `kit5` L70, `coins` L72, `WLIM` L77, `addWin` L78, `erase` L79, `reject` L80, `kit6` L83, `newSeq` L90, `kit7` L92, `kit8` L99, `kit9` L104, `kit10` L110, `attack` L116, `dropPlat` L117, `near` L120, `step` L126
 - **`art.js`**: `hs` L8, `idx` L21, `theme` L22, `rgba` L23, `glowDot` L24, `cham` L26, `towers` L28, `ring` L39, `fog` L44, `scanlines` L48, `bg` L54, `ruinsExtra` L74, `voidFill` L77, `seg` L80, `crystal` L92, `item` L93, `shadow` L116, `parts` L118, `heart` L125, `panel` L126, `hearts` L127, `icon` L130, `face` L132, `hud` L133, `arenaHud` L149, `joy` L158, `jump` L162, `rejectBtn` L165, `arenaBg` L170, `GameArtQ` L176, `plat` L178
 - **`bossart.js`**: `box` L7, `grad` L11, `glow` L12, `eyeGlow` L13, `slit` L14, `draw` L15
-- **`core.js`**: `tick` L6, `dprFor` L11, `steps` L13
+- **`core.js`**: `tick` L7, `dprFor` L12, `steps` L14, `frame` L17, `guard` L20, `fatal` L23, `resetErrors` L24
 - **`engine.js`**: `mul` L12, `clamp` L13, `prm` L15, `levelD` L18, `target` L19, `create` L20, `byte` L36, `place` L37, `gen` L39, `inPit` L64, `solid` L65, `hit` L66, `lose` L72, `fall` L74, `pts` L82, `bossStep` L84, `pOn` L96, `gateSt` L98, `hopE` L100, `platStep` L101, `step` L109, `stars` L189, `dist` L190
 - **`fx.js`**: `strength` L5, `draw` L7, `shake` L25
-- **`game.js`**: `mk` L11, `T` L12, `load` L16, `save` L17, `beep` L20, `buzz` L34, `open` L37, `btn` L45, `menu` L46, `archive` L65, `levels` L71, `start` L91, `cs` L100, `size` L101, `reset` L109, `intro` L115, `lvIntro` L120, `closeOv` L125, `overlay` L126, `pause` L130, `finish` L134, `finale` L160, `choose` L162, `loop` L168, `drawArena` L181, `draw` L230, `pd` L289, `pu` L290, `lp` L293, `pdA` L294, `pmA` L297, `puA` L298, `kd` L302, `ku` L304, `vis` L305, `rs` L306, `stop` L308, `hideChip` L314, `showChip` L315
+- **`game.js`**: `mk` L11, `T` L12, `load` L16, `save` L17, `beep` L20, `buzz` L34, `open` L37, `btn` L45, `menu` L46, `archive` L65, `levels` L71, `start` L91, `cs` L100, `size` L101, `reset` L109, `intro` L115, `lvIntro` L120, `closeOv` L125, `overlay` L126, `pause` L130, `finish` L134, `finale` L160, `choose` L162, `loop` L168, `drawArena` L182, `draw` L231, `pd` L290, `pu` L291, `lp` L294, `pdA` L295, `pmA` L298, `puA` L299, `kd` L303, `ku` L305, `vis` L306, `rs` L307, `stop` L309, `hideChip` L315, `showChip` L316
 - **`levels.js`**: `has` L83, `num` L84, `build` L85, `tA` L90, `mod` L91, `byte` L92, `row` L93, `arc` L94, `plat` L95
 - **`levelview.js`**: `A` L6, `lines` L8, `wrapX` L13, `extra` L15, `dashed` L26, `plat` L27, `item` L39, `draw` L69
 - **`spark.js`**: `has` L16, `put` L19, `state` L22, `burst` L24, `emo` L25, `runPose` L28, `draw` L31, `portrait` L58, `icon` L60, `whenReady` L61
@@ -127,7 +127,7 @@
 ### Тесты (`docs/tests`)
 
 - `bot.js` (35 строк): Тест-бот для уровней: поиск лучом по макро-действиям (отпустить / нажать / держать), шаг 5 кадров, горизонт 0,75 с.
-- `engine.test.js` (144 строк): Тест логики без браузера: node docs/tests/engine.test.js
+- `engine.test.js` (152 строк): Тест логики без браузера: node docs/tests/engine.test.js
 - `levels.test.js` (58 строк): Тесты уровней 1–29: node docs/tests/levels.test.js (долго: бот ищет путь лучом, ~1 мин)
 - `standalone.test.py` (115 строк): Тест отдельной игры: запускается без Kairema, меню, игра, пауза, «Назад», нет ошибок страницы.
 
