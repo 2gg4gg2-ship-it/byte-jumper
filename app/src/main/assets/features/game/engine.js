@@ -156,7 +156,7 @@ const GameEngine=(()=>{
   if(k==='mov')it.x=it.bx+it.amp*Math.sin(S.t*it.sp+it.ph);
   /* лазер: луч поперёк уровня, предупреждение 1,1 с, потом вспышка 0,45 с; падающий блок: метка на земле, падает, лежит и исчезает */
   if(k==='laser'){const ph=((S.t+it.ph)%it.per+it.per)%it.per;it.act=ph>=1.1&&ph<1.55;it.warn=ph<1.1}
-  if(k==='drop'){const ph=((S.t+it.ph)%it.per+it.per)%it.per;const tf=ph-.8;it.act=ph>=.8&&ph<2.1;it.warn=ph<.8;it.yy=tf>=0?Math.max(0,240-.5*1100*tf*tf):240}
+  if(k==='drop'){const wn=it.fast?.5:.8,ph=((S.t+it.ph)%it.per+it.per)%it.per,tf=ph-wn,g=it.fast?1700:1100;it.act=ph>=wn&&ph<wn+1.3;it.warn=ph<wn;it.yy=tf>=0?Math.max(0,240-.5*g*tf*tf):240}
   if(it.vx)it.x+=it.vx*dt;
    if(k==='zone'){it.age+=dt;continue}
    const y=gy-it.h;
@@ -177,13 +177,14 @@ const GameEngine=(()=>{
     /* Потеряшка: безопасен, превращается в жителя, если приземлиться на него сверху */
     if(Math.abs(it.x-pw)<10+PW/2&&py1>Y-22&&py0<Y&&p.vy>0&&feet0<=Y-12){
      it.dead=1;S.found=true;p.vy=-340;p.on=false;p.stand=null;S.score+=200;S.ev.push('found');S.note={text:'Потеряшка стал жителем!',ttl:3,kind:'tip'}}}
-   else if(k==='bug'||k==='proj'||k==='wall'||k==='hop'||k==='gate'||k==='spike'||k==='mov'||k==='laser'||k==='drop'){
+   else if(k==='bug'||k==='proj'||k==='wall'||k==='hop'||k==='gate'||k==='spike'||k==='mov'||k==='laser'||k==='drop'||k==='saw'){
     let w=8,h=14,Yb=Y;
     if(k==='bug'){w=it.big?11:9;h=it.big?30:22}
     else if(k==='spike'){w=7;h=12}
     else if(k==='mov'){w=10;h=30}
     else if(k==='laser'){if(!it.act)continue;w=it.w;h=18;Yb=gy-it.h}
-    else if(k==='drop'){if(!it.act)continue;w=13;h=26;Yb=gy-it.yy}
+    else if(k==='drop'){if(!it.act)continue;w=it.fast?16:13;h=it.fast?30:26;Yb=gy-it.yy}
+    else if(k==='saw'){w=11;h=12}
     else if(k==='wall'){h=it.hh}
     else if(k==='hop'){w=9;h=22;Yb=gy-hopE(S,it)}
     else if(k==='gate'){if(gateSt(S,it)!==2)continue;h=it.hh}

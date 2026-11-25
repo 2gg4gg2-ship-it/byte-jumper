@@ -54,8 +54,9 @@ const GameLevelView=(()=>{
    if(it.act){glow(ctx,x,gy-it.h-9,it.w*1.2,C.red,.7);ctx.fillStyle=C.red;ctx.fillRect(L0,gy-it.h-9,it.w*2,18)}
    else if(ph<1.1){ctx.globalAlpha=.4+.4*Math.sin(t*20);ctx.fillStyle=C.red;ctx.fillRect(L0,gy-it.h-1,it.w*2,2);ctx.globalAlpha=1}
    return}
-  if(k==='drop'){const ph=((S.t+it.ph)%it.per+it.per)%it.per;
-   if(ph<.8){ctx.globalAlpha=.5;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(x,gy+1,16,4,0,0,TAU);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=C.red;ctx.strokeRect(x-13,gy-26-0,26,26);ctx.globalAlpha=.4;ctx.strokeRect(x-13,gy-26,26,26);ctx.globalAlpha=1;return}
+  if(k==='saw'){glow(ctx,x,gy-8,24,C.red,dark?.45:.25);ctx.save();ctx.translate(x,gy-9);ctx.rotate(t*14);ctx.fillStyle='#8a8c93';ctx.beginPath();ctx.arc(0,0,9,0,TAU);ctx.fill();ctx.fillStyle=C.red;for(let i=0;i<6;i++){ctx.rotate(TAU/6);ctx.fillRect(7,-1.5,5,3)}ctx.fillStyle='#16161a';ctx.beginPath();ctx.arc(0,0,3,0,TAU);ctx.fill();ctx.restore();return}
+  if(k==='drop'){const ph=((S.t+it.ph)%it.per+it.per)%it.per,wn=it.fast?.5:.8;
+   if(ph<wn){ctx.globalAlpha=.5;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(x,gy+1,16,4,0,0,TAU);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=C.red;ctx.strokeRect(x-13,gy-26-0,26,26);ctx.globalAlpha=.4;ctx.strokeRect(x-13,gy-26,26,26);ctx.globalAlpha=1;return}
    if(!it.act)return;
    const by=gy-it.yy;glow(ctx,x,by-13,34,C.red,.35);ctx.fillStyle='#16161a';ctx.fillRect(x-13,by-26,26,26);ctx.fillStyle=C.red;ctx.fillRect(x-13,by-26,26,2);ctx.fillStyle='#8a8c93';ctx.fillRect(x-4,by-16,8,3);return}
   if(k==='spike'){if(dark)glow(ctx,x,gy-8,26,C.red,.4);ctx.fillStyle='#e8e9ec';ctx.beginPath();ctx.moveTo(x-7,gy);ctx.lineTo(x,gy-12);ctx.lineTo(x+7,gy);ctx.closePath();ctx.fill();ctx.fillStyle=C.red;ctx.fillRect(x-2,gy-9,4,2);return}
