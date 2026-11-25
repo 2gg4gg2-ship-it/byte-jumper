@@ -41,7 +41,9 @@ const GameLevelView=(()=>{
   if(k==='proj'&&!it.go){if(it.wn){const y=gy-it.h-7,a=.5+.5*Math.abs(Math.sin(t*14));ctx.globalAlpha=a;glow(ctx,W-18,y,26,C.red,.6);ctx.fillStyle=C.red;ctx.beginPath();ctx.moveTo(W-6,y);ctx.lineTo(W-22,y-9);ctx.lineTo(W-22,y+9);ctx.closePath();ctx.fill();ctx.fillStyle='#f1f2f4';ctx.fillRect(W-36,y-5,9,10);ctx.fillRect(W-38,y-8,13,2);ctx.globalAlpha=1}return}
   if(x<-60||x>W+80)return;
   const y=gy-it.h;
-  if(k==='byte'||k==='gold'||k==='bug'||k==='door'||k==='shield'||k==='magnet'){
+  if(it.decoy){ctx.save();ctx.globalAlpha=.42;ctx.fillStyle='#8a8c93';ctx.beginPath();ctx.moveTo(x-9,gy);ctx.lineTo(x,gy-22);ctx.lineTo(x+9,gy);ctx.closePath();ctx.fill();ctx.restore();return}
+   if(it.echo){ctx.save();ctx.globalAlpha=.5+.25*Math.sin(t*8);ctx.strokeStyle=C.red;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(x-9,gy);ctx.lineTo(x,gy-22);ctx.lineTo(x+9,gy);ctx.closePath();ctx.stroke();ctx.restore();return}
+   if(k==='byte'||k==='gold'||k==='bug'||k==='door'||k==='shield'||k==='magnet'){
    if(k==='bug'&&dark)glow(ctx,x,gy-14,34,C.red,.5);
    if(k==='byte'&&dark)glow(ctx,x,y,30,'#ffffff',.35);
    A().item(ctx,it,x,y,gy,t,S.H,th);

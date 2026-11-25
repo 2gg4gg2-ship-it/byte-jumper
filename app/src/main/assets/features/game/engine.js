@@ -106,7 +106,13 @@ const GameEngine=(()=>{
    q.cur=q.k==='lift'?q.h+q.amp*Math.sin(S.t*q.sp+q.ph):q.h-q.drop;
    q.cx=q.k==='mv'?q.x+q.amp*Math.sin(S.t*q.sp+q.ph):q.x}}
  /* ---------- шаг ---------- */
- function step(S,dt,inp){
+ /* эхо шагов (уровень 25): после прыжка на земле через 3 секунды появляется копия-баг; не ставится рядом с ямой или платформой */
+function echoSpawn(S){
+ const x=S.x+PX+3*Math.max(150,S.speed||200);
+ if(S.pits.some(q=>x>q.a-50&&x<q.b+50))return;
+ if(S.plats.some(q=>!q.dead&&x>q.cx-30&&x<q.cx+q.w+30))return;
+ S.items.push({t:'bug',x,h:0,big:false,echo:1})}
+function step(S,dt,inp){
   if(S.over)return;
   const p=S.p,gy=S.gy,boss=S.mode==='boss',lv=S.mode==='level';
   S.t+=dt;
@@ -125,7 +131,7 @@ const GameEngine=(()=>{
   const jv=JV*(1-S.wt);
   if(inp&&inp.pressed)p.buf=.12;
   p.coy=p.on?.08:p.coy-dt;p.buf-=dt;
-  if(p.buf>0&&p.coy>0){p.vy=-jv;p.on=false;p.stand=null;p.coy=0;p.buf=0;p.hold=HMAX;S.ev.push('jump')}
+  if(p.buf>0&&p.coy>0){p.vy=-jv;p.on=false;p.stand=null;p.coy=0;p.buf=0;p.hold=HMAX;S.ev.push('jump');if(S.def&&S.def.echo)echoSpawn(S)}
   let g=G;
   if(inp&&inp.down&&p.vy<0&&p.hold>0){g=G*HG;p.hold-=dt}else if(!(inp&&inp.down))p.hold=0;
   const feet0=p.y+PH;
@@ -146,6 +152,7 @@ const GameEngine=(()=>{
   /* предметы */
   const px0=pw-PW/2,px1=pw+PW/2,py0=p.y,py1=p.y+PH,wtOn=S.def&&S.def.wt;
   for(const it of S.items){
+    if(it.decoy)continue;/* ложный блок: только картинка, не бьёт */
    const k=it.t;
    if(k==='tip'){if(!it.dead&&pw>=it.x){it.dead=1;S.note={text:it.text,ttl:4.2,kind:'tip'}}continue}
    if(k==='proj'&&!it.go&&it.at!=null){
