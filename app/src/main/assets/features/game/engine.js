@@ -132,8 +132,12 @@ function step(S,dt,inp){
   if(inp&&inp.pressed)p.buf=.12;
   p.coy=p.on?.08:p.coy-dt;p.buf-=dt;
   if(p.buf>0&&p.coy>0){p.vy=-jv;p.on=false;p.stand=null;p.coy=0;p.buf=0;p.hold=HMAX;S.ev.push('jump');if(S.def&&S.def.echo)echoSpawn(S)}
+  /* способности боссов (S.ab): двойной прыжок — один раз в воздухе */
+  else if(p.buf>0&&S.ab&&S.ab.double&&!p.on&&!p.dj){p.vy=-jv*.9;p.dj=1;p.buf=0;S.ev.push('jump')}
   let g=G;
   if(inp&&inp.down&&p.vy<0&&p.hold>0){g=G*HG;p.hold-=dt}else if(!(inp&&inp.down))p.hold=0;
+  /* быстрое падение (S.ab.fall): удержание в полёте при падении тянет вниз втрое сильнее */
+  if(S.ab&&S.ab.fall&&inp&&inp.down&&!p.on&&p.vy>0)g=G*3;
   const feet0=p.y+PH;
   p.vy+=g*dt;p.y+=p.vy*dt;
   /* опора: платформа (держит и носит игрока) или земля */
@@ -145,7 +149,7 @@ function step(S,dt,inp){
    else for(const q of S.plats){
     if(!pOn(S,q))continue;
     if(pw+14>=q.cx&&pw-14<=q.cx+q.w&&f>=gy-q.cur&&feet0<=gy-q.p0+9){p.y=gy-q.cur-PH;p.vy=0;on=true;p.stand=q;if(q.k==='fall'&&!q.fs){q.fs=1;q.ft=0}break}}}
-  p.on=on;
+  p.on=on;if(on)p.dj=0;
   if(!p.on&&p.y+PH>gy+14&&inPit(S,pw)){fall(S);return}
   if(p.y>S.H+80){fall(S);return}
   p.inv=Math.max(0,p.inv-dt);p.mag=Math.max(0,p.mag-dt);

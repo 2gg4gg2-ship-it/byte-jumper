@@ -1,7 +1,7 @@
 /* Тест логики без браузера: node docs/tests/engine.test.js */
 const fs=require('fs'),path=require('path');const D=path.join(__dirname,'../../app/src/main/assets/features/game/');
 const ld=(f,n)=>new Function(fs.readFileSync(D+f,'utf8')+';return '+n)();
-const GE=ld('engine.js','GameEngine'),AR=new Function(fs.readFileSync(D+'engine.js','utf8')+';'+fs.readFileSync(D+'arena.js','utf8')+';return GameArena')(),FX=ld('fx.js','GameFX'),ST=ld('story.js','GameStory'),CO=ld('core.js','GameCore');
+const GE=ld('engine.js','GameEngine'),AR=new Function(fs.readFileSync(D+'engine.js','utf8')+';'+fs.readFileSync(D+'arena.js','utf8')+';'+fs.readFileSync(D+'boss12.js','utf8')+';'+fs.readFileSync(D+'boss12view.js','utf8')+';return GameArena')(),FX=ld('fx.js','GameFX'),ST=ld('story.js','GameStory'),CO=ld('core.js','GameCore');
 let ok=0,bad=[];const c=(n,v)=>{v?(ok++,console.log('ok  ',n)):(bad.push(n),console.log('FAIL',n))};
 function jump(hold){const S=GE.create({mode:'level',L:1,seed:1,W:360,H:600});S.items=[];let mn=1e9;const y0=S.p.y;GE.step(S,.016,{pressed:true,down:true});mn=Math.min(mn,S.p.y);for(let i=0;i<120;i++){GE.step(S,.016,{down:hold});mn=Math.min(mn,S.p.y)}return y0-mn}
 const tap=jump(false),hold=jump(true);
@@ -43,12 +43,12 @@ for(let i=0;i<50;i++)CO.tick(40);c('ядро снижает качество п�
  const P=GE.prm(GE.levelD(99));c('скорость ≤ 420, яма ≤ 0,8 дальности большого прыжка',P.vmax<=420&&P.gap<=.8*304);
  for(const L of [15,34,59,79,99]){const S=play(L,11);c('бот проходит уровень '+L+' ('+S.over+', потеряно '+S.lost+')',S.over==='win')}}
 
-/* ---- боссы глав 2–4: победимы, атаки с предупреждением, без аварий ---- */
-for(const id of [2,3,4]){const S=AR.create({W:360,H:520,seed:id,id});let tel=0,kinds={},seenPh={};S.hearts=999;
+/* ---- боссы глав 3–4: победимы, атаки с предупреждением, без аварий (боссы 1–2 — в boss12.test.js) ---- */
+for(const id of [3,4]){const S=AR.create({W:360,H:520,seed:id,id});let tel=0,kinds={},seenPh={};S.hearts=999;
  for(let f=0;f<60*260&&!S.over;f++){const k=id===3?S.sbytes[0]:S.key;if(k&&S.t>1){S.p.x=k.x;S.p.y=k.y-GE.PH/2}
   AR.step(S,1/60,{ax:0});seenPh[S.boss.phase]=1;S.tel.forEach(a=>{kinds[a.k]=1});tel+=S.tel.length?1:0;S.ev.length=0;if(S.sh.length>20)throw new Error('снарядов больше 20')}
  c('босс '+id+': победа ('+S.over+', t='+Math.round(S.t)+'), 3 фазы',S.over==='win'&&seenPh[1]&&seenPh[2]&&seenPh[3]);
- c('босс '+id+': свои атаки '+Object.keys(kinds).join(','),(id===2?kinds.row&&kinds.blk:id===3?kinds.fan:kinds.pkt)&&tel>0)}
+ c('босс '+id+': свои атаки '+Object.keys(kinds).join(','),(id===2?kinds.edge&&kinds.col:id===3?kinds.fan:kinds.pkt)&&tel>0)}
 {const S=AR.create({W:360,H:520,seed:1,id:4});S.hearts=999;let reps=0;for(let f=0;f<60*200;f++){AR.step(S,1/60,{ax:0});reps=Math.max(reps,S.rep||0);S.ev.length=0}c('Таймаут: до 7 повторов серии ('+reps+')',reps===7)}
 {const S=AR.create({W:360,H:520,seed:1,id:3});S.hearts=999;S.boss.hp=60;let st=false;for(let f=0;f<60*30;f++){AR.step(S,1/60,{ax:0});if(S.pl.some(q=>q.stale))st=true;S.ev.length=0}c('Stale: есть устаревшие платформы',st)}
 
@@ -148,21 +148,7 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
  c('ядро: хранилище работает без localStorage (память)',(()=>{C2.store.write('k','{"a":1}');return C2.store.json('k',null).a===1&&C2.store.read('нет')===null&&C2.store.json('нет',7)===7})());
  c('ядро: статистика кадров считает худший',(()=>{for(let i=0;i<120;i++)C2.frame(i===5?50:16);return C2.stats.worst>=50})());
  c('ядро: фиксированный шаг не больше 6 за кадр',C2.steps(0,1).n===6)}
-/* ---- боссы 1–3 по BOSSES.md (шаг: правки механик) ---- */
-{const S=AR.create({W:360,H:520,seed:11,id:1});S.hearts=999;S.p.inv=1e9;S.boss.phase=1;S.boss.hp=90;let big=0,lastT=null,gaps=[];S.fallT=99;
- const sim=(sec)=>{for(let f=0;f<60*sec;f++){S.p.inv=1e9;AR.step(S,1/60,{ax:0});S.ev.length=0}};
- const S1=AR.create({W:360,H:520,seed:11,id:1});S1.hearts=999;S1.boss.phase=1;S1.boss.hp=90;const t0=[];let prev=0;
- for(let f=0;f<60*12;f++){S1.p.inv=1e9;const n=S1.tel.length;AR.step(S1,1/60,{ax:0});S1.ev.length=0;if(S1.tel.length>n&&S1.tel[S1.tel.length-1].k==='big')t0.push(S1.t)}
- const d=t0.slice(1).map((x,i)=>x-t0[i]);const avg=d.reduce((a,b)=>a+b,0)/d.length;
- c('босс 1 фаза 1: залп обломков примерно каждые 1,6 с ('+avg.toFixed(2)+')',d.length>=4&&Math.abs(avg-1.6)<.25);
- const S2=AR.create({W:360,H:520,seed:11,id:1});S2.boss.phase=2;S2.boss.hp=60;S2.atk=99;S2.fallT=99;AR.step(S2,1/60,{ax:0});
- S2.atk=0;AR.step(S2,1/60,{ax:0});const str=S2.tel.find(a=>a.k==='str');
- c('босс 1 фаза 2: три красные зоны подряд, не пять',!!str&&str.n===3);
- const S3=AR.create({W:360,H:520,seed:11,id:1});S3.hearts=999;S3.boss.phase=3;S3.boss.hp=20;S3.p.x=10;let falls=[],was=0;
- for(let f=0;f<60*40;f++){S3.p.inv=1e9;AR.step(S3,1/60,{ax:0});S3.ev.length=0;const w=S3.pl.some(q=>q.st==='warn');if(w&&!was)falls.push(S3.t);was=w}
- const fg=falls.slice(1).map((x,i)=>x-falls[i]);
- c('босс 1 фаза 3: падение платформы каждые 12 с (не 9)',fg.length>=2&&fg.every(x=>Math.abs(x-12)<1.2));
-}
+/* ---- босс 1 (v3: 404, шахта) проверяется в boss12.test.js; здесь — что арена 3 и 4 не сломаны ---- */
 {const S=AR.create({W:360,H:520,seed:21,id:3});S.hearts=999;S.p.inv=1e9;S.boss.hp=100;S.boss.phase=1;S.fallT=99;S.atk=99;S.inval=99;S.sbT=99;
   const take=()=>{S.sbytes=[{x:S.p.x,y:S.p.y+12,t:6}];AR.step(S,1/60,{ax:0});S.ev.length=0};
   for(let i=0;i<4;i++)take();

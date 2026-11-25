@@ -4,11 +4,13 @@
 const GameArena=(()=>{
  const E=GameEngine,SPD=170,KEYHP=100/9;
  function layout(S){
+  if(S.b12){GameBoss12.layout(S,S.W,S.H);return}
   const W=S.W,H=S.H,gy=H*.84;S.gy=gy;
   const P=[[0,gy,W*.44],[W*.56,gy,W*.44],[14,gy-100,W*.3],[W-14-W*.3,gy-100,W*.3],[W*.5-W*.17,gy-200,W*.34]];
   if(!S.pl)S.pl=P.map(()=>({st:'ok',t:0}));
   P.forEach((q,i)=>{const o=S.pl[i];o.x=q[0];o.y=q[1];o.w=q[2];o.floor=i<2})}
  function create(o){
+  if(o.id===1||o.id===2)return GameBoss12.create(o);
   const S={bid:o.id||1,arena:true,mode:'boss',W:o.W,H:o.H,rnd:mul(o.seed||7),t:0,over:null,ev:[],score:0,bytes:0,combo:0,hearts:3,maxHearts:3,lost:0,
    boss:{hp:100,max:100,phase:1,x:o.W/2,y:64,conf:0},p:{x:o.W*.22,y:0,vx:0,vy:0,on:false,hold:0,buf:0,coy:0,inv:0},
    tel:[],sh:[],key:null,kt:3,atk:2,aN:0,fallT:8,hab:[0,0,0],idle:0,fair:0,hits:[],pl:null,tok:100,slow:0,wb:0,walls:[],free:[],fk:5,wins:[],chg:0,rj:[],las:null,flip:0,fw:0,fT:10,dark:false,seq:null,hs:[],sd:null,sdA:false,rt:{},cell:-1,trapT:0,fear:{},lastK:0,mm:[],memc:0,fz:null,fzQ:0,fzK:1,fzG:0,fzS:0,fh:false,gh:[],rem:0,p4:0,t3:0,ck:0,tb:o.bytes|0};
@@ -155,6 +157,7 @@ function staleTick(S,dt){
   return true});
 }
 function step(S,dt,inp){
+  if(S.b12){GameBoss12.step(S,dt,inp);return}
   if(S.over)return;inp=inp||{};const p=S.p,B=S.boss,W=S.W;
   S.t+=dt;S.fair=Math.max(0,S.fair-dt);S.slow=Math.max(0,S.slow-dt);
   B.phase=S.bid===8||S.bid===10?(B.hp>75?1:B.hp>50?2:B.hp>25?3:4):B.hp>70?1:B.hp>35?2:3;
@@ -249,4 +252,4 @@ function step(S,dt,inp){
   /* ключ на самой высокой платформе (в фазе «растерянности» на средней) */
   if(S.bid===3){}else if(S.flip>0){}else if(S.key){S.key.t-=dt;if(S.key.t<=0)S.key=null;else if(Math.abs(S.key.x-p.x)<16&&Math.abs(S.key.y-(p.y+PH/2))<24){S.key=null;if(dmg(S))return;S.kt=B.phase===1?7:B.phase===2?6:5}}
   else{S.kt-=dt;if(S.kt<=0&&!S.p4){const q=B.conf?S.pl[S.rnd()<.5?2:3]:S.pl[4];S.key={x:q.x+q.w*(.25+S.rnd()*.5),y:q.y-20,t:6}}}}
- return{create,step,layout,reject,SPD}})();
+ return{create,step,layout,reject:S=>{if(S&&S.b12)return;reject(S)},SPD}})();

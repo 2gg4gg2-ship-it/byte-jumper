@@ -41,7 +41,7 @@ with sync_playwright() as p:
     check('босс: показана анимация появления с именем', pg.evaluate("!!document.querySelector('.gm-intro')") and 'Потерянный Страж' in pg.evaluate("document.querySelector('.gm-intro h3').textContent"))
     pg.screenshot(path='/tmp/boss_intro.png')
     pg.locator('.gm-intro .gm-btn').click(); pg.wait_for_timeout(500)
-    check('босс: арена без прокрутки, 3 сердца, 5 платформ', pg.evaluate("(()=>{const S=document.querySelector('.spg.gm')._S();return S.arena&&S.hearts===3&&S.pl.length===5})()"))
+    check('босс 1: шахта (b12), 3 сердца, высота мира в три экрана, папки есть', pg.evaluate("(()=>{const S=document.querySelector('.spg.gm')._S();return S.arena&&S.b12&&S.hearts===3&&S.WH>S.H*2.5&&S.pl.length>=10})()"))
     pg.mouse.move(60, 600); pg.mouse.down(); pg.mouse.move(120, 600, steps=4); pg.wait_for_timeout(500)
     x1 = pg.evaluate("document.querySelector('.spg.gm')._S().p.x"); pg.mouse.up()
     check('джойстик двигает игрока вправо', x1 > 100, x1)

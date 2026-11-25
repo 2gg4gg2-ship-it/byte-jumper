@@ -108,7 +108,7 @@ function load(){let raw={};try{raw=JSON.parse(GameCore.store.read(KEY)||'{}')}ca
   const lvOpt={Lv,mode,get col(){return col},font:null,fx:()=>fxDraw(ctx,S.W,S.H,S.t,col)};
   cur._S=()=>S;
   function reset(){
-   closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,id:Lv/10,seed:(Date.now()&0xffff)||7,bytes:sv.b}):E.create({mode,L:Lv,W:z.W,H:z.H});ax=0;frz=false;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
+   closeOv();cs();const z=size();S=mode==='boss'?GameArena.create({W:z.W,H:z.H,id:Lv/10,seed:(Date.now()&0xffff)||7,bytes:sv.b}):E.create({mode,L:Lv,W:z.W,H:z.H});S.ab={double:GameAbilities.opened(sv.bosses).includes('double'),fall:GameAbilities.opened(sv.bosses).includes('fall')};ax=0;frz=false;stk=null;acc=0;last=0;ended=false;paused=false;down=false;press=false;hint=3;
    if(mode==='boss'&&!introOn){introOn=true;paused=true;intro()}
    if(mode==='level'&&!introLv){introLv=true;paused=true;lvIntro()}
    if(!raf)raf=requestAnimationFrame(loop)}
@@ -188,6 +188,8 @@ function load(){let raw={};try{raw=JSON.parse(GameCore.store.read(KEY)||'{}')}ca
   function drawArena(){
    const W=S.W,H=S.H,gy=S.gy,t=S.t,B=S.boss;
    ctx.setTransform(dpr*sc,0,0,dpr*sc,0,0);
+   /* боссы 1–2 рисуются своим модулем (boss12.js): шахта, башня, свой HUD */
+   if(S.b12){GameBoss12View.draw(ctx,S,{col,font:col.font,ax,stk,down,fx:()=>fxDraw(ctx,W,H,S.t,col)});return}
    ctx.fillStyle=BGC[Math.min(9,S.bid-1)];ctx.fillRect(0,0,W,H);
    if(!GameArt.arenaBg(ctx,S,W,H,t)){/* фон: туман и падающие строки «File not found» */
    ctx.fillStyle='#16161a';for(let i=0;i<5;i++)ctx.fillRect(((i*83)%W)-10,gy-120-(i*37)%90,26+(i*19)%20,gy);

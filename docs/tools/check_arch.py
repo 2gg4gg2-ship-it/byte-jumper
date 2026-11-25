@@ -6,10 +6,10 @@ R = pathlib.Path(__file__).resolve().parents[2]; G = R/'app/src/main/assets/feat
 # файл -> (слой, глобальное имя). Новый файл игры ОБЯЗАТЕЛЬНО добавь сюда и в docs/ARCHITECTURE.md
 MOD = {'core.js': (0, 'GameCore'), 'engine.js': (1, 'GameEngine'), 'levels.js': (1, 'GameLevels'), 'flags.js': (1, 'GameFlags'), 'abilities.js': (1, 'GameAbilities'), 'story.js': (1, 'GameStory'),
        'arena.js': (1, 'GameArena'), 'fx.js': (2, 'GameFX'), 'spark.js': (2, 'GameSpark'), 'art.js': (2, 'GameArt'),
-       'bossart.js': (2, 'GameBossArt'), 'levelview.js': (2, 'GameLevelView'), 'storyui.js': (3, 'GameStoryUI'), 'game.js': (3, 'Game')}
+       'bossart.js': (2, 'GameBossArt'), 'boss12.js': (1, 'GameBoss12'), 'boss12view.js': (2, 'GameBoss12View'), 'levelview.js': (2, 'GameLevelView'), 'storyui.js': (3, 'GameStoryUI'), 'game.js': (3, 'Game')}
 # разрешённые зависимости: слой 1 (логика) знает только слой 0 и логику; слой 2 (рисование) знает 0 и 1 (читает константы/состояние) и своих;
 # слой 3 (экраны) знает всё. Слой 0 не знает никого.
-OK_LOGIC = {'GameCore', 'GameEngine', 'GameLevels', 'GameStory', 'GameArena'}
+OK_LOGIC = {'GameCore', 'GameEngine', 'GameLevels', 'GameStory', 'GameArena', 'GameBoss12'}
 DOM = [r'\bdocument\b', r'\bwindow\b', r'\blocalStorage\b', r'\bnew Image\b', r'\bgetContext\b', r'\bAudioContext\b', r'\brequestAnimationFrame\b']
 LIMIT = 450
 bad = []; warn = []
