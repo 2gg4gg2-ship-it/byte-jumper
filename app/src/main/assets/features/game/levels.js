@@ -128,6 +128,26 @@ Object.assign(LORE,{
  43:{a:'Дверь с другом сияет зелёным. Дверь с багом сияет красным.'},
  45:{a:'Искра: «Ключ принадлежит тому, кто его держит».'},
  49:{a:'Мастер Правок: «Не подписывай. Я когда-то подписал».'}});
+ /* --- нарастание сложности (0.10.1): уровень 1 по числу препятствий = уровень 12 (33), дальше +3 препятствия на уровень ---
+    Считаем «препятствия» по строке сценария: b, bb, B, fb, W, p, lz, x, v, h, c, m, g, l. Если в сценарии их меньше цели,
+    между плоскими участками добавляются одиночные баги «b» (с плоским хвостом f:1, чтобы не было двух препятствий впритык). */
+ const OBS=/^(b|bb|B|fb|W|p|lz|x|v|h|c|m|g|l)(:|$)/;
+ const countObs=toks=>toks.filter(t=>OBS.test(t)).length;
+ const targetObs=L=>33+(Math.max(1,L)-1)*3;
+ function thicken(seq,L){
+  const toks=seq.split(/\s+/).filter(Boolean),need=targetObs(L)-countObs(toks);
+  if(need<=0)return seq;
+  const flats=[];toks.forEach((t,i)=>{if(/^f(:\d+)?$/.test(t))flats.push(i)});
+  if(!flats.length)return seq;
+  /* распределяем нехватку по плоским участкам поровну; если участков мало, в один может уйти несколько багов.
+     Порядок и сид от номера уровня — результат всегда один и тот же */
+  let sd=(L*2654435761)>>>0;const rnd=()=>{sd=(sd*1664525+1013904223)>>>0;return sd/4294967296};
+  const per=new Array(flats.length).fill(Math.floor(need/flats.length));
+  for(let k=0;k<need%flats.length;k++){const j=Math.floor(rnd()*flats.length);per[j]++}
+  const add=new Map();flats.forEach((idx,j)=>add.set(idx,per[j]));
+  const out=[];toks.forEach((t,i)=>{out.push(t);for(let k=0;k<(add.get(i)||0);k++)out.push('b','f:1')});
+  return out.join(' ');
+ }
  const has=L=>!!DEF[L];
  const num=v=>/^-?\d+(\.\d+)?$/.test(v)?+v:v;
  function build(S){
@@ -200,11 +220,11 @@ Object.assign(LORE,{
    k(){it.push({t:'cp',x:c+120,h:20});c+=300},
    i(){it.push({t:'bin',x:c+120,h:20});c+=260},
    l(){const a=c+130;pits.push({a,b:a+140});arc(a+70,150,4,50,70,true);c+=140+300}};
-  for(const tok of D.seq.split(/\s+/)){
+  for(const tok of thicken(D.seq,S.L).split(/\s+/)){
    const m=tok.split(':'),name=m[0],args=m[1]!=null?m[1].split(',').map(num):[];
    if(!B[name])throw new Error('уровень '+S.L+': неизвестный блок '+tok);
    B[name].apply(null,args)}
   /* финал: ровная земля до двери, чтобы дверь вошла в экран целиком и перед ней никаких препятствий */
   row(c+40,c+220,4,0);
   S.door=c+300;S.target=S.door-PXs;it.push({t:'door',x:S.door,h:0});S.genX=Infinity}
- return{has,build,INTRO,LOST,DEF}})();
+ return{targetObs,countObs,thicken,has,build,INTRO,LOST,DEF}})();

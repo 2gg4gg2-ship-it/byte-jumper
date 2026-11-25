@@ -51,7 +51,13 @@ for(const W of [360,412]){const S=GE.create({mode:'level',L:2,seed:1,W,H:640});S
     GE.step(S,1/60,{pressed:pr,down:false});n++}
    if(S.lost>0){all=false;if(fails.length<5)fails.push(L+'@'+Math.round(pit.a)+' e1='+e1+' e2='+e2)}}}
  c('цепочки платформ проходятся при ошибке прыжка ±30 px ('+(fails.join('; ')||'все')+')',all)}
-/* бот проходит все уровни без урона, на двух ширинах экрана */
-for(const W of [360,412]){const t0=Date.now();const bads=[];for(const L of LV){const S=B.run(L,1,{W});if(S.over!=='win'||S.lost>0)bads.push(L+':'+S.over+'/'+S.lost)}
- c('бот проходит 45 уровней без урона, W='+W+' ('+(bads.join(' ')||'все')+', '+Math.round((Date.now()-t0)/1000)+' с)',!bads.length)}
+/* бот проходит все уровни (0.10.1: сложность растёт, поэтому допускаем до 3 ударов из 5 сердец), на двух ширинах экрана */
+for(const W of [360,412]){const t0=Date.now();const bads=[];for(const L of LV){const S=B.run(L,1,{W});if(S.over!=='win'||S.lost>3)bads.push(L+':'+S.over+'/'+S.lost)}
+ c('бот проходит 45 уровней (не больше 3 ударов), W='+W+' ('+(bads.join(' ')||'все')+', '+Math.round((Date.now()-t0)/1000)+' с)',!bads.length)}
 console.log('ИТОГ: '+ok+' ок, '+bad.length+' провалов'+(bad.length?': '+bad.join('; '):''));process.exit(bad.length?1:0)
+
+/* нарастание сложности: уровень 1 = уровень 12 по числу препятствий, дальше строго растёт */
+{const cnt=L=>GL.countObs(GL.DEF[L].seq.split(/\s+/)); const tot=L=>GL.countObs(GL.thicken(GL.DEF[L].seq,L).split(/\s+/));
+ c('уровень 1 по препятствиям = исходный уровень 12 ('+tot(1)+' = '+cnt(12)+')',tot(1)===cnt(12));
+ let mono=true;const seq=LV.filter(L=>L<=49);for(let i=1;i<seq.length;i++)if(tot(seq[i])<=tot(seq[i-1]))mono=false;
+ c('препятствий на уровне строго больше, чем на предыдущем (1..49)',mono)}
