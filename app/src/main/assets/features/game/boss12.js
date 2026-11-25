@@ -15,7 +15,7 @@ const GameBoss12=(()=>{
    boss:{hp:100,max:100,phase:1,x:W/2,y:96,conf:0,shards:0,pops:0},
    p:{x:W*.5,y:0,vx:0,vy:0,on:false,hold:0,buf:0,coy:0,inv:0,stand:null,lastG:0},
    pl:[],sh:[],tel:[],say:null,cloud:0,fly:[],rail:[],frags:[],cols:[],waves:[],sheets:[],
-   tPop:3.5,tDrop:10,tCloud:14,tBm:2.5,tSheet:1.6,tColl:15,tWave:4,tCol:4,tFrag:3,fT:0,fDone:false};
+   tPop:3.5,tDrop:7.5,tCloud:11,tBm:2.3,tSheet:1.2,tColl:13,tWave:4,tCol:4,tFrag:3,fT:0,fDone:false,fr:{st:'wait',t:4.5}};
   if(o.id===1)buildShaft(S);else buildTower(S);
   if(o.id===2){S.boss.x=W-40;S.boss.y=tierY(S,2)-70}
   const p=S.p;p.x=W*.5;p.y=S.gy-E.PH;p.on=true;p.stand=S.pl[0];p.lastG=p.y;
@@ -118,33 +118,36 @@ const GameBoss12=(()=>{
   trackStand(S,dt);
   /* ---- папки: при стоянии больше 2 с — через 10 с падает одна ---- */
   S.tDrop-=dt;
-  if(S.tDrop<=0){S.tDrop=10;
+  if(S.tDrop<=0){S.tDrop=7.5;
    const c=S.pl.filter(q=>!q.floor&&!q.sup&&q.st==='ok'&&(q.stand||0)>2);
    if(c.length){const q=c[0];q.st='warn';q.t=1.2;q.back=6;S.ev.push('warn')}}
   /* ---- облако 404: 1,5 с затемняет верхнюю треть ---- */
-  S.tCloud-=dt;if(S.tCloud<=0){S.tCloud=14;S.cloud=1.5;S.ev.push('warn')}
+  S.tCloud-=dt;if(S.tCloud<=0){S.tCloud=11;S.cloud=1.5;S.ev.push('warn')}
   if(S.cloud>0)S.cloud-=dt;
   /* ---- обломки табличек (черновики): медленно падают, покачиваются ---- */
   S.tSheet-=dt;
-  if(S.tSheet<=0&&S.sheets.length<8){S.tSheet=1.6;S.sheets.push({x:14+S.rnd()*(W-28),y:S.cam-24,ph:S.rnd()*TAU,bx:0})}
+  if(S.tSheet<=0&&S.sheets.length<10){S.tSheet=1.2;S.sheets.push({x:14+S.rnd()*(W-28),y:S.cam-24,ph:S.rnd()*TAU,bx:0})}
   for(const s of S.sheets){s.y+=40*dt;s.ph+=dt*2;s.x=clamp(s.x+Math.sin(s.ph)*14*dt,10,W-10);
    if(over(p,s.x,s.y,14,18)&&!p.dead)hit(S)}
   S.sheets=S.sheets.filter(s=>s.y<S.WH+30);
   /* ---- диск-табличка: метка 0,8 с, потом бросок; дуга, отражение от стен дважды ---- */
   S.tBm-=dt;
-  if(S.tBm<=0){S.tBm=3;S.tel.push({k:'bm',x:B.x,t:.8})}
+  if(S.tBm<=0){const ph=B.phase;S.tBm=ph===1?2.3:ph===2?1.9:1.6;S.tel.push({k:'bm',x:B.x,t:.8});if(ph>=2)S.tel.push({k:'bm',x:B.x,t:1.3})}
   for(const a of S.tel){a.t-=dt;if(a.t>0)continue;a.dead=1;
-   if(a.k==='bm'){const dir=p.x<B.x?-1:1;S.sh.push({k:'disc',x:B.x,y:B.y+30,vx:dir*110,vy:-40,r:14,bn:0,t:0})}}
+   if(a.k==='bm'){const dir=p.x<B.x?-1:1;S.sh.push({k:'disc',x:B.x,y:B.y+30,vx:dir*143,vy:-40,r:14,bn:0,t:0})}}
   S.tel=S.tel.filter(a=>!a.dead);
   for(const d of S.sh){if(d.k!=='disc')continue;d.t+=dt;d.vy+=120*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;
    if(d.x<d.r||d.x>W-d.r){d.vx=-d.vx;d.x=clamp(d.x,d.r,W-d.r);d.bn++;if(d.bn>2)d.dead=1}
    if(d.y>S.WH+40)d.dead=1;
    if(Math.abs(p.x-d.x)<d.r+E.PW/2&&Math.abs(p.y+E.PH/2-d.y)<d.r+E.PH/2)hit(S)}
   S.sh=S.sh.filter(d=>!d.dead);
-  /* ---- рамка на груди: одна попытка на фазу, удар снизу ---- */
+  /* ---- рамка на груди: открыта только в окне. Ждёт 4,5 с → мигает 1 с (предупреждение) → открыта 2 с → снова ждёт.
+     Удар снизу в открытое окно — осколок. Промах: ждать следующего окна. ---- */
+  const fr=S.fr;fr.t-=dt;
+  if(fr.t<=0){if(fr.st==='wait'){fr.st='warn';fr.t=1}else if(fr.st==='warn'){fr.st='open';fr.t=2;S.ev.push('warn')}else{fr.st='wait';fr.t=4.5}}
   const fx=B.x-16,fy=B.y+8,fw=32,fh=22;
-  if(!S.over&&p.vy<0&&over(p,fx+fw/2,fy,fw,fh)&&p.y+E.PH/2>fy+fh/2){
-   S.fDone=true;shard(S)}
+  if(!S.over&&fr.st==='open'&&p.vy<0&&over(p,fx+fw/2,fy,fw,fh)&&p.y+E.PH/2>fy+fh/2){
+   S.fDone=true;fr.st='wait';fr.t=4.5;shard(S)}
   if(S.say){S.say.t-=dt;if(S.say.t<=0)S.say=null}
 }
 
@@ -158,23 +161,23 @@ const GameBoss12=(()=>{
   trackStand(S,dt);
   /* ---- ярус внизу отключается раз в 15 с (мигает 1 с, потом рушится вниз) ---- */
   S.tColl-=dt;
-  if(S.tColl<=0){S.tColl=15;const q=S.pl.filter(t=>t.tier!=null&&t.tier<3&&t.st==='ok').sort((a,b)=>a.tier-b.tier)[0];
+  if(S.tColl<=0){S.tColl=13;const q=S.pl.filter(t=>t.tier!=null&&t.tier<3&&t.st==='ok').sort((a,b)=>a.tier-b.tier)[0];
    if(q){q.st='warn';q.t=1;q.back=20;S.ev.push('warn')}}
   /* ---- блоки-кадры: скользят по рельсам вдоль правой стены, 40 px/с; касание отталкивает на 60 px ---- */
-  for(const r of S.rail){r.y+=r.dir*40*dt;if(r.y<40||r.y>H-70)r.dir*=-1;r.cd=Math.max(0,(r.cd||0)-dt);
+  for(const r of S.rail){r.y+=r.dir*48*dt;if(r.y<40||r.y>H-70)r.dir*=-1;r.cd=Math.max(0,(r.cd||0)-dt);
    if(r.cd<=0&&Math.abs(p.x-(W-11))<11+E.PW/2&&p.y<r.y+22&&p.y+E.PH>r.y){pushPlayer(S,-60);r.cd=.6;S.ev.push('shield')}}
   if(B.phase>=1&&S.rail.length===0)S.rail.push({y:70,dir:1,cd:0});
   if(B.phase>=2&&S.rail.length===1)S.rail.push({y:H*.6,dir:-1,cd:0});
   /* ---- пуш-волна: раз в 6 с, метка на краю яруса 1 с ---- */
   S.tWave-=dt;
-  if(S.tWave<=0){S.tWave=6;
+  if(S.tWave<=0){S.tWave=5;
    const ti=Math.floor(S.rnd()*4);S.tel.push({k:'edge',tier:ti,t:1})}
   /* ---- колонна: фаза 2+, раз в 4 с, тонкая линия 1 с, потом три блока ---- */
-  if(B.phase>=2){S.tCol-=dt;if(S.tCol<=0){S.tCol=4;S.tel.push({k:'col',x:clamp(p.x+p.vx*.6,20,W-20),t:1})}}
+  if(B.phase>=2){S.tCol-=dt;if(S.tCol<=0){S.tCol=3.3;S.tel.push({k:'col',x:clamp(p.x+p.vx*.6,20,W-20),t:1})}}
   for(const a of S.tel){a.t-=dt;if(a.t>0)continue;a.dead=1;
    if(a.k==='edge'){const q=S.pl.find(t=>t.tier===a.tier);if(!q)continue;
-    const even=a.tier%2===0;S.waves.push({x:even?q.x-34:q.x+q.w,y:q.y-80,w:34,h:80,dir:even?1:-1,v:120,tier:a.tier})}
-   if(a.k==='col'){for(let i=0;i<3;i++)S.cols.push({x:a.x,y:-30-i*34,vy:260,dead:0,st:0})}
+    const even=a.tier%2===0;S.waves.push({x:even?q.x-34:q.x+q.w,y:q.y-80,w:34,h:80,dir:even?1:-1,v:144,tier:a.tier})}
+   if(a.k==='col'){for(let i=0;i<3;i++)S.cols.push({x:a.x,y:-30-i*34,vy:312,dead:0,st:0})}
    if(a.k==='frag'){S.sh.push({k:'blk',x:a.x,y:a.y,vy:200,dead:0})}}
   S.tel=S.tel.filter(a=>!a.dead);
   for(const w of S.waves){w.x+=w.dir*w.v*dt;
@@ -184,8 +187,8 @@ const GameBoss12=(()=>{
   S.cols=S.cols.filter(c=>c.y<H+40);
   /* ---- фаза 3: два осколка прыгают по ярусам и бросают блоки ---- */
   if(B.phase===3&&!S.fDone){S.fDone=true;S.frags=[{x:W*.3,dir:1,ty:1,hop:0,from:1,tt:3},{x:W*.7,dir:-1,ty:2,hop:0,from:2,tt:3.5}];say(S,'push… push…',3)}
-  for(const f of S.frags){f.x+=f.dir*60*dt;if(f.x<30||f.x>W-30){f.dir*=-1;f.x=clamp(f.x,30,W-30)}
-   f.tt-=dt;if(f.tt<=0){f.tt=3;f.from=f.ty;f.ty=clamp(f.ty+(S.rnd()<.5?-1:1),0,3);f.hop=.6;S.tel.push({k:'frag',x:f.x,y:tierY(S,f.ty)-14,t:.6})}
+  for(const f of S.frags){f.x+=f.dir*72*dt;if(f.x<30||f.x>W-30){f.dir*=-1;f.x=clamp(f.x,30,W-30)}
+   f.tt-=dt;if(f.tt<=0){f.tt=2.5;f.from=f.ty;f.ty=clamp(f.ty+(S.rnd()<.5?-1:1),0,3);f.hop=.6;S.tel.push({k:'frag',x:f.x,y:tierY(S,f.ty)-14,t:.6})}
    if(f.hop>0){f.hop-=dt}}
   for(const f of S.frags){const yT=tierY(S,f.ty)-14,yF=tierY(S,f.from)-14,k=f.hop>0?1-f.hop/.6:1;f.y=yF+(yT-yF)*k-Math.sin(Math.PI*k)*18;
    if(Math.abs(p.x-f.x)<8+E.PW/2&&Math.abs(p.y+E.PH/2-f.y)<8+E.PH/2)hit(S)}
@@ -198,8 +201,8 @@ const GameBoss12=(()=>{
   if(S.tPop<=0&&alive<2&&B.pops<9){S.tPop=3.5;
    const ti=1+Math.floor(S.rnd()*3),q=S.pl.find(t=>t.tier===ti);
    if(q){const x=q.x+10+S.rnd()*(q.w-52);S.pl.push({x,y:q.y-20,w:32,st:'ok',stand:0,pop:1,born:S.t,tier:ti})}}
-  for(const q of S.pl){if(q.pop&&!q.dead&&S.t-q.born>10){q.dead=1;const dir=S.rnd()<.5?-1:1;
-   S.waves.push({x:dir>0?q.x:q.x+q.w,y:q.y-60,w:34,h:80,dir,v:120,tier:q.tier});S.ev.push('warn')}}
+  for(const q of S.pl){if(q.pop&&!q.dead&&S.t-q.born>8){q.dead=1;const dir=S.rnd()<.5?-1:1;
+   S.waves.push({x:dir>0?q.x:q.x+q.w,y:q.y-60,w:34,h:80,dir,v:144,tier:q.tier});S.ev.push('warn')}}
   /* вспышки: блок выталкивается к Колоссу */
   for(const f of S.fly)f.t+=dt;S.fly=S.fly.filter(f=>f.t<.5);
   if(S.say){S.say.t-=dt;if(S.say.t<=0)S.say=null}

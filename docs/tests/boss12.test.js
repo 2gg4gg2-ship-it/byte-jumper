@@ -33,15 +33,20 @@ for(const [name,S] of [['босс 1',s1],['босс 2',s2]]){
 /* 3. босс 1: рамка на груди, удар снизу — осколок; три осколка — победа, фазы идут 1→2→3 */
 {const S=mk(1);let phases=[1];
  for(let k=0;k<3&&!S.over;k++){
+  /* ждём открытого окна рамки (окно, а не сразу) */
+  for(let i=0;i<60*30&&S.fr.st!=='open'&&!S.over;i++)A.step(S,1/60,idle);
   const B=S.boss,fx=B.x,fy=B.y+8+11;
   /* ставим героя под рамку и выстреливаем вверх */
   S.p.x=fx;S.p.y=fy+14;S.p.vy=-420;S.p.on=false;S.p.inv=0;S.p.hold=0;S.p.buf=0;S.p.coy=0;
-  for(let i=0;i<30&&!S.over&&S.boss.shards===k;i++)A.step(S,1/60,idle);
+  for(let i=0;i<30&&!S.over&&S.boss.shards===k;i++){A.step(S,1/60,idle)}
   phases.push(S.boss.phase);
  }
  c('босс 1: три осколка = победа ('+S.over+', осколков '+S.boss.shards+')',S.over==='win'&&S.boss.shards===3);
  c('босс 1: фазы 1→2→3 ('+phases.join('→')+')',phases.join('')==='1233'||phases.join('')==='1223'||phases.join('')==='1233');
 }
+/* 3б. босс 1: удар под закрытую рамку осколка не даёт */
+{const S=mk(1);S.fr.st='wait';S.fr.t=99;S.boss.y=96;S.p.x=S.boss.x;S.p.y=S.boss.y+30+E.PH+4;S.p.vy=-420;S.p.on=false;
+ A.step(S,1/60,idle);c('босс 1: рамка закрыта — осколка нет',S.boss.shards===0);}
 /* 4. босс 2: POP-блок — посадка сверху выталкивает; девять штук — победа */
 {const S=mk(2);let n=0,guard=0;
  while(!S.over&&guard++<4000){
