@@ -49,6 +49,15 @@ const GameLevelView=(()=>{
    return}
   if(k==='wall'){const h=it.hh;glow(ctx,x,gy-h/2,h*.8,C.red,dark?.5:.28);ctx.fillStyle=C.red;ctx.fillRect(x-8,gy-h,16,h);ctx.fillStyle='rgba(5,5,6,.55)';for(let j=6;j<h;j+=14){ctx.beginPath();ctx.moveTo(x-8,gy-j);ctx.lineTo(x+8,gy-j-8);ctx.lineTo(x+8,gy-j-3);ctx.lineTo(x-8,gy-j+5);ctx.fill()}ctx.fillStyle='#f1f2f4';ctx.fillRect(x-10,gy-h-3,20,3);return}
   /* шипы «битых файлов» и блок, который едет по рельсам (уровни 31+) */
+  /* лазер: предупреждение пунктиром, вспышка — яркий луч; падающий блок: метка на земле, потом блок */
+  if(k==='laser'){const ph=((S.t+it.ph)%it.per+it.per)%it.per;const L0=x-it.w,L1=x+it.w;
+   if(it.act){glow(ctx,x,gy-it.h-9,it.w*1.2,C.red,.7);ctx.fillStyle=C.red;ctx.fillRect(L0,gy-it.h-9,it.w*2,18)}
+   else if(ph<1.1){ctx.globalAlpha=.4+.4*Math.sin(t*20);ctx.fillStyle=C.red;ctx.fillRect(L0,gy-it.h-1,it.w*2,2);ctx.globalAlpha=1}
+   return}
+  if(k==='drop'){const ph=((S.t+it.ph)%it.per+it.per)%it.per;
+   if(ph<.8){ctx.globalAlpha=.5;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(x,gy+1,16,4,0,0,TAU);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=C.red;ctx.strokeRect(x-13,gy-26-0,26,26);ctx.globalAlpha=.4;ctx.strokeRect(x-13,gy-26,26,26);ctx.globalAlpha=1;return}
+   if(!it.act)return;
+   const by=gy-it.yy;glow(ctx,x,by-13,34,C.red,.35);ctx.fillStyle='#16161a';ctx.fillRect(x-13,by-26,26,26);ctx.fillStyle=C.red;ctx.fillRect(x-13,by-26,26,2);ctx.fillStyle='#8a8c93';ctx.fillRect(x-4,by-16,8,3);return}
   if(k==='spike'){if(dark)glow(ctx,x,gy-8,26,C.red,.4);ctx.fillStyle='#e8e9ec';ctx.beginPath();ctx.moveTo(x-7,gy);ctx.lineTo(x,gy-12);ctx.lineTo(x+7,gy);ctx.closePath();ctx.fill();ctx.fillStyle=C.red;ctx.fillRect(x-2,gy-9,4,2);return}
   if(k==='mov'){glow(ctx,x,gy-15,40,C.red,dark?.45:.25);ctx.fillStyle='#16161a';ctx.fillRect(x-10,gy-30,20,30);ctx.fillStyle=C.red;ctx.fillRect(x-10,gy-30,20,2);ctx.fillRect(x-10,gy-2,20,2);ctx.fillStyle='#8a8c93';ctx.fillRect(x-1,gy-22,2,14);return}
   if(k==='proj'){glow(ctx,x,y,24,C.red,.5);ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t*9)*.12);ctx.fillStyle='#e8e9ec';ctx.fillRect(-10,-7,20,14);ctx.fillStyle='#5a5c63';ctx.fillRect(-7,-3,11,2);ctx.fillRect(-7,1,8,2);ctx.fillStyle=C.red;ctx.beginPath();ctx.arc(6,3,3,0,TAU);ctx.fill();ctx.restore();return}
