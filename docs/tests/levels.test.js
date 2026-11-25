@@ -56,8 +56,13 @@ for(const W of [360,412]){const t0=Date.now();const bads=[];for(const L of LV){c
  c('бот проходит 45 уровней (не больше 3 ударов), W='+W+' ('+(bads.join(' ')||'все')+', '+Math.round((Date.now()-t0)/1000)+' с)',!bads.length)}
 console.log('ИТОГ: '+ok+' ок, '+bad.length+' провалов'+(bad.length?': '+bad.join('; '):''));process.exit(bad.length?1:0)
 
-/* нарастание сложности: уровень 1 = уровень 12 по числу препятствий, дальше строго растёт */
-{const cnt=L=>GL.countObs(GL.DEF[L].seq.split(/\s+/)); const tot=L=>GL.countObs(GL.thicken(GL.DEF[L].seq,L).split(/\s+/));
- c('уровень 1 по препятствиям = исходный уровень 12 ('+tot(1)+' = '+cnt(12)+')',tot(1)===cnt(12));
- let mono=true;const seq=LV.filter(L=>L<=49);for(let i=1;i<seq.length;i++)if(tot(seq[i])<=tot(seq[i-1]))mono=false;
- c('препятствий на уровне строго больше, чем на предыдущем (1..49)',mono)}
+/* нарастание сложности 1–25 (вручную, без автоматического растягивания): длина ≈ 6000+90*(L-1), плотность 3.0–4.5 на 1000 px */
+{const OBJ=['bug','wall','gate','hop','proj','spike','laser','drop','mov'];const dens={},lens={};
+ for(const L of [1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19,21,22,23,24,25]){
+  const S=GE.create({mode:'level',L,seed:1,W:360,H:640});const T=S.target;
+  lens[L]=T;dens[L]=(S.items.filter(i=>OBJ.includes(i.t)&&i.x<T).length+S.pits.filter(p=>p.a<T).length)/T*1000}
+ const Ls=Object.keys(lens).map(Number);
+ c('длина уровней 1–25 в пределах ±250 px от 6000+90*(L-1) ('+Ls.map(L=>Math.round(lens[L]-6000-90*(L-1))).join(' ')+')',Ls.every(L=>Math.abs(lens[L]-6000-90*(L-1))<=250));
+ c('плотность препятствий 3.0–4.5 на 1000 px на уровнях 1–25 ('+Ls.map(L=>dens[L].toFixed(1)).join(' ')+')',Ls.every(L=>dens[L]>=2.9&&dens[L]<=4.5));
+ const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+ c('к 21–25 уровню плотность выше, чем на 1–5 ('+avg([21,22,23,24,25].map(L=>dens[L])).toFixed(2)+' > '+avg([1,2,3,4,5].map(L=>dens[L])).toFixed(2)+')',avg([21,22,23,24,25].map(L=>dens[L]))>avg([1,2,3,4,5].map(L=>dens[L])))}
