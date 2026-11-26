@@ -13,14 +13,22 @@ const GameArt=(()=>{
   ['#0a0f14','#1f2d2c','#dfe8e4','#101a1c','#081012','ruins','Свалка'],
   ['#0a1016','#2a3a38','#dfe8e4','#131f22','#091416','city','Ночная свалка'],
   ['#060a16','#121b3c','#dfe8fb','#0b1330','#060b1c','rings','Башни'],
-  ['#05060c','#15182a','#e0262b','#0c0e1c','#06070e','dark','Тьма']];
+  ['#05060c','#15182a','#e0262b','#0c0e1c','#06070e','dark','Тьма'],
+  ['#070c1e','#16224a','#dfe8fb','#0e1a3a','#070e24','stack','Стек'],
+  ['#05070f','#0f1530','#e0262b','#0a0e20','#050812','stack','Стек: подвал'],
+  ['#0b1216','#2b3f46','#dff4f2','#14242b','#0a1418','mirror','Витрина'],
+  ['#061016','#143a44','#9ff2ea','#0d2630','#071a20','mirror','Отражение'],
+  ['#03060e','#0a1a36','#6fd8ff','#071026','#040a18','fiber','Порт 80'],
+  ['#020409','#0c1426','#ffd27a','#060c1c','#03070f','fiber','Рельсы']];
  const NAMES=['Пробуждение','Первая память','Архивариус','Потеряшка','Мусорный ветер','Дверь без таблички','Потерянные иконки','Ржавый лифт','Тихая дверь','Страж',
-  'Нижний слой','Push','Мастер Правок','Подвал стека','Первый Шлюз','Спор Домов','Рекурсия','Сломанный лифт','Тяжёлая память','Колосс'];
+  'Нижний слой','Push','Мастер Правок','Подвал стека','Первый Шлюз','Спор Домов','Рекурсия','Сломанный лифт','Тяжёлая память','Колосс','Витрина','Копия копии','Горячее и холодное','Лавка забытых вещей','Эхо шагов','Первый спор','Инвалидация','Гость из Дома','Свежее имя','Босс','Порт 80','Рукопожатие','Потерянные пакеты','Шторм задержек','Мост наружу','Вопрос из-за экрана','Обрыв','Повторы','Тихая линия','Босс'];
  /* TH[i] = [верх, низ, свет, дальний, ближний, мотив, название]: 20 уровней, 4 сцены */
- const TH=NAMES.map((n,i)=>{const s=SC[Math.floor(i/5)];return[s[0],s[1],s[2],s[3],s[4],s[5],n]});
- const idx=(mode,L)=>mode==='endless'?11:Math.max(0,((L|0)-1)%20);
+ /* блоки по 5 уровней → сцена. Главы: 1–10 свалка (сцены 0,1), 11–20 стек (4,5), 21–30 зеркала (6,7), 31–40 оптоволокно (8,9) */
+ const SCBLK=[0,1,4,5,6,7,8,9];
+ const TH=NAMES.map((n,i)=>{const s=SC[SCBLK[Math.floor(i/5)]];return[s[0],s[1],s[2],s[3],s[4],s[5],n]});
+ const idx=(mode,L)=>mode==='endless'?11:Math.max(0,((L|0)-1)%40);
  /* alt: высота камеры 0..1. Уровни 1–10 — подъём от свалки внизу (0) к воздуху над ней (1); остальные уровни и арены — 0 */
- const theme=(mode,L)=>{const i=idx(mode,L),t=TH[i],sc=Math.floor(i/5),alt=mode==='level'&&L>=1&&L<=10?((L|0)-1)/9:0;return{i,sc,seed:(L|0)%5+sc*7,top:t[0],bot:t[1],ac:t[2],far:t[3],near:t[4],m:t[5],name:t[6],act:sc>1?1:0,alt}};
+ const theme=(mode,L)=>{const i=idx(mode,L),t=TH[i],sc=SCBLK[Math.floor(i/5)],alt=mode==='level'&&L>=1&&L<=10?((L|0)-1)/9:0;return{i,sc,seed:(L|0)%5+sc*7,top:t[0],bot:t[1],ac:t[2],far:t[3],near:t[4],m:t[5],name:t[6],act:sc>1?1:0,alt,tex:Math.floor(i/10),red:sc===3||sc===5}};
  const mixHex=(a,b,k)=>{const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];const A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*k).toString(16).padStart(2,'0')).join('')};
  const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')'};
  /* ---- кэш: статичное рисуется один раз в невидимый холст, потом одной командой drawImage (раньше фон пересчитывался каждый кадр) ---- */
@@ -76,7 +84,7 @@ const GameArt=(()=>{
   blit(ctx,'fog|'+a+'|'+ph%3,W-dx,y0,W,h,null)}
  /* фон уровня: небо и свет в кэше, слои руин (кэш), туман, пылинки; сверху один кэшированный слой «развёртки + виньетка» */
  function bg(ctx,W,H,gy,sx,t,th,q){
-  const sc=th.sc,red=sc===3,sd=th.seed,al=th.alt||0;gy=Math.round(gy);
+  const sc=th.sc,red=th.red,sd=th.seed,al=th.alt||0;gy=Math.round(gy);
   /* при подъёме небо синеет к ночному (#070b18 → #141d42), а свалка уходит вниз, под камеру */
   const top=al?mixHex(th.top,'#070b18',al):th.top,bot=al?mixHex(th.bot,'#141d42',al):th.bot,gA=gy+al*H*.35;
   blit(ctx,'back|'+sc+top+bot,0,0,W,H,x=>{const g=x.createLinearGradient(0,0,0,gy);g.addColorStop(0,top);g.addColorStop(1,bot);x.fillStyle=g;x.fillRect(0,0,W,H);
@@ -86,6 +94,7 @@ const GameArt=(()=>{
    x.font='500 9px monospace';x.textAlign='left';const CL=['code {','  echo()','  if (ok) {','  return;','}','  stack.push()','/* error */','  load(0x404)'];
    for(let i=0;i<22;i++){x.fillStyle=i%5===0?'rgba(224,38,43,.09)':'rgba(120,160,230,'+(.05+hs(i+sd*5)*.07).toFixed(3)+')';x.fillText(CL[(i+sd)%CL.length],hs(i*3+sd)*W,hs(i*7+sd*2)*gy)}
    if(red){const h=x.createLinearGradient(0,gy-170,0,gy);h.addColorStop(0,'rgba(224,38,43,0)');h.addColorStop(1,'rgba(224,38,43,.22)');x.fillStyle=h;x.fillRect(0,gy-170,W,170)}});
+  if(sc>=4)newMid(ctx,W,H,gy,gA,sx,t,th,sd);else{
   if(sc===0||sc===2||sc===3)ring(ctx,W*.58+Math.sin(sx*.0015)*18,gy*.5,sc===2?gy*.46:gy*.38,sc===3?.05:.07,t,sc===2?10:7);
   if(sc===2){ring(ctx,W*.22,gy*.32,gy*.2,.045,-t,5);ctx.fillStyle=rgba('#f1f2f4',.035);for(let i=0;i<4;i++)ctx.fillRect(W*(.1+i*.25)-6,0,12,gy)}
   towers(ctx,W,gA,sx,.04,3+sd,th.far,60,sc===2?230:170,sc===2?46:72,sc===1?.16:0,sc===1||red,t);
@@ -96,10 +105,38 @@ const GameArt=(()=>{
   else if(sc===3)for(let i=0;i<5;i++){const x=((i*86+20-sx*.12)%(W+120)+W+120)%(W+120)-30,h=30+hs(i+sd)*60;ctx.fillStyle=th.near;ctx.beginPath();ctx.moveTo(x,gy+2);ctx.lineTo(x+9,gy-h);ctx.lineTo(x+18,gy+2);ctx.fill()}
   towers(ctx,W,gA,sx,.16,29+sd,th.near,22,70,50,0,false,t);
   fog(ctx,W,gy-56,60,.13,t,sd+2);
+  }
   const n=Math.round(16*q),o=ctx.globalAlpha;
   for(let i=0;i<n;i++){const r=hs(i+500),x=((r*W-sx*(.2+r*.35)-t*(5+r*7))%(W+20)+W+20)%(W+20)-10,y=hs(i+90)*gy+Math.sin(t*.6+i)*7,s=1+(i%3);ctx.fillStyle=(red&&i%4===0)?'#e0262b':'#f1f2f4';ctx.globalAlpha=o*((red&&i%4===0)?.45:.1+.25*r);ctx.fillRect(x,y,s,s)}
   ctx.globalAlpha=o;
   blit(ctx,'over',0,0,W,H,x=>{const v=x.createRadialGradient(W/2,H*.45,Math.min(W,H)*.3,W/2,H*.5,Math.max(W,H)*.8);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');x.fillStyle=v;x.fillRect(0,0,W,H)})}
+ /* главы 2–4 (уровни 11–40): стек из слоёв блоков, витрина зеркал, оптоволокно и рельсы света. Руин здесь нет */
+ function newMid(ctx,W,H,gy,gA,sx,t,th,sd){
+  const tx=th.tex,dim=(th.sc===5||th.sc===7||th.sc===9)?.5:1;
+  if(tx===1)stackStrip(ctx,W,gA,sx,th.far,.8*dim,sd,false);
+  else if(tx===2){towers(ctx,W,gA,sx,.05,21+sd,th.far,60,150,60,0,false,t);
+   const a0=ctx.globalAlpha;
+   for(let i=0;i<5;i++){const x=((i*W/5-sx*.1+t*2)%W+W)%W;ctx.fillStyle=th.ac;ctx.globalAlpha=.05;ctx.fillRect(x,gy*.18,10,gy*.5);ctx.globalAlpha=.16;ctx.fillRect(x,gy*.18,1,gy*.5)}
+   ctx.globalAlpha=a0}
+  else{towers(ctx,W,gA,sx,.05,31+sd,th.far,50,130,60,0,false,t);packets(ctx,W,gy,t,sd,th.sc===9);rails(ctx,W,gy,t,th.sc===9)}
+  errPops(ctx,W,gy,sx,t,sd,3);
+  fog(ctx,W,gy-130,120,.1,t,sd);
+  if(tx===1)stackStrip(ctx,W,gA,sx,th.near,dim,sd,true);else towers(ctx,W,gA,sx,.09,11+sd,th.near,34,90,56,0,false,t);
+  fog(ctx,W,gy-56,60,.13,t,sd+2);
+ }
+ /* ряды блоков-слоёв: кэшированная полоса, склеивается по кругу как башни */
+ function stackStrip(ctx,W,gy,sx,color,dim,sd,near){
+  const G=Math.round(gy),per=near?64:48,N=Math.ceil(W/per)+3,span=N*per,off=((sx*(near?.12:.06))%span+span)%span,key='stk|'+(near?1:0)+color+dim.toFixed(2)+'|'+sd+'|'+N;
+  const paint=q=>{q.globalAlpha=dim;for(let i=0;i<N;i++){const r=hs(i*7+sd+(near?50:0)),h=(near?70:110)+r*(near?90:150),x=i*per+(r>.5?2:0),w=per*(near?.84:.7),top=G-h;
+    q.fillStyle=color;for(let y=G-6;y>top;y-=near?18:22)q.fillRect(x,y-(near?16:20),w,near?16:20);q.fillStyle='rgba(143,176,255,.14)';q.fillRect(x,top,w,1)}q.globalAlpha=1};
+  blit(ctx,key,-off,0,span,G,paint);blit(ctx,key,span-off,0,span,G,paint)}
+ /* оптоволокно: световые пакеты по диагонали; рельсы — две линии над землёй */
+ function packets(ctx,W,gy,t,sd,gold){
+  ctx.lineWidth=2;for(let i=0;i<12;i++){const sp=40+hs(i+sd)*90,x=(W+200)-((t*sp+i*97)%(W+200))-100,y=hs(i*13+sd)*gy*.7+(i%3)*4;
+   const g=ctx.createLinearGradient(x,y,x+46,y+10),c=gold&&i%3===0?'245,184,46':'111,216,255';g.addColorStop(0,'rgba('+c+',0)');g.addColorStop(1,'rgba('+c+',.55)');ctx.strokeStyle=g;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+46,y+10);ctx.stroke()}ctx.lineWidth=1}
+ function rails(ctx,W,gy,t,gold){const y1=gy-34,y2=gy-26;ctx.lineWidth=1;ctx.strokeStyle='rgba(111,216,255,.22)';ctx.beginPath();ctx.moveTo(0,y1);ctx.lineTo(W,y1);ctx.stroke();
+  ctx.strokeStyle=gold?'rgba(245,184,46,.18)':'rgba(111,216,255,.12)';ctx.beginPath();ctx.moveTo(0,y2);ctx.lineTo(W,y2);ctx.stroke();
+  ctx.fillStyle=gold?'rgba(245,184,46,.6)':'rgba(111,216,255,.6)';for(let i=0;i<6;i++){const x=((i*97-t*90)%W+W)%W;ctx.fillRect(x,y1-1,8,2)}}
  /* «Свалка» (глава 1 «Корзина», уровни 1–10 по библии): папки-горы, перечёркнутые иконки, падающие строки File not found.
     v=0 — свалка днём, v=1 — ночная свалка (больше тумана, меньше папок) */
  function dumpExtra(ctx,W,gy,sx,t,sd,v){
@@ -119,7 +156,12 @@ const GameArt=(()=>{
   ctx.fillStyle=rgba('#e0262b',.35+.15*Math.sin(t*3));ctx.fillRect(0,gy+1,W,2)}
  /* земля: плитка шириной 960 px (кратна шагам швов 96, щелей 64 и 80) лежит в кэше и укладывается по миру; кромки ям рисуются поверх */
  const TILE=960;
- function paintGround(x,Hg){
+ function paintGround(x,Hg,tex){
+  if(tex===1){const g=x.createLinearGradient(0,0,0,Hg);g.addColorStop(0,'#24386e');g.addColorStop(.08,'#141f40');g.addColorStop(1,'#050914');x.fillStyle=g;x.fillRect(0,0,TILE,Hg);x.fillStyle='#8fb0ff';x.fillRect(0,0,TILE,2);
+   for(let r=0,y=18;y<Hg;r++,y+=18){x.fillStyle='rgba(0,0,0,.45)';x.fillRect(0,y,TILE,2);const off=(r%2)*48;for(let X=off;X<TILE;X+=96){x.fillStyle='rgba(0,0,0,.45)';x.fillRect(X,y,2,18);x.fillStyle='rgba(143,176,255,.07)';x.fillRect(X+2,y+2,1,14)}}return}
+  if(tex===2){const g=x.createLinearGradient(0,0,0,Hg);g.addColorStop(0,'#6e8089');g.addColorStop(.05,'#3a4850');g.addColorStop(.35,'#14202a');g.addColorStop(1,'#060b10');x.fillStyle=g;x.fillRect(0,0,TILE,Hg);x.fillStyle='#dff4f2';x.fillRect(0,0,TILE,2);
+   x.strokeStyle='rgba(223,244,242,.16)';x.lineWidth=2;for(let X=-40;X<TILE+40;X+=120){x.beginPath();x.moveTo(X,0);x.lineTo(X+60,Math.min(Hg,80));x.stroke()}x.lineWidth=1;for(let y=30;y<Hg;y+=30){x.fillStyle='rgba(159,242,234,.06)';x.fillRect(0,y,TILE,1)}return}
+  if(tex===3){const g=x.createLinearGradient(0,0,0,Hg);g.addColorStop(0,'#0a1424');g.addColorStop(.1,'#070d1a');g.addColorStop(1,'#020408');x.fillStyle=g;x.fillRect(0,0,TILE,Hg);x.fillStyle='rgba(111,216,255,.7)';x.fillRect(0,4,TILE,2);x.fillStyle='rgba(111,216,255,.25)';x.fillRect(0,12,TILE,1);for(let X=0;X<TILE;X+=80){x.fillStyle='rgba(245,184,46,.7)';x.fillRect(X+8,6,6,2)}return}
   const g=x.createLinearGradient(0,0,0,Hg);g.addColorStop(0,'#2a3556');g.addColorStop(.06,'#1a2440');g.addColorStop(.3,'#0c1227');g.addColorStop(1,'#04060d');x.fillStyle=g;x.fillRect(0,0,TILE,Hg);
   x.fillStyle='#7f9cd0';x.fillRect(0,0,TILE,2);
   for(let X=0;X<TILE;X+=96){x.fillStyle='rgba(0,0,0,.55)';x.fillRect(X,3,2,40);x.fillStyle='rgba(255,255,255,.06)';x.fillRect(X+2,3,1,40)}
@@ -129,7 +171,7 @@ const GameArt=(()=>{
  function seg(ctx,a,b,gy,H,sx,th,t){
   if(b<=a)return;gy=Math.round(gy);const Hg=Math.ceil(H-gy+4);
   ctx.save();ctx.beginPath();ctx.rect(a,gy,b-a,Hg);ctx.clip();
-  for(let X=Math.floor((a+sx)/TILE)*TILE-sx;X<b;X+=TILE)blit(ctx,'ground',X,gy,TILE,Hg,x=>paintGround(x,Hg));
+  for(let X=Math.floor((a+sx)/TILE)*TILE-sx;X<b;X+=TILE)blit(ctx,'ground|'+th.tex,X,gy,TILE,Hg,x=>paintGround(x,Hg,th.tex));
   ctx.restore();
   ctx.fillStyle='#c9ccd1';ctx.fillRect(a,gy,3,9);ctx.fillRect(b-3,gy,3,9)}
  /* предметы; true = нарисовано */
@@ -215,7 +257,7 @@ const GameArt=(()=>{
   ctx.save();ctx.globalAlpha=on?1:.45;ctx.fillStyle=on?'rgba(224,38,43,.22)':'rgba(8,8,10,.6)';ctx.strokeStyle=C.red;ctx.lineWidth=2;ctx.beginPath();ctx.arc(rx,ry,30,0,TAU);ctx.fill();ctx.stroke();
   ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='700 10px '+font;ctx.fillText(label,rx,ry+4);ctx.restore()}
  /* ---------- арены боссов: тот же мир, что и на уровнях, но фон плывёт сам ---------- */
- const ASC=[0,2,1,3,0,3,1,2,3,3];
+ const ASC=[0,2,4,6,0,3,1,2,3,3];
  function arenaBg(ctx,S,W,H,t){
   const id=Math.max(1,Math.min(10,S.bid|0||1)),sc=ASC[id-1],th=theme('arena',sc*5+1+(id%5)),gy=Math.max(S.gy||H*.8,H*.8);
   if(id===1)th.alt=1;/* Страж (уровень 10): уже в воздухе над свалкой */
