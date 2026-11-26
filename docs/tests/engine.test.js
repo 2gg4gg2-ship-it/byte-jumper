@@ -138,8 +138,8 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
 {const fs=require('fs'),path=require('path'),dir=path.join(__dirname,'../../app/src/main/assets/features/game');let bad2=[];
  for(const f of['art.js','bossart.js','game.js','game.css','fx.js','spark.js']){const txt=fs.readFileSync(path.join(dir,f),'utf8');for(const m of txt.matchAll(/#([0-9a-fA-F]{6})\b/g)){const n=parseInt(m[1],16),r=n>>16,g=(n>>8)&255,b=n&255,mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx-mn<18)continue;
    let h;if(mx===r)h=((g-b)/(mx-mn)+6)%6*60;else if(mx===g)h=((b-r)/(mx-mn)+2)*60;else h=((r-g)/(mx-mn)+4)*60;
-   const red=(h<12||h>348);if(!red)bad2.push(f+' #'+m[1]+' hue '+Math.round(h))}}
- c('палитра: в коде игры нет цветных (фиолетовых, розовых, синих, зелёных, жёлтых) оттенков, только серые и красный'+(bad2.length?' '+bad2.slice(0,6).join('; '):''),bad2.length===0)}
+   const ok=(h<12||h>348)||(h>=30&&h<=50)||(h>=100&&h<=160)||(h>=160&&h<=245);if(!ok)bad2.push(f+' #'+m[1]+' hue '+Math.round(h))}}
+ c('палитра: в коде игры нет фиолетовых и розовых оттенков; разрешены тёмно-синий, голубой, золотой, зелёный и красный из утверждённого концепта'+(bad2.length?' '+bad2.slice(0,6).join('; '):''),bad2.length===0)}
 
 /* ---- ядро: страж ошибок, хранилище, статистика ---- */
 {const C2=ld('core.js','GameCore');
