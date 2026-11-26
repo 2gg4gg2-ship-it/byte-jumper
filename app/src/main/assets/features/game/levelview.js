@@ -43,7 +43,21 @@ const GameLevelView=(()=>{
   const y=gy-it.h;
   if(it.decoy){ctx.save();ctx.globalAlpha=.42;ctx.fillStyle='#8a8c93';ctx.beginPath();ctx.moveTo(x-9,gy);ctx.lineTo(x,gy-22);ctx.lineTo(x+9,gy);ctx.closePath();ctx.fill();ctx.restore();return}
    if(it.echo){ctx.save();ctx.globalAlpha=.5+.25*Math.sin(t*8);ctx.strokeStyle=C.red;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(x-9,gy);ctx.lineTo(x,gy-22);ctx.lineTo(x+9,gy);ctx.closePath();ctx.stroke();ctx.restore();return}
-   if(k==='byte'||k==='gold'||k==='bug'||k==='door'||k==='shield'||k==='magnet'){
+   /* потолочные шипы и баги: торчат вниз от потолка */
+  if(it.ceil){const hh=k==='spike'?12:22,w=k==='spike'?7:9;glow(ctx,x,GameEngine.CEIL+hh/2,hh*1.2,C.red,dark?.5:.3);ctx.fillStyle=C.red;ctx.beginPath();ctx.moveTo(x-w,GameEngine.CEIL);ctx.lineTo(x+w,GameEngine.CEIL);ctx.lineTo(x,GameEngine.CEIL+hh);ctx.closePath();ctx.fill();return}
+  /* батут: серая плита с пружиной */
+  if(k==='pad'){const w=it.w;ctx.fillStyle='#8a8c93';ctx.fillRect(x-w/2,gy-6,w,6);ctx.strokeStyle='#f1f2f4';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<4;i++){const yy=gy-8-i*4;ctx.moveTo(x-w/2+6,yy);ctx.lineTo(x+w/2-6,yy-2)}ctx.stroke();return}
+  /* хрупкий блок: полупрозрачный куб с трещиной */
+  if(k==='frag'){const yT=gy-it.h-40;ctx.fillStyle='rgba(241,242,244,.12)';ctx.fillRect(x-20,yT,40,40);ctx.strokeStyle='#d4d6db';ctx.lineWidth=1.5;ctx.strokeRect(x-20,yT,40,40);ctx.beginPath();ctx.moveTo(x-6,yT+8);ctx.lineTo(x+2,yT+18);ctx.lineTo(x-2,yT+30);ctx.stroke();return}
+  /* магнитная стена: вертикальная плита 110 px с полосами */
+  if(k==='mg'){const base=gy-it.h,tp=base-110;glow(ctx,x,base-55,50,'#ffffff',dark?.35:.2);ctx.fillStyle='#8a8c93';ctx.fillRect(x-7,tp,14,110);ctx.fillStyle='#16161a';for(let j=0;j<110;j+=12)ctx.fillRect(x-7,tp+j,14,2);ctx.fillStyle='#f1f2f4';ctx.fillRect(x-7,tp,14,2);return}
+  /* портал-инвертор: рамка в воздухе (внутри — серый провал) */
+  if(k==='inv'){const a=it.used?.35:.6+.3*Math.sin(t*5);glow(ctx,x,y-45,60,'#ffffff',a*.45);ctx.strokeStyle='#f1f2f4';ctx.lineWidth=3;ctx.strokeRect(x-14,y-90,28,90);ctx.globalAlpha=a;ctx.fillStyle='#16161a';ctx.fillRect(x-11,y-87,22,84);ctx.globalAlpha=1;return}
+  /* ускоритель: плита с бегущими стрелками >>> */
+  if(k==='bo'){const w=it.w;ctx.fillStyle='#16161a';ctx.fillRect(x-w/2,gy-6,w,6);ctx.fillStyle='#f1f2f4';const sh=(t*60)%18;for(let i=0;i<5;i++){const cx0=x-w/2+10+i*18+sh-18;if(cx0<x-w/2||cx0>x+w/2)continue;ctx.beginPath();ctx.moveTo(cx0,gy-20);ctx.lineTo(cx0+6,gy-14);ctx.lineTo(cx0,gy-8);ctx.lineTo(cx0+2,gy-14);ctx.closePath();ctx.fill()}return}
+  /* световой провод: тонкая линия с блоками на концах */
+  if(k==='line'){const yL=gy-it.h;ctx.strokeStyle='#f1f2f4';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,yL);ctx.lineTo(x+it.w,yL);ctx.stroke();ctx.fillStyle='#8a8c93';ctx.fillRect(x-3,yL-3,6,6);ctx.fillRect(x+it.w-3,yL-3,6,6);return}
+  if(k==='byte'||k==='gold'||k==='bug'||k==='door'||k==='shield'||k==='magnet'){
    if(k==='bug'&&dark)glow(ctx,x,gy-14,34,C.red,.5);
    if(k==='byte'&&dark)glow(ctx,x,y,30,'#ffffff',.35);
    A().item(ctx,it,x,y,gy,t,S.H,th);
@@ -86,6 +100,8 @@ const GameLevelView=(()=>{
   const th=GameArt.theme('level',o.Lv),C=GameArt.C;PE.PX=S.px;
   ctx.setTransform(o.dpr*o.sc,0,0,o.dpr*o.sc,0,0);
   GameArt.bg(ctx,W,H,gy,S.x,t,th,q);extra(ctx,S,W,H,gy,t,ch);
+  /* потолок: линия поверх, когда Искра идёт по нему (портал-инвертор) */
+  if(S.p.flip){ctx.fillStyle='rgba(241,242,244,.55)';ctx.fillRect(0,GameEngine.CEIL-2,W,2)}
   GameArt.voidFill(ctx,W,H,gy,th,t);
   const pits=S.pits.slice().sort((a,b)=>a.a-b.a);let cx=-10;
   for(const p of pits){const a=p.a-S.x,b=p.b-S.x;if(b<-20)continue;if(a>W+20)break;GameArt.seg(ctx,cx,Math.min(a,W+10),gy,H,S.x,th,t);cx=Math.max(cx,b)}

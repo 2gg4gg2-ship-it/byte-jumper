@@ -9,6 +9,8 @@
 const GameEngine=(()=>{
  /* Прыжок: тап ≈ 66 px (малый), удержание ≈ 124 px (большой) */
  const G=1900,JV=500,HG=.42,HMAX=.25,PX=80,PW=20,PH=24,FOOT=8,GY=.68;
+ /* новые блоки: CEIL — низ потолка (для портала-инвертора), PADV — скорость батута (≈160 px вверх) */
+ const CEIL=70,PADV=780;
  const mul=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
  /* сложность d от 0 (уровень 1) до 1 (уровень 10): растёт плавно, размер героя, высота прыжка и управление не меняются */
@@ -19,11 +21,11 @@ const GameEngine=(()=>{
  const target=L=>6000+Math.round(9000*levelD(L));
  function create(o){
   const S={mode:o.mode||'level',L:o.L||1,W:o.W||360,H:o.H||640,rnd:mul(o.seed==null?(Math.random()*1e9)|0:o.seed),
-   x:0,speed:0,t:0,items:[],pits:[],genX:420,rest:0,score:0,bytes:0,spawned:0,combo:0,usedShield:false,ev:[],over:null,
+   x:0,speed:0,t:0,items:[],pits:[],genX:420,rest:0,score:0,bytes:0,spawned:0,combo:0,boost:0,flipEnd:0,usedShield:false,ev:[],over:null,
    hearts:0,maxHearts:0,lost:0,boss:null,seg:0,last:'flat',px:PX,plats:[],wt:0,locked:false,door:0,doorOpen:0,note:null,found:false,lv:false,def:null};
   S.hearts=S.maxHearts=S.mode==='level'?5:3;
   S.gy=S.H*GY;S.d=S.mode==='endless'?.25:levelD(S.L);S.P=prm(S.d);
-  S.p={y:S.gy-PH,vy:0,on:true,hold:0,buf:0,coy:.1,sh:false,mag:0,inv:0,stand:null};
+  S.p={y:S.gy-PH,vy:0,on:true,hold:0,buf:0,coy:.1,sh:false,mag:0,inv:0,stand:null,flip:0,cling:0,zip:null,clingIt:null};
   if(S.mode==='boss')S.boss={hp:100,max:100,phase:1,atk:2.2,zone:7,fix:1.6,bob:0};
   else for(let i=0;i<5;i++)byte(S,200+i*40,0);
   S.target=S.mode==='level'?target(S.L):0;
@@ -78,7 +80,7 @@ const GameEngine=(()=>{
   S.px=PX;S.locked=false;
   S.x=(q?(q.retry?q.a-70:q.b+50):pw+120)-PX;p.y=S.gy-PH;p.vy=0;p.on=true;p.stand=null;p.buf=0;p.inv=1.8;
   for(const k of S.plats)if(k.fs||k.dead){k.fs=0;k.drop=0;k.dv=0;k.dead=0}
-  S.ev.push('fall')}
+  p.flip=0;p.zip=null;p.cling=0;p.clingIt=null;S.ev.push('fall')}
  const pts=(S,v)=>{S.score+=v*(S.combo>=10?2:1)};
  /* ---------- босс «Ошибка 404» ---------- */
  function bossStep(S,dt){
@@ -117,6 +119,7 @@ function step(S,dt,inp){
   const p=S.p,gy=S.gy,boss=S.mode==='boss',lv=S.mode==='level';
   S.t+=dt;
   S.speed=boss?250:S.mode==='endless'?Math.min(230+S.x*.012,420):Math.min(S.P.v0+S.P.acc*S.x,S.P.vmax);
+  if(p.zip)S.speed*=1.25;if(S.boost>0)S.speed*=1.4;S.boost=Math.max(0,(S.boost||0)-dt);
   /* конец уровня: камера останавливается, когда дверь целиком в правом углу экрана, и Искра сама идёт к двери */
   if(lv){
    if(!S.locked){S.x+=S.speed*dt;const endX=S.door-(S.W-58);if(S.x>=endX){S.x=endX;S.locked=true}}
@@ -125,32 +128,57 @@ function step(S,dt,inp){
   if(S.mode==='endless')S.d=clamp(.25+S.x/20000,.25,1),S.P=prm(S.d);
   if(!boss)gen(S);else bossStep(S,dt);
   const pw=S.x+S.px;
+  if(p.flip&&S.x>=S.flipEnd){p.flip=0;p.on=false;p.vy=0;S.ev.push('flipoff')}
   if(S.plats.length)platStep(S,dt);
   if(S.note){S.note.ttl-=dt;if(S.note.ttl<=0)S.note=null}
   /* прыжок: буфер нажатия и «койот»: нажал чуть раньше или чуть позже края — всё равно прыгнет. Вес (уровень 19) делает прыжок ниже */
-  const jv=JV*(1-S.wt);
+  const sg=p.flip?-1:1;
+  const jv=JV*(1-S.wt)*(S.boost>0?1.18:1);
   if(inp&&inp.pressed)p.buf=.12;
   p.coy=p.on?.08:p.coy-dt;p.buf-=dt;
-  if(p.buf>0&&p.coy>0){p.vy=-jv;p.on=false;p.stand=null;p.coy=0;p.buf=0;p.hold=HMAX;S.ev.push('jump');if(S.def&&S.def.echo)echoSpawn(S)}
+  if(p.buf>0&&p.coy>0){p.vy=-jv*sg;p.on=false;p.stand=null;p.coy=0;p.buf=0;p.hold=HMAX;S.ev.push('jump');if(S.def&&S.def.echo)echoSpawn(S)}
   /* способности боссов (S.ab): двойной прыжок — один раз в воздухе */
-  else if(p.buf>0&&S.ab&&S.ab.double&&!p.on&&!p.dj){p.vy=-jv*.9;p.dj=1;p.buf=0;S.ev.push('jump')}
-  let g=G;
-  if(inp&&inp.down&&p.vy<0&&p.hold>0){g=G*HG;p.hold-=dt}else if(!(inp&&inp.down))p.hold=0;
-  /* быстрое падение (S.ab.fall): удержание в полёте при падении тянет вниз втрое сильнее */
-  if(S.ab&&S.ab.fall&&inp&&inp.down&&!p.on&&p.vy>0)g=G*3;
+  else if(p.buf>0&&S.ab&&S.ab.double&&!p.on&&!p.dj&&!p.zip&&p.cling<=0){p.vy=-jv*.9*sg;p.dj=1;p.buf=0;S.ev.push('jump')}
+  /* прыжок с провода или со стены: отпускает */
+  else if(p.buf>0&&(p.cling>0||p.zip)){
+   if(p.cling>0){p.cling=0;if(p.clingIt){p.clingIt.dead=1;p.clingIt=null}}
+   p.zip=null;p.vy=-jv*sg;p.on=false;p.stand=null;p.buf=0;p.hold=HMAX;S.ev.push('jump')}
   const feet0=p.y+PH;
-  p.vy+=g*dt;p.y+=p.vy*dt;
+  let g=G*sg;
+  if(inp&&inp.down&&p.vy*sg<0&&p.hold>0){g=G*HG*sg;p.hold-=dt}else if(!(inp&&inp.down))p.hold=0;
+  /* быстрое падение (S.ab.fall): удержание в падении тянет втрое сильнее */
+  if(S.ab&&S.ab.fall&&inp&&inp.down&&!p.on&&p.vy*sg>0)g=G*3*sg;
+  /* провод: съехал с конца — отцепился */
+  if(p.zip&&pw>p.zip.x+p.zip.w+PW/2)p.zip=null;
+  if(p.zip){p.y=gy-p.zip.h-PH;p.vy=0}
+  else if(p.cling>0){
+   /* магнитная стена: медленно сползаем 1,2 с, стена едет вместе с Искрой */
+   p.cling-=dt;p.vy=90;p.y+=90*dt;
+   if(p.clingIt)p.clingIt.x=pw+PW/2+7;
+   if(p.y+PH>=gy){p.y=gy-PH;p.cling=0}
+   if(p.cling<=0){p.cling=0;if(p.clingIt){p.clingIt.dead=1;p.clingIt=null}}}
+  else{p.vy+=g*dt;p.y+=p.vy*dt}
   /* опора: платформа (держит и носит игрока) или земля */
   let on=false;
-  if(p.stand){const q=p.stand;if(p.vy<0||!pOn(S,q)||pw+14<q.cx||pw-14>q.cx+q.w)p.stand=null;else{p.y=gy-q.cur-PH;p.vy=0;on=true}}
-  if(!on&&p.vy>=0){
+  if(p.stand){const q=p.stand;if(p.vy*sg<0||!pOn(S,q)||pw+14<q.cx||pw-14>q.cx+q.w)p.stand=null;else{p.y=gy-q.cur-PH;p.vy=0;on=true}}
+  /* провод: ноги пересекли линию сверху — цепляемся */
+  if(!on&&!p.zip&&!p.flip&&p.cling<=0&&p.vy>0){
+   for(const z of S.items){if(z.t!=='line'||z.dead||pw<z.x||pw>z.x+z.w)continue;const Yl=gy-z.h;
+    if(feet0<=Yl+2&&p.y+PH>=Yl){p.zip=z;p.y=Yl-PH;p.vy=0;p.stand=null;S.ev.push('zip');break}}}
+  if(!on&&!p.zip&&p.cling<=0&&p.vy*sg>=0){
    const f=p.y+PH;
-   if(f>=gy&&solid(S,pw)&&f<gy+14){p.y=gy-PH;p.vy=0;on=true}
-   else for(const q of S.plats){
+   if(p.flip){if(p.y<=CEIL){p.y=CEIL;p.vy=0;on=true}}
+   else if(f>=gy&&solid(S,pw)&&f<gy+14){
+    /* батут: при посадке подбрасывает на ≈160 px, обычная земля — останавливает */
+    const pd=S.items.find(it=>it.t==='pad'&&!it.dead&&Math.abs(it.x-pw)<=it.w/2+PW/2);
+    p.y=gy-PH;
+    if(pd&&p.vy>0){p.vy=-PADV;S.ev.push('pad')}
+    else{p.vy=0;on=true;if(S.items.some(it=>it.t==='bo'&&!it.dead&&Math.abs(it.x-pw)<=it.w/2+PW/2)){S.boost=1.5;S.ev.push('boost')}}}
+   else if(!p.flip)for(const q of S.plats){
     if(!pOn(S,q))continue;
     if(pw+14>=q.cx&&pw-14<=q.cx+q.w&&f>=gy-q.cur&&feet0<=gy-q.p0+9){p.y=gy-q.cur-PH;p.vy=0;on=true;p.stand=q;if(q.k==='fall'&&!q.fs){q.fs=1;q.ft=0}break}}}
   p.on=on;if(on)p.dj=0;
-  if(!p.on&&p.y+PH>gy+14&&inPit(S,pw)){fall(S);return}
+  if(!p.flip&&!p.on&&p.y+PH>gy+14&&inPit(S,pw)){fall(S);return}
   if(p.y>S.H+80){fall(S);return}
   p.inv=Math.max(0,p.inv-dt);p.mag=Math.max(0,p.mag-dt);
   /* предметы */
@@ -158,6 +186,32 @@ function step(S,dt,inp){
   for(const it of S.items){
     if(it.decoy)continue;/* ложный блок: только картинка, не бьёт */
    const k=it.t;
+   /* потолочные баги и шипы (после портала-инвертора): бьют, только когда Искра идёт по потолку */
+   if(it.ceil){if(p.flip){const hh=k==='spike'?12:22,w=k==='spike'?7:9;if(px1>it.x-w&&px0<it.x+w&&py0<CEIL+hh&&py1>CEIL)hit(S,it)}continue}
+   /* хрупкий блок: сверху или снизу разбивается (без урона), сбоку — удар */
+   if(k==='frag'){
+    if(it.dead)continue;
+    const top=gy-it.h-40,bot=gy-it.h;
+    if(px1>it.x-20&&px0<it.x+20&&py1>top&&py0<bot){
+     if(p.vy>=0&&feet0<=top+8){it.dead=1;p.vy=-PADV*.4;pts(S,20);S.ev.push('shatter')}
+     else if(p.vy<0&&py0>=bot-16){it.dead=1;pts(S,20);S.ev.push('shatter')}
+     else hit(S,it)}
+    continue}
+   /* магнитная стена: в прыжке упёрлась — цепляется 1,2 с; на земле — удар */
+   if(k==='mg'){
+    if(it.dead)continue;
+    const base=gy-it.h,topY=base-110,gap=it.x-(pw+PW/2);
+    if(!p.zip&&p.cling<=0&&py1>topY&&py0<base&&gap<8&&gap>-30){
+     if(!p.on){p.cling=1.2;p.clingIt=it;it.x=pw+PW/2+7;p.vy=0;S.ev.push('cling')}
+     else hit(S,it)}
+    continue}
+   /* портал-инвертор: касание рамки переворачивает гравитацию до конца отрезка */
+   if(k==='inv'){
+    if(!it.used&&!p.flip&&px1>it.x-16&&px0<it.x+16&&py1>gy-it.h-90&&py0<gy-it.h){
+     it.used=1;p.flip=1;p.on=false;p.stand=null;p.vy=0;S.flipEnd=it.x+it.len;S.ev.push('flip')}
+    continue}
+   /* батут, ускоритель и провод: их действие уже учтено выше, здесь только не мешают */
+   if(k==='pad'||k==='bo'||k==='line')continue;
    if(k==='tip'){if(!it.dead&&pw>=it.x){it.dead=1;S.note={text:it.text,ttl:4.2,kind:'tip'}}continue}
    if(k==='proj'&&!it.go&&it.at!=null){
     if(pw>=it.at-170)it.wn=1;
@@ -209,4 +263,4 @@ function step(S,dt,inp){
    if(S.px>=dx-16){S.over='win';S.ev.push('win')}}}
  const stars=S=>{if(S.over!=='win'||S.mode!=='level')return S.over==='win'?3:0;const pc=S.bytes/Math.max(1,S.spawned);return 1+(pc>=.7?1:0)+(pc>=.9&&S.lost<=1?1:0)};
  const dist=S=>Math.floor(S.x/10);
- return{create,step,stars,dist,target,prm,levelD,PX,PW,PH,GY,G,JV,HMAX,HG,solid,inPit,gateSt,hopE}})();
+ return{create,step,stars,dist,target,prm,levelD,PX,PW,PH,GY,G,JV,HMAX,HG,solid,inPit,gateSt,hopE,CEIL,PADV}})();

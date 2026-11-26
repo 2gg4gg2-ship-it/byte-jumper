@@ -27,7 +27,7 @@ function run(L,allowHold){
   for(let i=0;i<3&&!S.over;i++){const j0=S.jn||0,x0=S.x;slice(S,b.first[i]||0,allowHold);for(let k=j0;k<(S.jn||0);k++)jumps.push({x:Math.round(x0),hold:(b.first[i]|0)>0&&allowHold})}
   n++}
  return {S,jumps}}
-module.exports={run,pick,slice,GE,GL,HAZ:['bug','wall','gate','hop','proj','zone','spike','mov','laser','drop']};
+module.exports={run,pick,slice,GE,GL,HAZ:['bug','wall','gate','hop','proj','zone','spike','mov','laser','drop','frag','mg']};
 if(require.main===module){
  const Ls=(process.argv[2]||'31,32,33,34,35,36,37,38,39,41,42,43,44,45,46,47,48,49').split(',').map(Number);
  const rows=[];

@@ -6,7 +6,7 @@ const lib=new Function(fs.readFileSync(D+'engine.js','utf8')+';'+fs.readFileSync
 const GE=lib.GE,GL=lib.GL,DT=1/60;
 function clone(S){
  const o=Object.assign({},S);o.p=Object.assign({},S.p);
- o.items=S.items.filter(i=>i.x<S.x+1100).map(i=>Object.assign({},i));
+ const mp=new Map();o.items=S.items.filter(i=>i.x<S.x+1100).map(i=>{const c=Object.assign({},i);mp.set(i,c);return c});o.p.zip=S.p.zip?(mp.get(S.p.zip)||null):null;o.p.clingIt=S.p.clingIt?(mp.get(S.p.clingIt)||null):null;
  o.plats=S.plats.map(q=>Object.assign({},q));
  if(S.p.stand)o.p.stand=o.plats[S.plats.indexOf(S.p.stand)]||null;
  o.ev=[];o.note=S.note?Object.assign({},S.note):null;return o}
