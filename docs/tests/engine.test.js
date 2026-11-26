@@ -32,7 +32,7 @@ for(let i=0;i<50;i++)CO.tick(40);c('ядро снижает качество п�
  c('арена: у падающей платформы есть метка до падения',warn>0&&gone>0);
  c('арена: у атак есть предупреждение (tel)',tel>0)}
 {const S=AR.create({W:360,H:520,seed:3});S.p.inv=0;S.sh.push({x:S.p.x,y:S.p.y,vx:0,vy:0,r:10,kind:1});AR.step(S,.016,{ax:0});c('арена: попадание = минус сердце',S.hearts===2)}
-{const S=AR.create({W:360,H:520,seed:3});S.p.x=S.W*.5;S.p.y=S.gy;S.p.on=false;for(let i=0;i<300&&S.lost===0;i++)AR.step(S,.016,{ax:0});c('арена: падение в щель = минус сердце и возврат на платформу',S.lost===1&&S.p.y<S.H&&S.hearts===2)}
+{const S=AR.create({W:360,H:520,seed:3});S.p.x=S.W*.5;S.p.y=S.gy;S.p.on=false;for(let i=0;i<300;i++)AR.step(S,.016,{ax:0});c('арена: падение в щель без урона, возврат на платформу',S.p.y<S.H&&S.hearts===3&&S.ev.includes('fall'))}
 {const S=AR.create({W:360,H:520,seed:5});S.hearts=999;let top=0;for(let f=0;f<60*30;f++){AR.step(S,1/60,{ax:0});if(S.key&&S.key.y<S.gy-150)top++}c('арена: ключ появляется на самой высокой платформе',top>0)}
 {const S=AR.create({W:360,H:520,seed:5});S.p.on=true;S.p.y=S.gy-GE.PH;S.p.x=60;let mn=1e9;AR.step(S,.016,{ax:0,pressed:true,down:false});for(let i=0;i<60;i++){AR.step(S,.016,{ax:0});mn=Math.min(mn,S.p.y)}c('арена: тап = малый прыжок 55–80 px',S.gy-GE.PH-mn>55&&S.gy-GE.PH-mn<80)}
 

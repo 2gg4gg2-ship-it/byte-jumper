@@ -168,7 +168,7 @@ function step(S,dt,inp){
   if(!on&&!p.zip&&p.cling<=0&&p.vy*sg>=0){
    const f=p.y+PH;
    if(p.flip){if(p.y<=CEIL){p.y=CEIL;p.vy=0;on=true}}
-   else if(f>=gy&&solid(S,pw)&&f<gy+14){
+   else if(f>=gy&&solid(S,pw)&&(f<gy+14||feet0<=gy+4)){/* feet0<=gy+4: быстрое падение/ускоритель не пробивает пол за кадр */
     /* батут: при посадке подбрасывает на ≈160 px, обычная земля — останавливает */
     const pd=S.items.find(it=>it.t==='pad'&&!it.dead&&Math.abs(it.x-pw)<=it.w/2+PW/2);
     p.y=gy-PH;

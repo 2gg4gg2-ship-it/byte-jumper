@@ -75,5 +75,8 @@ for(const [name,S] of [['босс 1',s1],['босс 2',s2]]){
  A.step(S,1/60,{ax:0,down:true,pressed:false});const v=S.p.vy;
  const S0=mk(2);S0.p.on=false;S0.p.vy=100;S0.p.y=200;S0.p.lastG=260;A.step(S0,1/60,{ax:0,down:true,pressed:false});
  c('быстрое падение: скорость падения растёт сильнее ('+v.toFixed(0)+' против '+S0.p.vy.toFixed(0)+')',v>S0.p.vy&&S.ab.fall);}
+{const S=A.create({id:1,W,H,seed:5});const q=S.pl[0];S.p.x=q.x+q.w+60;S.p.y=q.y-E.PH-20;S.p.vy=0;S.p.on=false;S.fallT=99;S.atk=99;S.p.inv=0;const h0=S.hearts;
+ for(let i=0;i<600&&!S.ev.includes('fall');i++){A.step(S,1/60,{ax:0});}
+ c('босс 1: падение мимо платформ не отнимает сердце',S.hearts===h0)}
 console.log('\nИТОГ: '+ok+' ок, '+bad.length+' провалов'+(bad.length?': '+bad.join('; '):''));
 process.exit(bad.length?1:0);

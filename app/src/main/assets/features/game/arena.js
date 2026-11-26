@@ -27,10 +27,10 @@ const GameArena=(()=>{
  function hit(S){const p=S.p;if(p.inv>0||S.over)return;S.hearts--;S.lost++;p.inv=1.3;S.combo=0;S.ev.push('hit');
   if(S.lastK)S.fear[S.lastK]=(S.fear[S.lastK]||0)+1;S.hits.push(S.t);S.hits=S.hits.filter(x=>S.t-x<6);if(S.hits.length>=2)S.fair=6;
   if(S.hearts<=0){S.over='dead';S.ev.push('die')}}
- /* падение вниз: минус сердце, возврат на ближайшую целую платформу */
- function fall(S){const p=S.p;hit(S);if(S.over)return;p.inv=1.8;
-  let best=null,bd=1e9;S.pl.forEach(q=>{if(q.st!=='ok')return;const d=Math.abs(q.x+q.w/2-p.x)+(S.gy-q.y)*1.5;if(d<bd){bd=d;best=q}});
-  best=best||S.pl[4];p.x=best.x+best.w/2;p.y=best.y-E.PH;p.vy=0;p.on=true;S.ev.push('fall')}
+ /* падение вниз: урона нет; игрок сам приземляется на платформу под собой, а если под ним пусто — встаёт на ближайшую по горизонтали целую */
+ function fall(S){const p=S.p;p.inv=Math.max(p.inv,1);
+  let best=null,bd=1e9;S.pl.forEach(q=>{if(q.st!=='ok')return;const d=Math.abs(q.x+q.w/2-p.x)+(S.gy-q.y)*.2;if(d<bd){bd=d;best=q}});
+  best=best||S.pl[4];p.x=clamp(p.x,best.x+E.PW/2,best.x+best.w-E.PW/2);p.y=best.y-E.PH;p.vy=0;p.on=true;S.ev.push('fall')}
  const shot=(S,x,y,vx,vy,r,kind)=>{if(S.sh.length<20)S.sh.push({x,y,vx,vy,r,kind:kind||0})};
  /* --- глава 1: Потерянный Страж: медленные обломки, очереди, веера, «растерянность» 404 --- */
  function kit1(S){
