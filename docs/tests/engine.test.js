@@ -122,8 +122,7 @@ function bot2(id,seed,o){o=o||{};const S=AR.create({W:360,H:520,seed,id,bytes:o.
  for(let L=1;L<=20;L++){const th=GA.theme('level',L);names.add(th.m+th.name);pal.add(th.top+th.bot+th.ac);try{GA.bg(ctx,360,640,435,5000+L*37,L*1.3,th,1)}catch(e){ok=false;console.log(e.message)}}
  c('графика: 20 уровней рисуют фон без ошибок',ok);
  c('графика: 4 сцены на уровни 1–20, смена раз в 5 уровней (не новый фон на каждый уровень)',pal.size===4&&GA.theme('level',5).top===GA.theme('level',1).top&&GA.theme('level',6).top!==GA.theme('level',5).top);
- c('графика: 20 сцен на уровни 1–100, главы по 10 уровней (текстура земли 0–9), бесконечный режим отдельно',(()=>{const sc=new Set();let ok=true;for(let L=1;L<=100;L++){const th=GA.theme('level',L);sc.add(th.top+th.bot);if(th.tex!==Math.floor((L-1)/10))ok=false}return ok&&sc.size===20&&GA.theme('endless',1).i===11})());
-c('графика: 8 сцен на уровни 1–40, смена раз в 10 уровней по главам, текстуры земли 0–3 (главы 1–4)',(()=>{const sc=new Set();let ok=true;for(let L=1;L<=40;L++){const th=GA.theme('level',L);sc.add(th.top+th.bot);if(th.tex!==Math.floor(((L-1)%40)/10))ok=false}return ok&&sc.size===8})());
+ c('графика: уровни 21+ берут палитры по кругу, бесконечный режим тоже',GA.theme('level',21).top===GA.theme('level',1).top&&GA.theme('endless',1).i===11);
  let ok2=true;const th=GA.theme('level',3);try{for(const t of['byte','gold','bug','door','proj','fix','shield','magnet','zone'])if(!GA.item(ctx,{t,x:10,w:80,age:.5,big:true},100,300,435,1,640))ok2=false;
   GA.seg(ctx,0,300,435,640,100,th,1);GA.voidFill(ctx,360,640,435,th,1);GA.shadow(ctx,80,435,400,24);GA.plat(ctx,0,300,100,10);for(const st of['warn','stale','lit'])GA.plat(ctx,0,300,100,10,st);GA.arenaHud(ctx,{score:5,bytes:3,hearts:2,maxHearts:3},360,640,1,{font:'sans-serif',name:'Босс',frac:.5});GA.joy(ctx,60,500,.5,true);GA.jump(ctx,300,500,true);GA.rejectBtn(ctx,300,400,true,'Отклонить','sans-serif');
   const S=AR.create({W:360,H:520,seed:1,id:1,bytes:0});GA.parts(ctx,S,S.t,th,1,GE);GA.hud(ctx,{score:5,bytes:3,combo:12,hearts:3,maxHearts:5},360,640,1,{th,font:'sans-serif',hearts:true,f:.4,label:'3 · Архивариус'});
@@ -139,8 +138,8 @@ c('графика: 8 сцен на уровни 1–40, смена раз в 10 
 {const fs=require('fs'),path=require('path'),dir=path.join(__dirname,'../../app/src/main/assets/features/game');let bad2=[];
  for(const f of['art.js','bossart.js','game.js','game.css','fx.js','spark.js']){const txt=fs.readFileSync(path.join(dir,f),'utf8');for(const m of txt.matchAll(/#([0-9a-fA-F]{6})\b/g)){const n=parseInt(m[1],16),r=n>>16,g=(n>>8)&255,b=n&255,mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx-mn<18)continue;
    let h;if(mx===r)h=((g-b)/(mx-mn)+6)%6*60;else if(mx===g)h=((b-r)/(mx-mn)+2)*60;else h=((r-g)/(mx-mn)+4)*60;
-   const ok=(h<12||h>348)||(h>=30&&h<=50)||(h>=100&&h<=160)||(h>=160&&h<=245);if(!ok)bad2.push(f+' #'+m[1]+' hue '+Math.round(h))}}
- c('палитра: в коде игры нет фиолетовых и розовых оттенков; разрешены тёмно-синий, голубой, золотой, зелёный и красный из утверждённого концепта'+(bad2.length?' '+bad2.slice(0,6).join('; '):''),bad2.length===0)}
+   const red=(h<12||h>348);if(!red)bad2.push(f+' #'+m[1]+' hue '+Math.round(h))}}
+ c('палитра: в коде игры нет цветных (фиолетовых, розовых, синих, зелёных, жёлтых) оттенков, только серые и красный'+(bad2.length?' '+bad2.slice(0,6).join('; '):''),bad2.length===0)}
 
 /* ---- ядро: страж ошибок, хранилище, статистика ---- */
 {const C2=ld('core.js','GameCore');

@@ -1,6 +1,6 @@
 # Руководство для Клауда: как работать с «Байт-прыгуном»
 
-Прочитай это первым, потом `docs/ARCHITECTURE.md` (слои и правила, обязательно), потом `docs/MAP.md` (карта кода), потом нужные файлы. Владелец пишет с телефона и по-русски: отвечай по-русски, коротко, без воды.
+Короткая английская версия для малых моделей: `/CLAUDE.md` и `docs/ai/` (читай их первыми). Это руководство подробнее. Прочитай это, потом `docs/ARCHITECTURE.md` (слои и правила, обязательно), потом `docs/MAP.md` (карта кода), потом нужные файлы. Владелец пишет с телефона и по-русски: отвечай по-русски, коротко, без воды.
 
 ## 1. Как зайти в репозиторий
 Репозиторий публичный: `https://github.com/2gg4gg2-ship-it/byte-jumper`, ветка `main`. Ссылка сама доступа не даёт.
@@ -31,8 +31,8 @@
 
 ## 5. Как отдавать работу
 CI (`.github/workflows/build.yml`) берёт любой `./*.zip` из корня репозитория, делает `rm -rf app settings.gradle.kts`, распаковывает и собирает APK (релиз `latest`, файл `ByteJumper.apk`). Поэтому:
-- Архив **всегда полный**: `app/ docs/ README.md settings.gradle.kts .gitignore`. Частичный архив сотрёт приложение. Не клади `.github/`, ключи, пароли, видео.
-- Сборка из корня проекта: `zip -qr ../byte-jumper.zip app docs README.md settings.gradle.kts .gitignore`.
+- Архив **всегда полный**: `app/ docs/ README.md CLAUDE.md settings.gradle.kts .gitignore`. Частичный архив сотрёт приложение. Не клади `.github/`, ключи, пароли, видео.
+- Сборка из корня проекта: `zip -qr ../byte-jumper.zip app docs README.md CLAUDE.md settings.gradle.kts .gitignore`.
 - Версия при каждой отдаче (в трёх местах): `app/build.gradle.kts` (строки со знаком `=`: `versionCode = N`, `versionName = "X.Y.Z"`; после правки проверь `grep`), `README.md`, строка сверху в `docs/CHANGELOG.md`. Потом `python3 docs/tools/make_map.py`.
 - Отправь zip вложением (не простынёй кода). Скажи владельцу залить его в **корень** репозитория: `https://github.com/2gg4gg2-ship-it/byte-jumper/upload/main` (не в папку `.github/workflows`). После сборки версия в приложении должна совпасть.
 

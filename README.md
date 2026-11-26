@@ -4,7 +4,9 @@
 
 Игра родилась внутри приложения **Kairema** (`features/game`). Здесь она живёт отдельно, пока её доделывают. Когда будет готова, папку `features/game` копируют обратно в Kairema (см. `docs/RETURN_TO_KAIREMA.md`).
 
-Текущая версия: 0.16.0
+Текущая версия: 0.13.9
+
+Для Клаудов: `CLAUDE.md` (корень) и `docs/ai/` (английский пакет инструкций: процесс, уровни, боссы, механики, стиль кода, отладка, статус).
 
 ## Устройство
 
@@ -28,7 +30,7 @@ app/src/main/java/com/bytejumper/app/MainActivity.kt   оболочка: WebView
 
 Как у Kairema: заливаешь `byte-jumper.zip` в корень репозитория, GitHub Actions распаковывает его, собирает APK и кладёт в раздел **Releases** (`ByteJumper-<версия>.apk`).
 
-**Архив всегда полный** (`app/`, `docs/`, `README.md`, `settings.gradle.kts`, `.gitignore`, без `.github/`): перед распаковкой workflow удаляет `app/` и `settings.gradle.kts`.
+**Архив всегда полный** (`app/`, `docs/`, `README.md`, `CLAUDE.md`, `settings.gradle.kts`, `.gitignore`, без `.github/`): перед распаковкой workflow удаляет `app/` и `settings.gradle.kts`.
 
 Файл `.github/workflows/build.yml` в архив не кладут: его один раз создают вручную на сайте GitHub.
 

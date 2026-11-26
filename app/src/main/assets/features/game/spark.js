@@ -23,25 +23,6 @@ const GameSpark=(()=>{
  /* частицы урона: светлые осколки разлетаются от героя на 0,5 с; героя они не двигают */
  function burst(m){for(let i=0;i<10;i++){const a=-1.2+i*.26+Math.random()*.2;m.parts.push({x:6,y:-16,vx:Math.cos(a)*(40+Math.random()*50),vy:Math.sin(a)*(40+Math.random()*50)-10,l:.5})}}
  function emo(m,n,t,len){m.emo=n;m.emoT=t+len}
-
- /* бирюзовый шлейф и частицы кода (только отрисовка) */
- const GL=['{','}','0','1','<','>',';','/'];
- function trail(ctx,m,on,dt,t){
-  const dp=m.dp||(m.dp=[]);
-  if(on&&dp.length<16)for(let i=0;i<2;i++)dp.push({x:-6-Math.random()*6,y:-6-Math.random()*26,vx:-(90+Math.random()*80),l:.45+Math.random()*.3,g:GL[(Math.random()*GL.length)|0]});
-  ctx.save();ctx.globalCompositeOperation='lighter';
-  if(on){for(let i=0;i<4;i++){const y=-8-i*7,g=ctx.createLinearGradient(-8,0,-70-i*8,0);g.addColorStop(0,'rgba(110,231,255,.55)');g.addColorStop(1,'rgba(110,231,255,0)');ctx.fillStyle=g;ctx.fillRect(-70-i*8,y-2,62+i*8,3.4-i*.4)}
-   const gg=ctx.createRadialGradient(-4,-16,2,-4,-16,26);gg.addColorStop(0,'rgba(110,231,255,.35)');gg.addColorStop(1,'rgba(110,231,255,0)');ctx.fillStyle=gg;ctx.fillRect(-30,-42,52,52)}
-  ctx.font='8px monospace';ctx.textAlign='center';
-  for(const q of dp){q.l-=dt;q.x+=q.vx*dt;if(q.l>0){ctx.globalAlpha=Math.min(1,q.l*2.4);ctx.fillStyle='#8ff0ff';ctx.fillText(q.g,q.x,q.y)}}
-  m.dp=dp.filter(q=>q.l>0);ctx.restore()}
- /* красные трещины на корпусе и красные помехи при уроне (k 0..1) */
- function cracks(ctx,k,t){
-  ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,k));ctx.strokeStyle='#ff3b4a';ctx.lineWidth=1.3;ctx.lineJoin='miter';
-  ctx.beginPath();ctx.moveTo(-3,-36);ctx.lineTo(1,-29);ctx.lineTo(-3,-24);ctx.lineTo(3,-17);ctx.lineTo(-1,-10);ctx.lineTo(4,-3);
-  ctx.moveTo(1,-29);ctx.lineTo(7,-27);ctx.moveTo(-3,-24);ctx.lineTo(-9,-21);ctx.moveTo(3,-17);ctx.lineTo(9,-14);ctx.stroke();
-  ctx.fillStyle='#ff3b4a';const j=Math.floor(t*30)%3;
-  ctx.fillRect(-12+j*3,-30,6,1.4);ctx.fillRect(4-j*2,-20,7,1.4);ctx.fillRect(-9,-9+j,5,1.4);ctx.restore()}
  /* выбор кадра и рисование. Вызывать после translate в центр хитбокса. mode: 'level' | 'arena' */
  const STRIDE=10;/* px пути на один кадр бега */
  function runPose(run,p,m,t){
@@ -69,11 +50,7 @@ const GameSpark=(()=>{
     name=e&&has('front_'+e)?'front_'+e:'front'}
    else{name=win&&p.on&&!arena?'m1':runPose(m.run,p,m,t);if(hit)name=has(name+'_x')?name+'_x':'d1'}}
   if(hurt>=0&&hurt<.8)ctx.globalAlpha=1;/* выражение урона видно чётко, мерцание неуязвимости не гасит его */
-  /* рывок (ускоритель или провод): бирюзовый шлейф и частицы кода позади героя */
-  const dash=!arena&&((S.boost>0)||p.zip);
-  if(dash||m.dp&&m.dp.length)trail(ctx,m,dash,dt,t);
   const drawn=put(ctx,name,fx,1,1,null);
-  if(hurt>=0&&hurt<.8||S.hearts===1&&!arena)cracks(ctx,hurt>=0&&hurt<.8?1-hurt/.8:.55,t);
   if(m.parts.length){ctx.fillStyle='#e6e8eb';for(const q of m.parts){q.l-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=120*dt;if(q.l>0){ctx.globalAlpha=Math.min(1,q.l*3);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.l*9);ctx.fillRect(-1,-2,2,4);ctx.restore()}}ctx.globalAlpha=1;m.parts=m.parts.filter(q=>q.l>0)}
   ctx.translate(0,-foot);
   return drawn}

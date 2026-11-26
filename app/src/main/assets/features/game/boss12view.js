@@ -5,8 +5,8 @@ const GameBoss12View=(()=>{
  function draw(ctx,S,o){ 
   const W=S.W,H=S.H,t=S.t,col=o.col,p=S.p,B=S.boss;
   /* фон */
-  if(S.bid===1){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#141d42');g.addColorStop(1,'#070b18');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
-  else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#16224a');g.addColorStop(1,'#070c1e');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+  if(S.bid===1){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1d1712');g.addColorStop(1,'#09090b');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+  else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1c1131');g.addColorStop(1,'#07050d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
   /* мировой слой: для шахты экран едет вниз, башня стоит */
   ctx.save();ctx.translate(0,-(S.bid===1?S.cam:0));
   if(S.bid===1){
@@ -19,7 +19,7 @@ const GameBoss12View=(()=>{
    /* рамка на груди Стража: пустая, мигает */
    const fx=B.x-30,fy=B.y-4,st=S.fr?S.fr.st:'wait';ctx.lineWidth=2;ctx.strokeStyle=st==='open'?'#f1f2f4':st==='warn'?(Math.sin(t*24)>0?'#e0262b':'rgba(224,38,43,.3)'):'rgba(241,242,244,.25)';ctx.strokeRect(fx,fy,60,44);if(st==='open'){ctx.fillStyle='rgba(241,242,244,.18)';ctx.fillRect(fx,fy,60,44)}
   } else {
-   ctx.fillStyle='#0a1024';ctx.fillRect(0,0,W,H);
+   ctx.fillStyle='#0c0817';ctx.fillRect(0,0,W,H);
    ctx.font='600 9px monospace';ctx.fillStyle=col.tx2;ctx.globalAlpha=.12;
    for(let i=0;i<10;i++)ctx.fillText('fn()',8,20+i*46+(t*8)%46);ctx.globalAlpha=1;
    for(const q of S.pl){if(q.st==='gone')continue;const sh=q.st==='warn'&&Math.sin(t*30)>0?2:0;

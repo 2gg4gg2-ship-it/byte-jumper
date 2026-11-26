@@ -91,11 +91,9 @@ const GameLevelView=(()=>{
   if(k==='cp'){glow(ctx,x,y-8,30,'#ffffff',.25);ctx.fillStyle='#8a8c93';ctx.fillRect(x-1,y-26,3,38);ctx.fillStyle='#f1f2f4';ctx.beginPath();ctx.moveTo(x+2,y-26);ctx.lineTo(x+22,y-19+Math.sin(t*5)*2);ctx.lineTo(x+2,y-12);ctx.closePath();ctx.fill();return}
   if(k==='bin'){ctx.strokeStyle='#f1f2f4';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x-14,y-18);ctx.lineTo(x-10,y+16);ctx.lineTo(x+10,y+16);ctx.lineTo(x+14,y-18);ctx.stroke();ctx.fillStyle='#f1f2f4';ctx.fillRect(x-17,y-22,34,4);
    ctx.globalAlpha=.6+.4*Math.sin(t*5);ctx.beginPath();ctx.moveTo(x-5,y-8);ctx.lineTo(x+5,y-8);ctx.lineTo(x,y);ctx.closePath();ctx.fill();ctx.globalAlpha=1;return}
-  if(k==='lost'){const bl=Math.sin(t*6)>-.3;glow(ctx,x,gy-14,34,'#8fb6ff',dark?.4:.22);
-   ctx.save();ctx.translate(x,gy);ctx.fillStyle='#c4d0e8';ctx.beginPath();ctx.moveTo(-10,-30);ctx.lineTo(4,-30);ctx.lineTo(10,-24);ctx.lineTo(10,0);ctx.lineTo(-10,0);ctx.closePath();ctx.fill();
-   ctx.strokeStyle='#0b1226';ctx.lineWidth=1.2;ctx.stroke();ctx.fillStyle='#0b1226';ctx.fillRect(-6,-19,2,2);ctx.fillRect(4,-19,2,2);
-   ctx.beginPath();ctx.moveTo(-5,-10);ctx.quadraticCurveTo(0,-14,5,-10);ctx.lineWidth=1.3;ctx.stroke();ctx.restore();
-   ctx.globalAlpha=bl?1:.2;ctx.fillStyle=C.red;ctx.font='700 14px '+font;ctx.textAlign='center';ctx.fillText('!',x,gy-36);ctx.globalAlpha=1}}
+  if(k==='lost'){const bl=Math.sin(t*6)>-.3;glow(ctx,x,gy-14,34,'#ffffff',dark?.5:.28);
+   ctx.fillStyle='#d4d6db';ctx.beginPath();ctx.moveTo(x-11,gy);ctx.lineTo(x,gy-22);ctx.lineTo(x+11,gy);ctx.closePath();ctx.fill();ctx.fillStyle='#16161a';ctx.fillRect(x-4,gy-15,2,3);ctx.fillRect(x+2,gy-15,2,3);
+   ctx.globalAlpha=bl?1:.2;ctx.fillStyle=C.red;ctx.font='700 14px '+font;ctx.textAlign='center';ctx.fillText('!',x,gy-27);ctx.globalAlpha=1}}
 
  /* ---------- «сок»: свет вокруг героя, частицы глубины, кольцо прыжка, праздник Потеряшки ----------
     Только косметика: слой рисуется без хитбоксов, количество частиц ограничено и зависит от GameCore.perf.q. */
