@@ -17,7 +17,7 @@ const GameBoss12View=(()=>{
    for(const q of S.pl){if(q.st==='gone')continue;const sh=q.st==='warn'&&Math.sin(t*30)>0?2:0;
     GameArt.plat(ctx,q.x+sh,q.y,q.w,q.floor?H*3-q.y:10,q.st==='warn'?'warn':'')}
    /* рамка на груди Стража: пустая, мигает */
-   const fx=B.x-16,fy=B.y+8,st=S.fr?S.fr.st:'wait';ctx.lineWidth=2;ctx.strokeStyle=st==='open'?'#f1f2f4':st==='warn'?(Math.sin(t*24)>0?'#e0262b':'rgba(224,38,43,.3)'):'rgba(241,242,244,.25)';ctx.strokeRect(fx,fy,32,22);if(st==='open'){ctx.fillStyle='rgba(241,242,244,.12)';ctx.fillRect(fx,fy,32,22)}
+   const fx=B.x-30,fy=B.y-4,st=S.fr?S.fr.st:'wait';ctx.lineWidth=2;ctx.strokeStyle=st==='open'?'#f1f2f4':st==='warn'?(Math.sin(t*24)>0?'#e0262b':'rgba(224,38,43,.3)'):'rgba(241,242,244,.25)';ctx.strokeRect(fx,fy,60,44);if(st==='open'){ctx.fillStyle='rgba(241,242,244,.18)';ctx.fillRect(fx,fy,60,44)}
   } else {
    ctx.fillStyle='#0c0817';ctx.fillRect(0,0,W,H);
    ctx.font='600 9px monospace';ctx.fillStyle=col.tx2;ctx.globalAlpha=.12;

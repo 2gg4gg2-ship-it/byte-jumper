@@ -15,7 +15,7 @@ const GameBoss12=(()=>{
    boss:{hp:100,max:100,phase:1,x:W/2,y:96,conf:0,shards:0,pops:0},
    p:{x:W*.5,y:0,vx:0,vy:0,on:false,hold:0,buf:0,coy:0,inv:0,stand:null,lastG:0},
    pl:[],sh:[],tel:[],say:null,cloud:0,fly:[],rail:[],frags:[],cols:[],waves:[],sheets:[],
-   tPop:3.5,tDrop:7.5,tCloud:11,tBm:2.3,tSheet:1.2,tColl:13,tWave:4,tCol:4,tFrag:3,fT:0,fDone:false,fr:{st:'wait',t:4.5}};
+   tPop:3.5,tDrop:7.5,tCloud:11,tBm:2.3,tSheet:1.2,tColl:13,tWave:4,tCol:4,tFrag:3,fT:0,fDone:false,fr:{st:'wait',t:2.5}};
   if(o.id===1)buildShaft(S);else buildTower(S);
   if(o.id===2){S.boss.x=W-40;S.boss.y=tierY(S,2)-70}
   const p=S.p;p.x=W*.5;p.y=S.gy-E.PH;p.on=true;p.stand=S.pl[0];p.lastG=p.y;
@@ -111,7 +111,7 @@ const GameBoss12=(()=>{
   const B=S.boss,W=S.W,p=S.p;
   B.phase=Math.min(3,B.shards+1);B.conf=B.phase===3&&(S.t%8)<2?1:0;
   B.y+=(BY(B.phase)-B.y)*Math.min(1,dt*1.5);
-  B.x=W/2+Math.sin(S.t*.4)*W*.08;
+  B.x=W/2+Math.sin(S.t*.4)*W*.05;
   /* камера: следит за героем, экран «едет вниз» при подъёме */
   const cT=clamp(p.y-S.H*.62,0,S.WH-S.H);S.cam+=(cT-S.cam)*Math.min(1,dt*6);
   movePlayer(S,dt,inp);
@@ -144,10 +144,10 @@ const GameBoss12=(()=>{
   /* ---- рамка на груди: открыта только в окне. Ждёт 4,5 с → мигает 1 с (предупреждение) → открыта 2 с → снова ждёт.
      Удар снизу в открытое окно — осколок. Промах: ждать следующего окна. ---- */
   const fr=S.fr;fr.t-=dt;
-  if(fr.t<=0){if(fr.st==='wait'){fr.st='warn';fr.t=1}else if(fr.st==='warn'){fr.st='open';fr.t=2;S.ev.push('warn')}else{fr.st='wait';fr.t=4.5}}
-  const fx=B.x-16,fy=B.y+8,fw=32,fh=22;
-  if(!S.over&&fr.st==='open'&&p.vy<0&&over(p,fx+fw/2,fy,fw,fh)&&p.y+E.PH/2>fy+fh/2){
-   S.fDone=true;fr.st='wait';fr.t=4.5;shard(S)}
+  if(fr.t<=0){if(fr.st==='wait'){fr.st='warn';fr.t=.9}else if(fr.st==='warn'){fr.st='open';fr.t=3.6;S.ev.push('warn');if(B.shards===0&&!S.say)say(S,'Рамка белая: подпрыгни под неё!',2.6)}else{fr.st='wait';fr.t=3}}
+  const fx=B.x-30,fy=B.y-4,fw=60,fh=44;
+  if(!S.over&&fr.st==='open'&&over(p,fx+fw/2,fy,fw,fh)){
+   S.fDone=true;fr.st='wait';fr.t=3;shard(S)}
   if(S.say){S.say.t-=dt;if(S.say.t<=0)S.say=null}
 }
 
