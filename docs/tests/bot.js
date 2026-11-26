@@ -25,10 +25,15 @@ function pick(S0,depth,width){
   next.sort((x,y)=>score(y.S)-score(x.S));beam=next.slice(0,width)}
  return beam[0]}
 function run(L,seed,opt){
- opt=opt||{};const S=GE.create({mode:'level',L,seed:seed||1,W:opt.W||360,H:opt.H||640});let n=0;
+ opt=opt||{};const N=opt.lag|0,S=GE.create({mode:'level',L,seed:seed||1,W:opt.W||360,H:opt.H||640}),q=[];let n=0;
+ /* opt.lag — задержка ввода в кадрах (2 кадра ≈ 33 мс): бот планирует без неё, а нажатия доходят позже, как у живого игрока */
+ const real=(pr,dn)=>{q.push({pressed:pr,down:dn});const a=q.length>N?q.shift():{pressed:false,down:false};GE.step(S,DT,a);S.ev.length=0};
  while(!S.over&&n<6000){
-  if(S.locked){GE.step(S,DT,{});S.ev.length=0;n++;continue}
-  const b=pick(S,11,10);for(let i=0;i<3&&!S.over;i++){slice(S,b.first[i]||0)}n++}
+  if(S.locked){if(N)real(false,false);else{GE.step(S,DT,{});S.ev.length=0}n++;continue}
+  const b=pick(S,11,10);
+  if(N){for(let i=0;i<3&&!S.over;i++){const a=b.first[i]||0;for(let f=0;f<5&&!S.over;f++)real(a===1&&f===0,a>0)}}
+  else for(let i=0;i<3&&!S.over;i++){slice(S,b.first[i]||0)}
+  n++}
  return S}
 module.exports={run,GE,GL,clone,slice};
 if(require.main===module){const Ls=process.argv.slice(2).map(Number);for(const L of Ls){const t=Date.now(),S=run(L,1);console.log('L'+L,S.over,'lost',S.lost,'hearts',S.hearts,'bytes',S.bytes+'/'+S.spawned,'lostfound',S.found,'t',Math.round(S.t)+'s','calc',Date.now()-t+'ms')}}
