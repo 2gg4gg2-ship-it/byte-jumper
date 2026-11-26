@@ -171,7 +171,7 @@ Object.assign(LORE,{
      else if(k==='S')q=plat(x,ww,h,'fall',{dl:.45,tone:'stale'});
      else if(k==='mv')q=plat(x,ww,h,'mv',{amp:20,sp:1.4,ph:-1.4*tc});
      else if(k==='mw')q=plat(x,ww,h,'mv',{amp:42,sp:.9,ph:-.9*tc});
-     else if(k==='lift'){h=34;q=plat(x,ww,h,'lift',{amp:20,sp:1.4,ph:-1.4*tc})}
+     else if(k==='lift'){h=34;q=plat(x,ww,h,'lift',{amp:30,sp:1.9,ph:.6-1.9*tc})}
      else if(k==='blink')q=plat(x,ww,h,'blink',{per:3,on:2.1,ph:mod(1.05-tc,3)});
      else if(k==='rise')q=plat(x,ww,h,'st',{rise:1});
      else q=plat(x,ww,h,'st');
@@ -198,10 +198,10 @@ Object.assign(LORE,{
    /* x n — кластер из n шипов «битых файлов» на земле; m amp,per,ph — блок-рельс на земле, едет туда-сюда */
    x(n){n=n|0||3;const x0=c+120;for(let i=0;i<n;i++)it.push({t:'spike',x:x0+i*18,h:0});c=x0+n*18+150},
    /* lz h,w,per,ph — луч поперёк уровня на высоте h (w — полуширина); fb per,ph — блок падает сверху на метку */
-   lz(h,w,per,ph){const x=c+200;it.push({t:'laser',x,h:+h,w:(+w)/2,per:+per,ph:+(ph||0),act:false,warn:false});c=x+(+w)/2+260},
-   fb(per,ph){const x=c+200;it.push({t:'drop',x,h:0,per:+per,ph:+(ph||0),act:false,warn:false,yy:240});c=x+260},
+   lz(h,w,per,ph){const x=c+200;it.push({t:'laser',x,h:+h,w:(+w)/2,per:+per,ph:mod(1.3+.2*(+ph||0)-tA(x),+per),act:false,warn:false});c=x+(+w)/2+260},
+   fb(per,ph){const x=c+200;it.push({t:'drop',x,h:0,per:+per,ph:mod(1.15+.2*(+ph||0)-tA(x),+per),act:false,warn:false,yy:240});c=x+260},
    /* fx per,ph — быстрый падающий блок: предупреждение 0,5 с, падает быстрее и шире */
-   fx(per,ph){const x=c+200;it.push({t:'drop',x,h:0,per:+per,ph:+(ph||0),act:false,warn:false,yy:240,fast:1});c=x+260},
+   fx(per,ph){const x=c+200;it.push({t:'drop',x,h:0,per:+per,ph:mod(.85+.2*(+ph||0)-tA(x),+per),act:false,warn:false,yy:240,fast:1});c=x+260},
    /* sw speed — катящаяся пила по земле, едет навстречу (px/с) */
    sw(sp){const x=c+200;it.push({t:'saw',x,h:0,vx:-(+sp||150)});c=x+260},
    /* mf amp,per,ph — быстрый блок-рельс (в 1,6 раза быстрее обычного m) */
