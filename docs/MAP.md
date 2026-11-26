@@ -32,7 +32,7 @@
 - Пути `app/src/main/assets/features/game/*` нельзя менять: игру позже вернут в Kairema (`docs/RETURN_TO_KAIREMA.md`).
 
 <!-- AUTO:START -->
-Версия в сборке: **0.13.9** (versionCode 45). Файл: `app/build.gradle.kts`.
+Версия в сборке: **0.16.1** (versionCode 51). Файл: `app/build.gradle.kts`.
 
 ### Индекс файлов игры и оболочки (`app/src/main/assets`)
 
@@ -40,7 +40,7 @@
 |---|---|---|
 | `features/game/abilities.js` | 28 | СПОСОБНОСТИ ГЕРОЯ (слой 1, логика): реестр-таблица, без DOM и без эффектов ===== Способность открывается, когда побеждён нужный босс (поле boss). |
 | `features/game/arena.js` | 256 | АРЕНА БОССА: логика без DOM. |
-| `features/game/art.js` | 216 | ГРАФИКА «БАЙТ-ПРЫГУНА» (0.7.1): строгая палитра чёрный / серый / белый, красный только для опасности и акцентов ===== Всё рисуется кодом на canvas, картинок нет, сеть не  |
+| `features/game/art.js` | 399 | ГРАФИКА «БАЙТ-ПРЫГУНА» (0.7.1): строгая палитра чёрный / серый / белый, красный только для опасности и акцентов ===== Всё рисуется кодом на canvas, картинок нет, сеть не  |
 | `features/game/boss12.js` | 227 | БОССЫ 1 и 2 по документу v3 (раздел 4): «404» в шахте из файлов и «Колосс» в башне из ярусов. |
 | `features/game/boss12view.js` | 64 | РИСОВАНИЕ БОССОВ 1–2 (боссы 404 и Колосс): только canvas, без логики. |
 | `features/game/bossart.js` | 73 | РИСУНКИ БОССОВ (0.7.1): десять тел в одной палитре: серый металл, красное око, белые блики ===== Только рисование (canvas), без логики и DOM. |
@@ -51,8 +51,8 @@
 | `features/game/game.css` | 113 | Игра «Байт-прыгун»: меню, уровни, плашка «Нет сети». Цвета только из токенов, поэтому работает в тёмной и светлой теме. |
 | `features/game/game.js` | 349 | ИГРА «Байт-прыгун»: экраны, рисование, звук, сохранение ===== Офлайн-игра внутри приложения: пока нет сети или просто для отдыха. |
 | `features/game/levels.js` | 258 | УРОВНИ 1–29: сценарии, у каждого уровня своя изюминка (чистая логика, без DOM) ===== Уровень = строка блоков: f плоско, b/B баг, bb два бага, W высокая стена (держи прыжо |
-| `features/game/levelview.js` | 178 | РИСОВАНИЕ УРОВНЕЙ (режим «уровень»): новые препятствия, платформы, подсказки ===== Фон, земля, байты, баги, HUD и герой берутся из GameArt / GameSpark (общий стиль 0.7.x: |
-| `features/game/spark.js` | 63 | ИСКРА: утверждённая графика героя (атлас spark/spark.png, чёрно-белая) и выбор кадра по состоянию ===== Кадры из утверждённых листов автора: idle, r0–r7 (бег), e0–e3 (эво |
+| `features/game/levelview.js` | 180 | РИСОВАНИЕ УРОВНЕЙ (режим «уровень»): новые препятствия, платформы, подсказки ===== Фон, земля, байты, баги, HUD и герой берутся из GameArt / GameSpark (общий стиль 0.7.x: |
+| `features/game/spark.js` | 86 | ИСКРА: утверждённая графика героя (атлас spark/spark.png, чёрно-белая) и выбор кадра по состоянию ===== Кадры из утверждённых листов автора: idle, r0–r7 (бег), e0–e3 (эво |
 | `features/game/story.js` | 8 | ИСТОРИЯ «Искра: Нулевой Ключ»: только данные, без DOM. Сгенерировано из docs/STORY_BIBLE.md (текст автора) |
 | `features/game/storyui.js` | 44 | ЭКРАНЫ ИСТОРИИ: читалка страниц (пролог) и «Книга истории» из меню ===== Спойлеры: главы и боссы, до которых игрок не дошёл, закрыты. |
 | `index.html` | 33 |  |
@@ -77,7 +77,7 @@
 |---|---|---|
 | `abilities.js` | `GameAbilities` | LIST,byId,opened,available,spend,newRun}; |
 | `arena.js` | `GameArena` | create,step,layout,reject:S=>{if(S&&S.b12)return;reject(S)},SPD}})(); |
-| `art.js` | `GameArt` | theme,bg,voidFill,seg,item,shadow,parts,hud,arenaHud,arenaBg,plat,joy,jump,rejectBtn,glowDot,cham,panel,rgba,hs,TH,C,SC}})(); |
+| `art.js` | `GameArt` | theme,bg,voidFill,seg,item,shadow,parts,hud,arenaHud,arenaBg,plat,joy,jump,rejectBtn,glowDot,cham,panel,rgba,hs,TH,C,SC,WH}})(); |
 | `boss12.js` | `GameBoss12` | create,step,layout,reject,SPD}})(); |
 | `boss12view.js` | `GameBoss12View` | draw}})(); |
 | `bossart.js` | `GameBossArt` | draw}})(); |
@@ -99,7 +99,7 @@
 
 - **`abilities.js`**: `byId` L15, `opened` L17, `available` L19, `spend` L21, `newRun` L25
 - **`arena.js`**: `layout` L6, `create` L12, `mul` L21, `clamp` L22, `band` L23, `aim` L25, `hit` L27, `fall` L31, `shot` L34, `kit1` L36, `kit2` L49, `row` L51, `kit4` L62, `dmg` L69, `nearPl` L70, `wallTel` L72, `kit5` L74, `coins` L76, `WLIM` L81, `addWin` L82, `erase` L83, `reject` L84, `kit6` L87, `newSeq` L94, `kit7` L96, `kit8` L103, `kit9` L108, `kit10` L114, `attack` L120, `dropPlat` L121, `near` L124
-- **`art.js`**: `hs` L8, `idx` L21, `theme` L22, `rgba` L23, `hasDoc` L26, `kOf` L27, `layer` L28, `blit` L33, `blob` L37, `glowDot` L39, `cham` L43, `paintTowers` L46, `towers` L57, `ring` L66, `fog` L70, `bg` L76, `ruinsExtra` L96, `voidFill` L99, `paintGround` L104, `seg` L111, `crystal` L118, `item` L119, `shadow` L142, `parts` L144, `heart` L151, `panel` L152, `hearts` L153, `icon` L156, `face` L158, `hud` L159, `arenaHud` L175, `joy` L184, `jump` L188, `rejectBtn` L191, `arenaBg` L196, `GameArtQ` L202, `plat` L204
+- **`art.js`**: `hs` L8, `idx` L43, `theme` L45, `mixHex` L46, `rgba` L47, `hasDoc` L50, `kOf` L51, `layer` L52, `blit` L57, `blob` L61, `glowDot` L63, `cham` L67, `paintTowers` L70, `towers` L81, `ring` L90, `fog` L94, `bg` L100, `newMid` L128, `stackStrip` L143, `paint` L145, `packets` L149, `rails` L152, `newer` L156, `gridStrip` L169, `paint` L171, `frameStrip` L177, `paint` L179, `logStrip` L183, `paint` L186, `skyBand` L190, `bsodMid` L197, `finaleMid` L209, `cloudBank` L220, `dumpExtra` L225, `wx` L226, `voidFill` L237, `paintGround` L242, `seg` L267, `crystal` L274, `item` L275, `shadow` L303, `parts` L305, `heart` L312, `panel` L313, `hearts` L314, `icon` L317, `face` L319, `hud` L320, `arenaHud` L336, `joy` L345, `jump` L349, `rejectBtn` L352, `arenaBg` L357, `GameArtQ` L364, `winPaint` L370, `plat` L385, `errWin` L387, `errPops` L395
 - **`boss12.js`**: `clamp` L7, `rng` L8, `create` L11, `say` L25, `BY` L28, `buildShaft` L29, `buildTower` L45, `hit` L54, `fall` L57, `over` L62, `addWarn` L63, `pushPlayer` L64, `movePlayer` L67, `trackStand` L92, `tickPlats` L96, `bossPos` L102, `shard` L105, `step1` L110, `tierY` L155, `PHASE2` L156, `step2` L157, `popBlock` L212, `step` L218, `layout` L222, `reject` L224
 - **`boss12view.js`**: `draw` L5
 - **`bossart.js`**: `box` L7, `grad` L11, `glow` L12, `eyeGlow` L13, `slit` L14, `draw` L15
@@ -109,8 +109,8 @@
 - **`fx.js`**: `strength` L5, `glyph` L9, `draw` L10, `shake` L28
 - **`game.js`**: `mk` L11, `T` L12, `fxDraw` L16, `save` L18, `beep` L21, `buzz` L35, `open` L38, `btn` L46, `menu` L47, `archive` L66, `levels` L72, `start` L92, `cs` L101, `size` L102, `reset` L110, `intro` L116, `lvIntro` L121, `closeOv` L126, `overlay` L127, `pause` L131, `finish` L135, `finale` L161, `choose` L163, `loop` L169, `drawCopy` L184, `drawArena` L188, `draw` L244, `pd` L303, `pu` L304, `lp` L307, `pdA` L308, `pmA` L311, `puA` L312, `kd` L316, `ku` L318, `vis` L319, `rs` L320, `stop` L322, `hideChip` L328, `showChip` L329
 - **`levels.js`**: `countObs` L137, `has` L138, `num` L139, `build` L140, `tA` L147, `mod` L148, `byte` L149, `row` L150, `arc` L151, `plat` L152
-- **`levelview.js`**: `A` L6, `lines` L8, `wrapX` L13, `extra` L15, `dashed` L26, `plat` L27, `item` L39, `juiceBack` L100, `juiceFront` L108, `draw` L137
-- **`spark.js`**: `has` L16, `put` L19, `state` L22, `burst` L24, `emo` L25, `runPose` L28, `draw` L31, `portrait` L58, `icon` L60, `whenReady` L61
+- **`levelview.js`**: `A` L6, `lines` L8, `wrapX` L13, `extra` L15, `dashed` L26, `plat` L27, `item` L39, `juiceBack` L102, `juiceFront` L110, `draw` L139
+- **`spark.js`**: `has` L16, `put` L19, `state` L22, `burst` L24, `emo` L25, `trail` L29, `cracks` L39, `runPose` L47, `draw` L50, `portrait` L81, `icon` L83, `whenReady` L84
 - **`storyui.js`**: `mk` L4, `read` L5, `show` L10, `book` L17, `sec` L21, `card` L22, `lock` L23
 
 ### Боссы: что где (id босса = уровень/10; тексты берутся из `story.js` ← `docs/STORY_BIBLE.md`, механика описана в `docs/BOSSES.md`)
@@ -139,7 +139,7 @@
 - `balance.js` (42 строк): Баланс уровней: node docs/tests/balance.js [L1,L2,...] Два бота с одинаковым поиском, но разными кнопками: - полный: тап и удержание (как бот в bot.js); - короткий: тольк
 - `boss12.test.js` (83 строк): Тест боссов 1 и 2 (v3, раздел 4) без браузера: node docs/tests/boss12.test.js
 - `bot.js` (40 строк): Тест-бот для уровней: поиск лучом по макро-действиям (отпустить / нажать / держать), шаг 5 кадров, горизонт 0,75 с.
-- `engine.test.js` (187 строк): Тест логики без браузера: node docs/tests/engine.test.js
+- `engine.test.js` (188 строк): Тест логики без браузера: node docs/tests/engine.test.js
 - `levels.test.js` (69 строк): Тесты уровней 1–29: node docs/tests/levels.test.js (долго: бот ищет путь лучом, ~1 мин)
 - `levels1117.test.js` (20 строк): Уровни 11–17 (0.13.7): «азартные» сценарии.
 - `levels15.test.js` (15 строк): Уровни 1–5 (0.13.2): препятствий не меньше чем в 1,5 раза больше, чем в 0.13.0, длина не больше прежней, полный бот проходит с потерей не больше одного сердца, простой бо

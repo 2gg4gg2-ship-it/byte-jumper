@@ -1,6 +1,6 @@
 # Glossary: owner's words → meaning (he writes Russian, short, half-sentences)
 ## People / world
-- Искра (Spark) — the hero, white faceted robot, black face, glowing eyes. Atlas `spark/spark.png` + `spark.js`. "Character stays almost the same" is a standing wish.
+- Искра (Spark) — the hero, white faceted robot, black face, glowing eyes. Atlas `spark/spark.png` (colour since 0.13.9) + `spark.js`. "Character stays almost the same" is a standing wish.
 - Бит (Bit) — companion voice giving hints/lore. Потеряшка (Lost One, `L` token) — small NPC to rescue; 100 planned, 1 per level on many levels; "Архив" = collection screen.
 - Kairema — owner's main app; game folder is inserted there (`docs/RETURN_TO_KAIREMA.md`, `docs/tools/sync_to_kairema.py`). Never rename `features/game/*`.
 - Босс/босы — bosses on levels 10,20,…; hearts 3. Глава (chapter) = 10 levels. 100 levels planned, now 1–49 playable by chapters (see STATUS).

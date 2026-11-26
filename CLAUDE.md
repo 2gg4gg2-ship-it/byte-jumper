@@ -3,7 +3,7 @@
 Android WebView game, pure JS + canvas, offline. Owner writes Russian from a phone, short/vague messages ("с полслова"). Answer in Russian, short, honest. Repo: github.com/2gg4gg2-ship-it/byte-jumper. Game code: `app/src/main/assets/features/game/` (paths FIXED: the folder is later copied into the Kairema app).
 
 ## 0. Hard rules (break one = wasted owner limit)
-1. You usually have NO push access. Deliver a FULL zip: `cd <project root> && zip -qr ../byte-jumper-X.Y.Z.zip app docs README.md CLAUDE.md settings.gradle.kts .gitignore` (never `.github/`, keys, video). A partial zip wipes the app (CI does `rm -rf app settings.gradle.kts`).
+1. You usually have NO push access. Deliver a FULL zip: `cd <project root> && zip -qr ../byte-jumper-X.Y.Z.zip app docs README.md CLAUDE.md settings.gradle.kts .gitignore` (never `.github/`, keys, video; the owner repo root may hold a *.mp4 recording: leave it out of the zip). A partial zip wipes the app (CI does `rm -rf app settings.gradle.kts`).
 2. Always start from the NEWEST repo state the owner gives (zip/clone). Check `versionName` in `app/build.gradle.kts` before editing. Never overwrite newer owner changes with your older copy.
 3. Layers (checked by script): logic (no DOM) / drawing (no logic) / screens. Never mix. See `docs/ai/CODE_STYLE.md`.
 4. Gameplay numbers (hitboxes, jump, speed) are changed ONLY if the task says so. Visual tasks never touch hitboxes.
