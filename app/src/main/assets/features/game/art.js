@@ -10,8 +10,8 @@ const GameArt=(()=>{
  const C={ink:'#060910',k1:'#080c17',k2:'#0d1321',k3:'#121a2c',k4:'#1c273f',g1:'#283652',g2:'#42506c',g3:'#728099',g4:'#a2aec3',w:'#ebf1f8',red:'#e0262b',red2:'#8f1519',red3:'#3a0709',gold:'#f5b82e',gold2:'#8a5a12',green:'#37d67a',blue:'#3d7bff',navy:'#141d42'};
  /* сцены: [верх неба, низ неба, свет, дальний слой, ближний слой, мотив, название] */
  const SC=[
-  ['#070b18','#141d42','#e8eefc','#0c1430','#070d20','ruins','Свалка'],
-  ['#080c1b','#18244f','#e8eefc','#0e1737','#081024','city','Руины'],
+  ['#0a0f14','#1f2d2c','#dfe8e4','#101a1c','#081012','ruins','Свалка'],
+  ['#0a1016','#2a3a38','#dfe8e4','#131f22','#091416','city','Ночная свалка'],
   ['#060a16','#121b3c','#dfe8fb','#0b1330','#060b1c','rings','Башни'],
   ['#05060c','#15182a','#e0262b','#0c0e1c','#06070e','dark','Тьма']];
  const NAMES=['Пробуждение','Первая память','Архивариус','Потеряшка','Мусорный ветер','Дверь без таблички','Потерянные иконки','Ржавый лифт','Тихая дверь','Страж',
@@ -88,8 +88,7 @@ const GameArt=(()=>{
   errPops(ctx,W,gy,sx,t,sd);
   fog(ctx,W,gy-130,120,.1,t,sd);
   towers(ctx,W,gy,sx,.09,11+sd,sc===2?'#101013':th.near,34,sc===0?130:100,56,0,false,t);
-  if(sc===0)ruinsExtra(ctx,W,gy,sx,t,th,q);
-  else if(sc===1)for(let i=0;i<3;i++){const x=((i*170+50-sx*.1)%(W+200)+W+200)%(W+200)-70;ctx.fillStyle=th.near;ctx.fillRect(x,gy-84,3,84);ctx.fillRect(x-20,gy-88,44,10);ctx.fillStyle=rgba('#f1f2f4',.25);ctx.fillRect(x-17,gy-85,38,2)}
+  if(sc===0||sc===1)dumpExtra(ctx,W,gy,sx,t,sd,sc);
   else if(sc===3)for(let i=0;i<5;i++){const x=((i*86+20-sx*.12)%(W+120)+W+120)%(W+120)-30,h=30+hs(i+sd)*60;ctx.fillStyle=th.near;ctx.beginPath();ctx.moveTo(x,gy+2);ctx.lineTo(x+9,gy-h);ctx.lineTo(x+18,gy+2);ctx.fill()}
   towers(ctx,W,gy,sx,.16,29+sd,th.near,22,70,50,0,false,t);
   fog(ctx,W,gy-56,60,.13,t,sd+2);
@@ -97,9 +96,19 @@ const GameArt=(()=>{
   for(let i=0;i<n;i++){const r=hs(i+500),x=((r*W-sx*(.2+r*.35)-t*(5+r*7))%(W+20)+W+20)%(W+20)-10,y=hs(i+90)*gy+Math.sin(t*.6+i)*7,s=1+(i%3);ctx.fillStyle=(red&&i%4===0)?'#e0262b':'#f1f2f4';ctx.globalAlpha=o*((red&&i%4===0)?.45:.1+.25*r);ctx.fillRect(x,y,s,s)}
   ctx.globalAlpha=o;
   blit(ctx,'over',0,0,W,H,x=>{const v=x.createRadialGradient(W/2,H*.45,Math.min(W,H)*.3,W/2,H*.5,Math.max(W,H)*.8);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');x.fillStyle=v;x.fillRect(0,0,W,H)})}
- /* «Свалка»: обломки табличек и каркас арки на горизонте */
- function ruinsExtra(ctx,W,gy,sx,t,th,q){
-  for(let i=0;i<3;i++){const x=((i*150+60-sx*.12)%(W+180)+W+180)%(W+180)-50;ctx.fillStyle=th.near;ctx.fillRect(x,gy-70,5,70);ctx.fillRect(x+34,gy-58,5,58);ctx.fillRect(x-4,gy-76,48,7);ctx.strokeStyle=rgba('#f1f2f4',.12);ctx.lineWidth=1;ctx.strokeRect(x+8,gy-64,22,40)}}
+ /* «Свалка» (глава 1 «Корзина», уровни 1–10 по библии): папки-горы, перечёркнутые иконки, падающие строки File not found.
+    v=0 — свалка днём, v=1 — ночная свалка (больше тумана, меньше папок) */
+ function dumpExtra(ctx,W,gy,sx,t,sd,v){
+  const wx=(x,p)=>{const m=W+p*2;return((x%m)+m)%m-p};
+  const nF=v?3:4;
+  for(let i=0;i<nF;i++){const x=wx(i*(W/nF)+sd*37-sx*(.14+v*.03),80),h=34+hs(i*11+sd+v)*30,w=60+hs(i*5+sd)*34,y=gy-h+4;
+   ctx.fillStyle=v?'#0b1517':'#0e1a1c';ctx.fillRect(x,y,w,h);ctx.fillRect(x,y-6,w*.38,6);
+   ctx.strokeStyle='rgba(190,214,204,'+(v?.08:.12)+')';ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,h-1);
+   ctx.fillStyle='rgba(190,214,204,.06)';ctx.fillRect(x+6,y+8,w-12,2)}
+  for(let i=0;i<5;i++){const x=((hs(i*13+sd+v*7)*W-sx*.05)%W+W)%W,y=gy-18-hs(i*3+sd)*40;ctx.strokeStyle='rgba(190,214,204,.12)';ctx.lineWidth=1;ctx.strokeRect(x,y,14,14);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+14,y+14);ctx.moveTo(x+14,y);ctx.lineTo(x,y+14);ctx.stroke()}
+  ctx.font='500 9px monospace';ctx.textAlign='left';
+  for(let i=0;i<6;i++){const x=(hs(i*17+sd+v)*W+W)%W,y=(t*(18+i*3)+i*71+v*40)%gy;ctx.fillStyle='rgba(190,214,204,'+(.1+hs(i+sd)*.08).toFixed(3)+')';ctx.fillText(i%3?'File not found':'404',x,y)}
+ }
  /* пустота ям (опасность: красное свечение снизу) и земля */
  function voidFill(ctx,W,H,gy,th,t){
   gy=Math.round(gy);blit(ctx,'void',0,gy,W,H-gy+4,x=>{const g=x.createLinearGradient(0,0,0,H-gy);g.addColorStop(0,'#050506');g.addColorStop(.55,'#08080a');g.addColorStop(1,'rgba(143,21,25,.55)');x.fillStyle=g;x.fillRect(0,0,W,H-gy+4)});
