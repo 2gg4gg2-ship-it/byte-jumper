@@ -19,7 +19,9 @@ const GameArt=(()=>{
  /* TH[i] = [верх, низ, свет, дальний, ближний, мотив, название]: 20 уровней, 4 сцены */
  const TH=NAMES.map((n,i)=>{const s=SC[Math.floor(i/5)];return[s[0],s[1],s[2],s[3],s[4],s[5],n]});
  const idx=(mode,L)=>mode==='endless'?11:Math.max(0,((L|0)-1)%20);
- const theme=(mode,L)=>{const i=idx(mode,L),t=TH[i],sc=Math.floor(i/5);return{i,sc,seed:(L|0)%5+sc*7,top:t[0],bot:t[1],ac:t[2],far:t[3],near:t[4],m:t[5],name:t[6],act:sc>1?1:0}};
+ /* alt: высота камеры 0..1. Уровни 1–10 — подъём от свалки внизу (0) к воздуху над ней (1); остальные уровни и арены — 0 */
+ const theme=(mode,L)=>{const i=idx(mode,L),t=TH[i],sc=Math.floor(i/5),alt=mode==='level'&&L>=1&&L<=10?((L|0)-1)/9:0;return{i,sc,seed:(L|0)%5+sc*7,top:t[0],bot:t[1],ac:t[2],far:t[3],near:t[4],m:t[5],name:t[6],act:sc>1?1:0,alt}};
+ const mixHex=(a,b,k)=>{const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];const A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*k).toString(16).padStart(2,'0')).join('')};
  const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')'};
  /* ---- кэш: статичное рисуется один раз в невидимый холст, потом одной командой drawImage (раньше фон пересчитывался каждый кадр) ---- */
  const cache=new Map();
@@ -74,8 +76,10 @@ const GameArt=(()=>{
   blit(ctx,'fog|'+a+'|'+ph%3,W-dx,y0,W,h,null)}
  /* фон уровня: небо и свет в кэше, слои руин (кэш), туман, пылинки; сверху один кэшированный слой «развёртки + виньетка» */
  function bg(ctx,W,H,gy,sx,t,th,q){
-  const sc=th.sc,red=sc===3,sd=th.seed;gy=Math.round(gy);
-  blit(ctx,'back|'+sc+th.top+th.bot,0,0,W,H,x=>{const g=x.createLinearGradient(0,0,0,gy);g.addColorStop(0,th.top);g.addColorStop(1,th.bot);x.fillStyle=g;x.fillRect(0,0,W,H);
+  const sc=th.sc,red=sc===3,sd=th.seed,al=th.alt||0;gy=Math.round(gy);
+  /* при подъёме небо синеет к ночному (#070b18 → #141d42), а свалка уходит вниз, под камеру */
+  const top=al?mixHex(th.top,'#070b18',al):th.top,bot=al?mixHex(th.bot,'#141d42',al):th.bot,gA=gy+al*H*.35;
+  blit(ctx,'back|'+sc+top+bot,0,0,W,H,x=>{const g=x.createLinearGradient(0,0,0,gy);g.addColorStop(0,top);g.addColorStop(1,bot);x.fillStyle=g;x.fillRect(0,0,W,H);
    glowDot(x,W*.55,gy*.62,W*.9,red?'#e0262b':'#3d7bff',red?.07:.09);
    /* вертикальные световые колонки и фоновый код (статичны, поэтому в кэше слоя) */
    for(let i=0;i<5;i++){const cxl=hs(i+sd*3)*W,gw=18+hs(i*9+sd)*30;const cg=x.createLinearGradient(cxl-gw,0,cxl+gw,0);cg.addColorStop(0,'rgba(90,140,255,0)');cg.addColorStop(.5,'rgba(90,140,255,.07)');cg.addColorStop(1,'rgba(90,140,255,0)');x.fillStyle=cg;x.fillRect(cxl-gw,0,gw*2,gy)}
@@ -84,13 +88,13 @@ const GameArt=(()=>{
    if(red){const h=x.createLinearGradient(0,gy-170,0,gy);h.addColorStop(0,'rgba(224,38,43,0)');h.addColorStop(1,'rgba(224,38,43,.22)');x.fillStyle=h;x.fillRect(0,gy-170,W,170)}});
   if(sc===0||sc===2||sc===3)ring(ctx,W*.58+Math.sin(sx*.0015)*18,gy*.5,sc===2?gy*.46:gy*.38,sc===3?.05:.07,t,sc===2?10:7);
   if(sc===2){ring(ctx,W*.22,gy*.32,gy*.2,.045,-t,5);ctx.fillStyle=rgba('#f1f2f4',.035);for(let i=0;i<4;i++)ctx.fillRect(W*(.1+i*.25)-6,0,12,gy)}
-  towers(ctx,W,gy,sx,.04,3+sd,th.far,60,sc===2?230:170,sc===2?46:72,sc===1?.16:0,sc===1||red,t);
-  errPops(ctx,W,gy,sx,t,sd);
+  towers(ctx,W,gA,sx,.04,3+sd,th.far,60,sc===2?230:170,sc===2?46:72,sc===1?.16:0,sc===1||red,t);
+  errPops(ctx,W,gy,sx,t,sd,3+Math.round(al*3));
   fog(ctx,W,gy-130,120,.1,t,sd);
-  towers(ctx,W,gy,sx,.09,11+sd,sc===2?'#101013':th.near,34,sc===0?130:100,56,0,false,t);
-  if(sc===0||sc===1)dumpExtra(ctx,W,gy,sx,t,sd,sc);
+  towers(ctx,W,gA,sx,.09,11+sd,sc===2?'#101013':th.near,34,sc===0?130:100,56,0,false,t);
+  if(sc===0||sc===1)dumpExtra(ctx,W,gA,sx,t,sd,sc);
   else if(sc===3)for(let i=0;i<5;i++){const x=((i*86+20-sx*.12)%(W+120)+W+120)%(W+120)-30,h=30+hs(i+sd)*60;ctx.fillStyle=th.near;ctx.beginPath();ctx.moveTo(x,gy+2);ctx.lineTo(x+9,gy-h);ctx.lineTo(x+18,gy+2);ctx.fill()}
-  towers(ctx,W,gy,sx,.16,29+sd,th.near,22,70,50,0,false,t);
+  towers(ctx,W,gA,sx,.16,29+sd,th.near,22,70,50,0,false,t);
   fog(ctx,W,gy-56,60,.13,t,sd+2);
   const n=Math.round(16*q),o=ctx.globalAlpha;
   for(let i=0;i<n;i++){const r=hs(i+500),x=((r*W-sx*(.2+r*.35)-t*(5+r*7))%(W+20)+W+20)%(W+20)-10,y=hs(i+90)*gy+Math.sin(t*.6+i)*7,s=1+(i%3);ctx.fillStyle=(red&&i%4===0)?'#e0262b':'#f1f2f4';ctx.globalAlpha=o*((red&&i%4===0)?.45:.1+.25*r);ctx.fillRect(x,y,s,s)}
@@ -213,7 +217,8 @@ const GameArt=(()=>{
  /* ---------- арены боссов: тот же мир, что и на уровнях, но фон плывёт сам ---------- */
  const ASC=[0,2,1,3,0,3,1,2,3,3];
  function arenaBg(ctx,S,W,H,t){
-  const id=Math.max(1,Math.min(10,S.bid|0||1)),sc=ASC[id-1],th=theme('level',sc*5+1+(id%5)),gy=Math.max(S.gy||H*.8,H*.8);
+  const id=Math.max(1,Math.min(10,S.bid|0||1)),sc=ASC[id-1],th=theme('arena',sc*5+1+(id%5)),gy=Math.max(S.gy||H*.8,H*.8);
+  if(id===1)th.alt=1;/* Страж (уровень 10): уже в воздухе над свалкой */
   bg(ctx,W,H,H*.9,t*14,t,th,GameArtQ());
   if(id===1){ctx.font='600 10px monospace';ctx.textAlign='left';for(let i=0;i<7;i++){ctx.fillStyle='rgba(241,242,244,.12)';ctx.fillText(i%3?'File not found':'404',hs(i+2)*(W-70),((t*34+i*83)%(H+20))-10)}}
   else if(id===2){ctx.font='600 10px monospace';ctx.textAlign='left';const fn=['push()','pop()','call()','return','main()','stack'];for(let i=0;i<6;i++){ctx.fillStyle='rgba(241,242,244,.12)';ctx.fillText(fn[i],8,((t*24+i*90)%(H+20)))}}
@@ -249,7 +254,7 @@ const GameArt=(()=>{
   q.fillStyle=C.red;q.beginPath();q.arc(17,30,7,0,TAU);q.fill();q.fillStyle='#fff';q.fillRect(14,29,6,2);
   q.fillStyle='#e8eefc';q.font='700 13px sans-serif';q.fillText(k?'0x404':'ALLOW?',30,35);
   q.strokeStyle='#8fb6ff';q.strokeRect(81.5,36.5,26,8);q.font='600 6px sans-serif';q.textAlign='center';q.fillText('OK',94.5,43)}
- function errPops(ctx,W,gy,sx,t,sd){
-  for(let i=0;i<3;i++){const k=(i+sd)%2,span=W+240,x=(((i*197+sd*61)-sx*.2+t*6)%span+span)%span-120,y=gy*(.12+.2*hs(i*5+sd))+Math.sin(t*.8+i)*2;
+ function errPops(ctx,W,gy,sx,t,sd,n){
+  for(let i=0;i<n;i++){const k=(i+sd)%2,span=W+240,x=(((i*197+sd*61)-sx*.2+t*6)%span+span)%span-120,y=gy*(.12+.2*hs(i*5+sd))+Math.sin(t*.8+i)*2;
    glowDot(ctx,x+58,y+23,64,'#3d7bff',.09);blit(ctx,'err|'+k,x,y,116,46,q=>errWin(q,k))}}
  return{theme,bg,voidFill,seg,item,shadow,parts,hud,arenaHud,arenaBg,plat,joy,jump,rejectBtn,glowDot,cham,panel,rgba,hs,TH,C,SC,WH}})();

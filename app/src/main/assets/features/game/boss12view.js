@@ -5,7 +5,7 @@ const GameBoss12View=(()=>{
  function draw(ctx,S,o){ 
   const W=S.W,H=S.H,t=S.t,col=o.col,p=S.p,B=S.boss;
   /* фон */
-  if(S.bid===1){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1d1712');g.addColorStop(1,'#09090b');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+  if(S.bid===1){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#141d42');g.addColorStop(1,'#070b18');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
   else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1c1131');g.addColorStop(1,'#07050d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
   /* мировой слой: для шахты экран едет вниз, башня стоит */
   ctx.save();ctx.translate(0,-(S.bid===1?S.cam:0));
