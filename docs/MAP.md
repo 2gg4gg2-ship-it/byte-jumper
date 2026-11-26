@@ -32,7 +32,7 @@
 - Пути `app/src/main/assets/features/game/*` нельзя менять: игру позже вернут в Kairema (`docs/RETURN_TO_KAIREMA.md`).
 
 <!-- AUTO:START -->
-Версия в сборке: **0.13.8** (versionCode 44). Файл: `app/build.gradle.kts`.
+Версия в сборке: **0.13.9** (versionCode 45). Файл: `app/build.gradle.kts`.
 
 ### Индекс файлов игры и оболочки (`app/src/main/assets`)
 
@@ -52,7 +52,7 @@
 | `features/game/game.js` | 349 | ИГРА «Байт-прыгун»: экраны, рисование, звук, сохранение ===== Офлайн-игра внутри приложения: пока нет сети или просто для отдыха. |
 | `features/game/levels.js` | 258 | УРОВНИ 1–29: сценарии, у каждого уровня своя изюминка (чистая логика, без DOM) ===== Уровень = строка блоков: f плоско, b/B баг, bb два бага, W высокая стена (держи прыжо |
 | `features/game/levelview.js` | 178 | РИСОВАНИЕ УРОВНЕЙ (режим «уровень»): новые препятствия, платформы, подсказки ===== Фон, земля, байты, баги, HUD и герой берутся из GameArt / GameSpark (общий стиль 0.7.x: |
-| `features/game/spark.js` | 63 | ИСКРА: утверждённая графика героя (атлас spark/spark.png, чёрно-белая) и выбор кадра по состоянию ===== Кадры из утверждённых листов автора: idle, r0–r7 (бег), e0–e3 (эво |
+| `features/game/spark.js` | 86 | ИСКРА: утверждённая графика героя (атлас spark/spark.png, чёрно-белая) и выбор кадра по состоянию ===== Кадры из утверждённых листов автора: idle, r0–r7 (бег), e0–e3 (эво |
 | `features/game/story.js` | 8 | ИСТОРИЯ «Искра: Нулевой Ключ»: только данные, без DOM. Сгенерировано из docs/STORY_BIBLE.md (текст автора) |
 | `features/game/storyui.js` | 44 | ЭКРАНЫ ИСТОРИИ: читалка страниц (пролог) и «Книга истории» из меню ===== Спойлеры: главы и боссы, до которых игрок не дошёл, закрыты. |
 | `index.html` | 33 |  |
@@ -110,7 +110,7 @@
 - **`game.js`**: `mk` L11, `T` L12, `fxDraw` L16, `save` L18, `beep` L21, `buzz` L35, `open` L38, `btn` L46, `menu` L47, `archive` L66, `levels` L72, `start` L92, `cs` L101, `size` L102, `reset` L110, `intro` L116, `lvIntro` L121, `closeOv` L126, `overlay` L127, `pause` L131, `finish` L135, `finale` L161, `choose` L163, `loop` L169, `drawCopy` L184, `drawArena` L188, `draw` L244, `pd` L303, `pu` L304, `lp` L307, `pdA` L308, `pmA` L311, `puA` L312, `kd` L316, `ku` L318, `vis` L319, `rs` L320, `stop` L322, `hideChip` L328, `showChip` L329
 - **`levels.js`**: `countObs` L137, `has` L138, `num` L139, `build` L140, `tA` L147, `mod` L148, `byte` L149, `row` L150, `arc` L151, `plat` L152
 - **`levelview.js`**: `A` L6, `lines` L8, `wrapX` L13, `extra` L15, `dashed` L26, `plat` L27, `item` L39, `juiceBack` L100, `juiceFront` L108, `draw` L137
-- **`spark.js`**: `has` L16, `put` L19, `state` L22, `burst` L24, `emo` L25, `runPose` L28, `draw` L31, `portrait` L58, `icon` L60, `whenReady` L61
+- **`spark.js`**: `has` L16, `put` L19, `state` L22, `burst` L24, `emo` L25, `trail` L29, `cracks` L39, `runPose` L47, `draw` L50, `portrait` L81, `icon` L83, `whenReady` L84
 - **`storyui.js`**: `mk` L4, `read` L5, `show` L10, `book` L17, `sec` L21, `card` L22, `lock` L23
 
 ### Боссы: что где (id босса = уровень/10; тексты берутся из `story.js` ← `docs/STORY_BIBLE.md`, механика описана в `docs/BOSSES.md`)
