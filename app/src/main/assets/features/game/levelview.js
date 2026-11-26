@@ -94,6 +94,45 @@ const GameLevelView=(()=>{
   if(k==='lost'){const bl=Math.sin(t*6)>-.3;glow(ctx,x,gy-14,34,'#ffffff',dark?.5:.28);
    ctx.fillStyle='#d4d6db';ctx.beginPath();ctx.moveTo(x-11,gy);ctx.lineTo(x,gy-22);ctx.lineTo(x+11,gy);ctx.closePath();ctx.fill();ctx.fillStyle='#16161a';ctx.fillRect(x-4,gy-15,2,3);ctx.fillRect(x+2,gy-15,2,3);
    ctx.globalAlpha=bl?1:.2;ctx.fillStyle=C.red;ctx.font='700 14px '+font;ctx.textAlign='center';ctx.fillText('!',x,gy-27);ctx.globalAlpha=1}}
+
+ /* ---------- «сок»: свет вокруг героя, частицы глубины, кольцо прыжка, праздник Потеряшки ----------
+    Только косметика: слой рисуется без хитбоксов, количество частиц ограничено и зависит от GameCore.perf.q. */
+ function juiceBack(ctx,S,W,gy,t,q,dark){
+  const p=S.p;
+  if(!dark)A().glowDot(ctx,S.px,p.y+12,150,'#ffffff',.08);/* уровень 0: тёплый свет следует за Искрой */
+  ctx.fillStyle='#b8bac0';
+  for(let i=0,n=Math.round(14*q);i<n;i++){/* задний план: мелкие медленные пылинки */
+   const x=wrapX(i*53.7-S.x*.12-t*5,W,10),y=(i*89.3+t*3+i*i)%Math.max(60,gy-10);
+   ctx.globalAlpha=.12+.14*Math.abs(Math.sin(t*.8+i));ctx.fillRect(x,y,1.5,1.5)}
+  ctx.globalAlpha=1}
+ function juiceFront(ctx,S,o,W,H,gy,t,q){
+  const v=S._lv||(S._lv={ring:[],found:0,fa:0,fx:0,fy:0,on:true,lt:S.t}),p=S.p,C=A().C,glow=A().glowDot;
+  const dt=Math.max(0,Math.min(.1,S.t-v.lt));v.lt=S.t;
+  /* передний план: крупные быстрые частицы и штрихи прямо перед камерой, объём */
+  ctx.fillStyle='#f1f2f4';
+  for(let i=0,n=Math.round(6*q);i<n;i++){
+   const x=wrapX(i*131-S.x*1.7-t*30,W,40),y=(i*97.1)%Math.max(80,gy-20)+Math.sin(t*.9+i)*6;
+   ctx.globalAlpha=.13;ctx.fillRect(x,y,3.2,3.2);ctx.globalAlpha=.07;ctx.fillRect(x+4,y+1,12,1.4)}
+  /* линии скорости на быстрых участках */
+  const sp=(S.speed-300)/120;
+  if(sp>0){ctx.fillStyle='#ffffff';ctx.globalAlpha=Math.min(.18,sp*.18);for(let i=0;i<5;i++){const y=(i*61+t*140)%gy,x=wrapX(i*77-t*500,W,60);ctx.fillRect(x,y,26+i*6,1)}}
+  /* кольцо при прыжке */
+  if(v.on&&!p.on&&p.vy<-200&&v.ring.length<3)v.ring.push({x:S.px,y:p.y+24,l:.3});
+  v.on=p.on;
+  ctx.lineWidth=1.5;
+  for(const r of v.ring){r.l-=dt;if(r.l>0){const k=.3-r.l;ctx.globalAlpha=Math.min(.6,r.l*2.4);ctx.strokeStyle='#f1f2f4';ctx.beginPath();ctx.ellipse(r.x,r.y,8+k*110,2+k*28,0,0,6.2832);ctx.stroke()}}
+  v.ring=v.ring.filter(r=>r.l>0);
+  /* Потеряшка найден: золотая волна, свет и фраза жителя рядом с героем */
+  if(S.found&&!v.found){v.found=1;v.fa=S.t;v.fx=S.px;v.fy=p.y+12}
+  if(v.found){const age=S.t-v.fa;
+   if(age<1.9){const k=age/1.9;
+    glow(ctx,v.fx,v.fy,90*(1-k)+20,'#ffd34d',.5*(1-k));
+    ctx.strokeStyle='#ffd34d';ctx.lineWidth=3;ctx.globalAlpha=.7*(1-k);ctx.beginPath();ctx.arc(v.fx,v.fy,10+age*170,0,6.2832);ctx.stroke();
+    if(age>.15){ctx.lineWidth=1.5;ctx.globalAlpha=.5*(1-k);ctx.beginPath();ctx.arc(v.fx,v.fy,10+(age-.15)*120,0,6.2832);ctx.stroke()}
+    const lo=typeof GameLevels!=='undefined'&&GameLevels.LOST[o.Lv];
+    if(lo&&age>.2){ctx.font='600 13px '+o.col.font;ctx.textAlign='center';ctx.globalAlpha=Math.min(1,(1-k)*2.2);ctx.fillStyle='#ffe9a8';
+     const fx=Math.max(90,Math.min(W-90,v.fx+70)),fy=v.fy-44-age*14;ctx.fillText('«'+lo[1]+'»',fx,fy);ctx.font='700 11px '+o.col.font;ctx.fillStyle='#ffffff';ctx.fillText(lo[0],fx,fy-16)}}}
+  ctx.globalAlpha=1}
  /* ---------- главная функция ---------- */
  function draw(ctx,S,o){
   const W=S.W,H=S.H,gy=S.gy,t=S.t,col=o.col,font=col.font,q=GameCore.perf.q,ch=Math.min(10,Math.ceil(o.Lv/10)),dark=!!(S.def&&S.def.dark);
@@ -106,6 +145,7 @@ const GameLevelView=(()=>{
   const pits=S.pits.slice().sort((a,b)=>a.a-b.a);let cx=-10;
   for(const p of pits){const a=p.a-S.x,b=p.b-S.x;if(b<-20)continue;if(a>W+20)break;GameArt.seg(ctx,cx,Math.min(a,W+10),gy,H,S.x,th,t);cx=Math.max(cx,b)}
   GameArt.seg(ctx,cx,W+10,gy,H,S.x,th,t);
+  juiceBack(ctx,S,W,gy,t,q,dark);
   if(dark){const p=S.p,g=ctx.createRadialGradient(S.px,p.y+12,30,S.px,p.y+12,200);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.86)');ctx.fillStyle=g;ctx.fillRect(0,0,W,gy);
    for(const p2 of pits){const a=p2.a-S.x,b=p2.b-S.x;ctx.fillStyle=C.red;ctx.fillRect(a-2,gy,3,10);ctx.fillRect(b-1,gy,3,10)}}
   for(const pl of S.plats)plat(ctx,S,pl,W,gy,t);
@@ -119,6 +159,7 @@ const GameLevelView=(()=>{
     if(p.sh){ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(0,0,21,0,TAU);ctx.stroke()}
     ctx.restore()}}
   GameArt.parts(ctx,S,t,th,q,PE);
+  juiceFront(ctx,S,o,W,H,gy,t,q);
   /* HUD */
   const row=GameStory.chapters[ch-1].levels[(o.Lv-1)%10]||[];
   GameArt.hud(ctx,S,W,H,t,{th,font,hearts:true,f:Math.min(1,(S.x+S.px)/S.door),label:o.Lv+' · '+(row[1]||th.name)});
