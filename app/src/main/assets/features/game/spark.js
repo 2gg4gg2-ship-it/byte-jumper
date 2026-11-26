@@ -43,6 +43,7 @@ const GameSpark=(()=>{
   ctx.fillStyle='#ff3b4a';const j=Math.floor(t*30)%3;
   ctx.fillRect(-12+j*3,-30,6,1.4);ctx.fillRect(4-j*2,-20,7,1.4);ctx.fillRect(-9,-9+j,5,1.4);ctx.restore()}
  /* выбор кадра и рисование. Вызывать после translate в центр хитбокса. mode: 'level' | 'arena' */
+ const HS=1.28;/* визуальный масштаб героя (хитбокс не меняется) */
  const STRIDE=10;/* px пути на один кадр бега */
  function runPose(run,p,m,t){
   if(p.on){const land=t-m.landT;return(land>=0&&land<.08)?'r0':'r'+(((Math.floor(run/STRIDE))%8+8)%8)}
@@ -57,7 +58,7 @@ const GameSpark=(()=>{
   if(Math.abs(p.vx||0)>1)m.face=p.vx>0?1:-1;
   if(win&&!m.won){m.won=1;emo(m,'h',t,99)}
   const hurt=t-m.hurtT,hit=hurt>=0&&hurt<.45;let name,fx=1;
-  const foot=E.PH/2+1;ctx.translate(0,foot);
+  const foot=E.PH/2+1;ctx.translate(0,foot);ctx.scale(HS,HS);
   if(form>0&&has('e'+form)){name='e'+form;fx=arena?m.face:1}/* эволюция: один кадр */
   else{
    const dist=arena?Math.abs(p.vx||0)*dt:S.speed*dt;m.run=(m.run||0)+dist;
@@ -72,7 +73,11 @@ const GameSpark=(()=>{
   /* рывок (ускоритель или провод): бирюзовый шлейф и частицы кода позади героя */
   const dash=!arena&&((S.boost>0)||p.zip);
   if(dash||m.dp&&m.dp.length)trail(ctx,m,dash,dt,t);
+  /* свечение вокруг героя и янтарный кристалл на боку (по концепту); только вид */
+  ctx.save();ctx.globalCompositeOperation='lighter';{const gg=ctx.createRadialGradient(0,-18,3,0,-18,34);gg.addColorStop(0,'rgba(130,200,255,.30)');gg.addColorStop(1,'rgba(130,200,255,0)');ctx.fillStyle=gg;ctx.fillRect(-36,-54,72,72)}ctx.restore();
   const drawn=put(ctx,name,fx,1,1,null);
+  if(drawn&&!(hurt>=0&&hurt<.45)){ctx.save();const gx=-9*fx,gy2=-17,pu=.75+.25*Math.sin(t*5);ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(255,190,70,'+(.35*pu).toFixed(2)+')';ctx.beginPath();ctx.arc(gx,gy2,5.5,0,6.2832);ctx.fill();ctx.restore();
+   ctx.fillStyle='#ffc247';ctx.beginPath();ctx.moveTo(gx,gy2-3.4);ctx.lineTo(gx+2.4,gy2);ctx.lineTo(gx,gy2+3.4);ctx.lineTo(gx-2.4,gy2);ctx.closePath();ctx.fill()}
   if(hurt>=0&&hurt<.8||S.hearts===1&&!arena)cracks(ctx,hurt>=0&&hurt<.8?1-hurt/.8:.55,t);
   if(m.parts.length){ctx.fillStyle='#e6e8eb';for(const q of m.parts){q.l-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=120*dt;if(q.l>0){ctx.globalAlpha=Math.min(1,q.l*3);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.l*9);ctx.fillRect(-1,-2,2,4);ctx.restore()}}ctx.globalAlpha=1;m.parts=m.parts.filter(q=>q.l>0)}
   ctx.translate(0,-foot);

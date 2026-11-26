@@ -1,5 +1,5 @@
 # STATUS — what exists, what is planned (LIVE document: update every delivery; verify claims with grep before trusting)
-Last updated at version 0.16.1 (owner's repo was 0.16.0; logic files unchanged since 0.13.8). Story/world source: `docs/STORY_BIBLE.md` («Искра: Нулевой Ключ», 10 chapters × 10 levels = 100 levels, 10 bosses, 4 endings, "помехи" screen glitches grow with bosses beaten).
+Last updated at version 0.16.2 (logic files unchanged since 0.13.8). Story/world source: `docs/STORY_BIBLE.md` («Искра: Нулевой Ключ», 10 chapters × 10 levels = 100 levels, 10 bosses, 4 endings, "помехи" screen glitches grow with bosses beaten).
 
 ## DONE (in the game now)
 - Engine: fixed-step physics, tap/hold jump, 5 hearts (levels) / 3 (bosses), invulnerability, swept ground landing (0.13.8), pits with retry/return, endless mode, stars/bytes, save v2 with migrations (`flags.js`), ability registry (`abilities.js`), 3-level interference setting.
@@ -10,6 +10,7 @@ Last updated at version 0.16.1 (owner's repo was 0.16.0; logic files unchanged s
 - Tools: bots, level tests per range, architecture check, auto map, Kairema sync.
 
 ## IN PROGRESS / NEXT (owner asked, not finished)
+0. Visual step 1 done in 0.16.2 (readability, ground windows, brighter sky, bigger hero). Owner approved order: step 2 chapter-1 dump in detail (folder/file piles, crossed icons, broken monitors, windows in heaps, warm light), step 3 HUD like concept + obstacle restyle only (obstacles may be restyled, not moved), step 4 other chapters.
 1. **Visual part 3 + polish to ~90% of the concept images**: HUD (white hearts, "BYTES: 045" + gold diamond, settings button), obstacle polish, echo-dash pose with amber side gem. Start with a screenshot comparison (ART.md). Do not touch hitboxes.
 ## PLANNED (do NOT start without owner's go)
 - Rework levels 18–19, 21–29, 31–49 like 1–17 (sections, combos, new blocks; bots: full bot ≤2 hearts, simple bot fails); then generated 50–99 → hand-built.
