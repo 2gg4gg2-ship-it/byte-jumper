@@ -43,7 +43,7 @@ const GameSpark=(()=>{
   ctx.fillStyle='#ff3b4a';const j=Math.floor(t*30)%3;
   ctx.fillRect(-12+j*3,-30,6,1.4);ctx.fillRect(4-j*2,-20,7,1.4);ctx.fillRect(-9,-9+j,5,1.4);ctx.restore()}
  /* выбор кадра и рисование. Вызывать после translate в центр хитбокса. mode: 'level' | 'arena' */
- const HS=1.28;/* визуальный масштаб героя (хитбокс не меняется) */
+ const HS=1;/* визуальный масштаб героя (хитбокс не меняется) */
  const STRIDE=10;/* px пути на один кадр бега */
  function runPose(run,p,m,t){
   if(p.on){const land=t-m.landT;return(land>=0&&land<.08)?'r0':'r'+(((Math.floor(run/STRIDE))%8+8)%8)}

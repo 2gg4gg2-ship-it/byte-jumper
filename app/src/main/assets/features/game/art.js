@@ -310,6 +310,13 @@ const GameArt=(()=>{
    ctx.beginPath();crystal(ctx,r);ctx.strokeStyle='rgba(255,236,170,.75)';ctx.lineWidth=1;ctx.stroke();
    if(gd){ctx.strokeStyle='rgba(245,184,46,'+(.35+.3*Math.sin(t*5))+')';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,r+7+Math.sin(t*5)*1.5,0,TAU);ctx.stroke()}ctx.restore();return true}
   /* баг («потерянный житель, искажённый Сбоем», 0.16.3): вращающийся венец чёрных шипов, красное треснувшее ядро, один большой глаз со зрачком-щелью, пасть из зубцов, стекающие пиксели. Хитбокс прежний */
+  /* испорченная память: чем дальше глава, тем чаще опасность «рвётся» полосами со сдвигом и цветным двоением, а на баге всплывает украденное имя */
+  const cr=th&&th.i!=null?.2+.8*Math.floor(th.i/10)/9:.2;
+  if(k==='bug'&&!it._g){const ph=(t*1.7+it.x*.013)%1;
+   if(ph<.14+.2*cr){const gl=Object.assign({},it,{_g:1}),hh=36,by=gy-hh+((t*53+it.x)%1)*hh*.7,bh=4+hh*.18,dx=(((t*97+it.x)|0)%2?1:-1)*(3+4*cr);
+    ctx.save();ctx.beginPath();ctx.rect(x-30,by,60,bh);ctx.clip();ctx.translate(dx,0);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.55;item(ctx,gl,x,y,gy,t,H,th);ctx.restore();
+    ctx.save();ctx.globalAlpha=.28+.2*cr;ctx.globalCompositeOperation='lighter';ctx.translate(-2-2*cr,0);ctx.filter&&(ctx.filter='hue-rotate(150deg)');item(ctx,gl,x,y,gy,t,H,th);ctx.restore()}
+   if(cr>.35){ctx.save();ctx.font='600 6px monospace';ctx.textAlign='center';ctx.fillStyle='rgba(255,120,128,'+(.35+.3*Math.sin(t*3+it.x)).toFixed(2)+')';ctx.fillText(['null','404','???','~','0x00'][((it.x|0)%5+5)%5],x,gy-(it.big?13:10)*2-10);ctx.restore()}}
   if(k==='bug'){const R=it.big?13:10,cy=gy-R-1,j=Math.sin(t*14+it.x)*1,pu=.5+.5*Math.sin(t*5+it.x);glowDot(ctx,x+j,cy,R*3,C.red,.28+.18*pu);
    ctx.save();ctx.translate(x+j,cy);
    ctx.save();ctx.rotate(t*.9*(it.x%2?1:-1));ctx.fillStyle='#07080d';ctx.beginPath();for(let i=0;i<10;i++){const a1=i*TAU/10,a2=a1+TAU/20;ctx.lineTo(Math.cos(a1)*(R+6.5),Math.sin(a1)*(R+6.5));ctx.lineTo(Math.cos(a2)*(R-1),Math.sin(a2)*(R-1))}ctx.closePath();ctx.fill();
