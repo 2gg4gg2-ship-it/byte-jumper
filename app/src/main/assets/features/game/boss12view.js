@@ -9,19 +9,14 @@ const GameBoss12View=(()=>{
   else{const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#16224a');g.addColorStop(1,'#070c1e');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
   /* мировой слой: для шахты экран едет вниз, башня стоит */
   ctx.save();ctx.translate(0,-(S.bid===1?S.cam:0));
+  if(typeof GameArenaBg!=='undefined')GameArenaBg.draw(ctx,S,W,H,t,S.bid);/* 0.16.6: фон шахты / башни */
   if(S.bid===1){
    /* ржавые стены шахты */
-   ctx.fillStyle='#24201b';ctx.fillRect(0,S.cam,10,H);ctx.fillRect(W-10,S.cam,10,H);
-   ctx.font='600 10px monospace';ctx.fillStyle=col.tx2;ctx.globalAlpha=.14;
-   for(let i=0;i<8;i++){ctx.fillText('File not found',(i*61)%(W-70),S.cam+((t*40+i*83)%(H+20))-10)}ctx.globalAlpha=1;
    for(const q of S.pl){if(q.st==='gone')continue;const sh=q.st==='warn'&&Math.sin(t*30)>0?2:0;
     GameArt.plat(ctx,q.x+sh,q.y,q.w,q.floor?H*3-q.y:10,q.st==='warn'?'warn':'')}
    /* рамка на груди Стража: пустая, мигает */
    const fx=B.x-30,fy=B.y-4,st=S.fr?S.fr.st:'wait';ctx.lineWidth=2;ctx.strokeStyle=st==='open'?'#f1f2f4':st==='warn'?(Math.sin(t*24)>0?'#e0262b':'rgba(224,38,43,.3)'):'rgba(241,242,244,.25)';ctx.strokeRect(fx,fy,60,44);if(st==='open'){ctx.fillStyle='rgba(241,242,244,.18)';ctx.fillRect(fx,fy,60,44)}
   } else {
-   ctx.fillStyle='#0a1024';ctx.fillRect(0,0,W,H);
-   ctx.font='600 9px monospace';ctx.fillStyle=col.tx2;ctx.globalAlpha=.12;
-   for(let i=0;i<10;i++)ctx.fillText('fn()',8,20+i*46+(t*8)%46);ctx.globalAlpha=1;
    for(const q of S.pl){if(q.st==='gone')continue;const sh=q.st==='warn'&&Math.sin(t*30)>0?2:0;
     if(q.pop){ctx.fillStyle='#6b4fa6';ctx.fillRect(q.x+sh,q.y,q.w,20);ctx.fillStyle='#7dffa8';ctx.fillRect(q.x+sh+2,q.y+2,q.w-4,4)}
     else GameArt.plat(ctx,q.x+sh,q.y,q.w,q.floor?H-q.y:10,q.st==='warn'?'warn':'')}

@@ -422,6 +422,7 @@ const GameArt=(()=>{
  function arenaBg(ctx,S,W,H,t){
   const id=Math.max(1,Math.min(10,S.bid|0||1)),sc=ASC[id-1],th=theme('arena',sc*5+1+(id%5)),gy=Math.max(S.gy||H*.8,H*.8);
   if(id===1)th.alt=1;/* Страж (уровень 10): уже в воздухе над свалкой */
+  if(typeof GameArenaBg!=='undefined'&&id>=3&&id<=5&&GameArenaBg.draw(ctx,S,W,H,t,id))return true;/* 0.16.6: свои арены боссов 3–5 */
   bg(ctx,W,H,H*.9,t*14,t,th,GameArtQ());
   if(id===1){ctx.font='600 10px monospace';ctx.textAlign='left';for(let i=0;i<7;i++){ctx.fillStyle='rgba(241,242,244,.12)';ctx.fillText(i%3?'File not found':'404',hs(i+2)*(W-70),((t*34+i*83)%(H+20))-10)}}
   else if(id===2){ctx.font='600 10px monospace';ctx.textAlign='left';const fn=['push()','pop()','call()','return','main()','stack'];for(let i=0;i<6;i++){ctx.fillStyle='rgba(241,242,244,.12)';ctx.fillText(fn[i],8,((t*24+i*90)%(H+20)))}}
