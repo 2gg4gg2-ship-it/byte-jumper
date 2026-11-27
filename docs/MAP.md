@@ -32,7 +32,7 @@
 - Пути `app/src/main/assets/features/game/*` нельзя менять: игру позже вернут в Kairema (`docs/RETURN_TO_KAIREMA.md`).
 
 <!-- AUTO:START -->
-Версия в сборке: **0.16.6** (versionCode 56). Файл: `app/build.gradle.kts`.
+Версия в сборке: **0.16.7** (versionCode 57). Файл: `app/build.gradle.kts`.
 
 ### Индекс файлов игры и оболочки (`app/src/main/assets`)
 
@@ -40,7 +40,7 @@
 |---|---|---|
 | `features/game/abilities.js` | 28 | СПОСОБНОСТИ ГЕРОЯ (слой 1, логика): реестр-таблица, без DOM и без эффектов ===== Способность открывается, когда побеждён нужный босс (поле boss). |
 | `features/game/arena.js` | 256 | АРЕНА БОССА: логика без DOM. |
-| `features/game/arenabg.js` | 64 | ФОНЫ АРЕН БОССОВ 1–5 (0.16.6): только canvas, без логики. |
+| `features/game/arenabg.js` | 100 | ФОНЫ АРЕН БОССОВ 1–10 (0.16.6–0.16.7): только canvas, без логики. |
 | `features/game/art.js` | 465 | ГРАФИКА «БАЙТ-ПРЫГУНА» (0.7.1): строгая палитра чёрный / серый / белый, красный только для опасности и акцентов ===== Всё рисуется кодом на canvas, картинок нет, сеть не  |
 | `features/game/boss12.js` | 227 | БОССЫ 1 и 2 по документу v3 (раздел 4): «404» в шахте из файлов и «Колосс» в башне из ярусов. |
 | `features/game/boss12view.js` | 59 | РИСОВАНИЕ БОССОВ 1–2 (боссы 404 и Колосс): только canvas, без логики. |
@@ -101,7 +101,7 @@
 
 - **`abilities.js`**: `byId` L15, `opened` L17, `available` L19, `spend` L21, `newRun` L25
 - **`arena.js`**: `layout` L6, `create` L12, `mul` L21, `clamp` L22, `band` L23, `aim` L25, `hit` L27, `fall` L31, `shot` L34, `kit1` L36, `kit2` L49, `row` L51, `kit4` L62, `dmg` L69, `nearPl` L70, `wallTel` L72, `kit5` L74, `coins` L76, `WLIM` L81, `addWin` L82, `erase` L83, `reject` L84, `kit6` L87, `newSeq` L94, `kit7` L96, `kit8` L103, `kit9` L108, `kit10` L114, `attack` L120, `dropPlat` L121, `near` L124
-- **`arenabg.js`**: `glow` L5, `wrap` L6, `shaft` L8, `tower` L21, `mirror` L28, `conveyor` L38, `scales` L48, `draw` L61
+- **`arenabg.js`**: `glow` L5, `wrap` L6, `shaft` L8, `tower` L21, `mirror` L28, `conveyor` L38, `scales` L48, `shelves` L61, `ring` L68, `ribbon` L75, `frozen` L82, `voidSeals` L90, `draw` L97
 - **`art.js`**: `hs` L8, `idx` L43, `theme` L45, `mixHex` L46, `rgba` L47, `hasDoc` L50, `kOf` L51, `layer` L52, `blit` L57, `blob` L61, `glowDot` L63, `cham` L67, `paintTowers` L70, `towers` L81, `ring` L90, `fog` L94, `bg` L100, `newMid` L129, `stackStrip` L144, `paint` L146, `packets` L150, `rails` L153, `newer` L157, `gridStrip` L170, `paint` L172, `frameStrip` L178, `paint` L180, `logStrip` L184, `paint` L187, `skyBand` L191, `bsodMid` L198, `finaleMid` L210, `cloudBank` L221, `dumpExtra` L226, `wx` L227, `dumpScrap` L238, `wx` L239, `chip` L255, `drift` L256, `voidFill` L279, `paintGround` L284, `seg` L320, `crystal` L327, `item` L328, `shadow` L368, `parts` L370, `heart` L377, `panel` L378, `hearts` L379, `icon` L382, `face` L384, `hud` L385, `arenaHud` L401, `joy` L410, `jump` L414, `rejectBtn` L417, `arenaBg` L422, `GameArtQ` L430, `winPaint` L436, `plat` L451, `errWin` L453, `errPops` L461
 - **`boss12.js`**: `clamp` L7, `rng` L8, `create` L11, `say` L25, `BY` L28, `buildShaft` L29, `buildTower` L45, `hit` L54, `fall` L57, `over` L62, `addWarn` L63, `pushPlayer` L64, `movePlayer` L67, `trackStand` L92, `tickPlats` L96, `bossPos` L102, `shard` L105, `step1` L110, `tierY` L155, `PHASE2` L156, `step2` L157, `popBlock` L212, `step` L218, `layout` L222, `reject` L224
 - **`boss12view.js`**: `draw` L5
