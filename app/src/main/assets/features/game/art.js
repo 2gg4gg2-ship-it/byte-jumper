@@ -341,17 +341,17 @@ const GameArt=(()=>{
     ctx.save();ctx.beginPath();ctx.rect(x-30,by,60,bh);ctx.clip();ctx.translate(dx,0);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.55;item(ctx,gl,x,y,gy,t,H,th);ctx.restore();
     ctx.save();ctx.globalAlpha=.28+.2*cr;ctx.globalCompositeOperation='lighter';ctx.translate(-2-2*cr,0);ctx.filter&&(ctx.filter='hue-rotate(150deg)');item(ctx,gl,x,y,gy,t,H,th);ctx.restore()}
    if(cr>.35){ctx.save();ctx.font='600 6px monospace';ctx.textAlign='center';ctx.fillStyle='rgba(255,120,128,'+(.35+.3*Math.sin(t*3+it.x)).toFixed(2)+')';ctx.fillText(['null','404','???','~','0x00'][((it.x|0)%5+5)%5],x,gy-(it.big?13:10)*2-10);ctx.restore()}}
-  if(k==='bug'){const R=it.big?13:10,cy=gy-R-1,j=Math.sin(t*14+it.x)*1,pu=.5+.5*Math.sin(t*5+it.x);glowDot(ctx,x+j,cy,R*3,C.red,.28+.18*pu);
+  if(k==='bug'){const K=GameSkin.of(th),R=it.big?13:10,cy=gy-R-1,j=Math.sin(t*14+it.x)*1,pu=.5+.5*Math.sin(t*5+it.x);glowDot(ctx,x+j,cy,R*3,K.hex,.28+.18*pu);
    ctx.save();ctx.translate(x+j,cy);
-   ctx.save();ctx.rotate(t*.9*(it.x%2?1:-1));ctx.fillStyle='#07080d';ctx.beginPath();for(let i=0;i<10;i++){const a1=i*TAU/10,a2=a1+TAU/20;ctx.lineTo(Math.cos(a1)*(R+6.5),Math.sin(a1)*(R+6.5));ctx.lineTo(Math.cos(a2)*(R-1),Math.sin(a2)*(R-1))}ctx.closePath();ctx.fill();
-   ctx.strokeStyle='rgba(255,59,74,.75)';ctx.lineWidth=1;ctx.stroke();ctx.restore();
-   const g=ctx.createRadialGradient(-R*.3,-R*.35,1,0,0,R);g.addColorStop(0,'#2a1010');g.addColorStop(1,'#050405');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,R,0,TAU);ctx.fill();ctx.strokeStyle=C.red;ctx.lineWidth=1.6;ctx.stroke();
-   ctx.strokeStyle='rgba(255,70,80,'+(.5+.4*pu).toFixed(2)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(R*.2,-R);ctx.lineTo(-R*.1,-R*.45);ctx.lineTo(R*.15,-R*.2);ctx.moveTo(-R*.6,R*.7);ctx.lineTo(-R*.3,R*.35);ctx.stroke();
-   const er=R*.5;glowDot(ctx,-R*.15,-R*.18,er*2.6,'#ff2a3a',.5);ctx.fillStyle='#ff2a3a';ctx.beginPath();ctx.ellipse(-R*.15,-R*.18,er,er*.78,0,0,TAU);ctx.fill();
+   ctx.save();ctx.rotate(t*.9*(it.x%2?1:-1));ctx.fillStyle='#07080d';ctx.beginPath();for(let i=0;i<K.n;i++){const a1=i*TAU/K.n,a2=a1+TAU/(2*K.n);ctx.lineTo(Math.cos(a1)*(R+6.5),Math.sin(a1)*(R+6.5));ctx.lineTo(Math.cos(a2)*(R-1),Math.sin(a2)*(R-1))}ctx.closePath();ctx.fill();
+   ctx.strokeStyle=K.a(.75);ctx.lineWidth=1;ctx.stroke();ctx.restore();
+   const g=ctx.createRadialGradient(-R*.3,-R*.35,1,0,0,R);g.addColorStop(0,K.d1);g.addColorStop(1,K.d0);ctx.fillStyle=g;ctx.beginPath();if(K.body==='square')ctx.rect(-R*.9,-R*.9,R*1.8,R*1.8);else if(K.body==='diamond'){ctx.moveTo(0,-R*1.15);ctx.lineTo(R*1.1,0);ctx.lineTo(0,R*1.15);ctx.lineTo(-R*1.1,0);ctx.closePath()}else ctx.arc(0,0,R,0,TAU);ctx.fill();ctx.strokeStyle=K.hex;ctx.lineWidth=1.6;ctx.stroke();
+   ctx.strokeStyle=K.a((.5+.4*pu).toFixed(2));ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(R*.2,-R);ctx.lineTo(-R*.1,-R*.45);ctx.lineTo(R*.15,-R*.2);ctx.moveTo(-R*.6,R*.7);ctx.lineTo(-R*.3,R*.35);ctx.stroke();
+   const er=R*.5;glowDot(ctx,-R*.15,-R*.18,er*2.6,K.eye,.5);ctx.fillStyle=K.eye;ctx.beginPath();ctx.ellipse(-R*.15,-R*.18,er,er*.78,0,0,TAU);ctx.fill();
    ctx.fillStyle='#100404';ctx.beginPath();ctx.ellipse(-R*.3,-R*.18,er*.2,er*.7,0,0,TAU);ctx.fill();
-   ctx.strokeStyle='#ff6a72';ctx.lineWidth=1;ctx.beginPath();for(let i=0;i<6;i++){const mx=-R*.62+i*R*.24;ctx.lineTo(mx,R*.42+(i%2?R*.2:0))}ctx.stroke();
-   for(let i=0;i<4;i++){const ph=(t*1.6+i*.37+it.x*.01)%1;ctx.globalAlpha=1-ph;ctx.fillStyle=i%2?'#ff3b4a':'#ffffff';ctx.fillRect(-R*.5+i*R*.35,R*.5+ph*(R+6),2,2.5)}
-   for(let i=0;i<3;i++){const ph=t*9+i*2.1+it.x,px=Math.sin(ph)*(R+9),py=Math.cos(ph*1.3)*(R+6);ctx.fillStyle=i%2?'#ffffff':C.red;ctx.globalAlpha=.45+.55*Math.abs(Math.sin(ph));ctx.fillRect(px,py,2,2)}
+   ctx.strokeStyle=K.eye;ctx.lineWidth=1;ctx.beginPath();for(let i=0;i<6;i++){const mx=-R*.62+i*R*.24;ctx.lineTo(mx,R*.42+(i%2?R*.2:0))}ctx.stroke();
+   for(let i=0;i<4;i++){const ph=(t*1.6+i*.37+it.x*.01)%1;ctx.globalAlpha=1-ph;ctx.fillStyle=i%2?K.hex:'#ffffff';ctx.fillRect(-R*.5+i*R*.35,R*.5+ph*(R+6),2,2.5)}
+   for(let i=0;i<3;i++){const ph=t*9+i*2.1+it.x,px=Math.sin(ph)*(R+9),py=Math.cos(ph*1.3)*(R+6);ctx.fillStyle=i%2?'#ffffff':K.hex;ctx.globalAlpha=.45+.55*Math.abs(Math.sin(ph));ctx.fillRect(px,py,2,2)}
    ctx.globalAlpha=1;ctx.restore();return true}
   if(k==='door'){const dh=64,pulse=.5+.5*Math.sin(t*3);glowDot(ctx,x,gy-dh/2,84,'#ffffff',.12+.1*pulse);ctx.save();ctx.translate(x,gy);
    ctx.fillStyle='#08080a';ctx.fillRect(-24,-dh,48,dh);const g=ctx.createLinearGradient(0,-dh,0,0);g.addColorStop(0,'rgba(255,255,255,.35)');g.addColorStop(1,'rgba(255,255,255,.04)');ctx.fillStyle=g;ctx.fillRect(-20,-dh+4,40,dh-4);

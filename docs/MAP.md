@@ -32,7 +32,7 @@
 - Пути `app/src/main/assets/features/game/*` нельзя менять: игру позже вернут в Kairema (`docs/RETURN_TO_KAIREMA.md`).
 
 <!-- AUTO:START -->
-Версия в сборке: **0.17.0** (versionCode 58). Файл: `app/build.gradle.kts`.
+Версия в сборке: **0.17.1** (versionCode 59). Файл: `app/build.gradle.kts`.
 
 ### Индекс файлов игры и оболочки (`app/src/main/assets`)
 
@@ -53,10 +53,11 @@
 | `features/game/game.js` | 349 | ИГРА «Байт-прыгун»: экраны, рисование, звук, сохранение ===== Офлайн-игра внутри приложения: пока нет сети или просто для отдыха. |
 | `features/game/levels.js` | 258 | УРОВНИ 1–29: сценарии, у каждого уровня своя изюминка (чистая логика, без DOM) ===== Уровень = строка блоков: f плоско, b/B баг, bb два бага, W высокая стена (держи прыжо |
 | `features/game/levelview.js` | 189 | РИСОВАНИЕ УРОВНЕЙ (режим «уровень»): новые препятствия, платформы, подсказки ===== Фон, земля, байты, баги, HUD и герой берутся из GameArt / GameSpark (общий стиль 0.7.x: |
+| `features/game/skins.js` | 21 | skins.js — слой 2 (рисование). |
 | `features/game/spark.js` | 91 | ИСКРА: утверждённая графика героя (атлас spark/spark.png, чёрно-белая) и выбор кадра по состоянию ===== Кадры из утверждённых листов автора: idle, r0–r7 (бег), e0–e3 (эво |
 | `features/game/story.js` | 8 | ИСТОРИЯ «Искра: Нулевой Ключ»: только данные, без DOM. Сгенерировано из docs/STORY_BIBLE.md (текст автора) |
 | `features/game/storyui.js` | 44 | ЭКРАНЫ ИСТОРИИ: читалка страниц (пролог) и «Книга истории» из меню ===== Спойлеры: главы и боссы, до которых игрок не дошёл, закрыты. |
-| `index.html` | 34 |  |
+| `index.html` | 35 |  |
 | `shim/shim.css` | 18 | shim.css: тёмная тема и каркас экрана, которые в Kairema даёт core. Для игры в Kairema не нужен. |
 | `shim/shim.js` | 25 | shim.js: заглушка ядра Kairema для отдельной игры «Байт-прыгун» ===== Игра (features/game) написана для приложения Kairema и ждёт от него несколько готовых функций: $, el |
 
@@ -69,7 +70,7 @@
 
 ### Порядок подключения скриптов (`index.html`): важен, модули ищут друг друга по глобальным именам
 
-`shim/shim.js` → `features/game/core.js` → `features/game/engine.js` → `features/game/levels.js` → `features/game/flags.js` → `features/game/abilities.js` → `features/game/story.js` → `features/game/arena.js` → `features/game/fx.js` → `features/game/spark.js` → `features/game/art.js` → `features/game/bossart.js` → `features/game/boss12.js` → `features/game/arenabg.js` → `features/game/boss12view.js` → `features/game/levelview.js` → `features/game/game.js` → `features/game/storyui.js`
+`shim/shim.js` → `features/game/core.js` → `features/game/engine.js` → `features/game/levels.js` → `features/game/flags.js` → `features/game/abilities.js` → `features/game/story.js` → `features/game/arena.js` → `features/game/fx.js` → `features/game/spark.js` → `features/game/art.js` → `features/game/bossart.js` → `features/game/boss12.js` → `features/game/arenabg.js` → `features/game/skins.js` → `features/game/boss12view.js` → `features/game/levelview.js` → `features/game/game.js` → `features/game/storyui.js`
 
 
 ### Модули и их API (глобальное имя → что отдаёт наружу)
@@ -90,6 +91,7 @@
 | `game.js` | `Game` | open,state:()=>sv,setForm:v=>{sv.form=Math.max(0,Math.min(3,v\|0));if(typeof GameSpark!=='undefined')GameSpark.form(sv.form);save()}}})(); |
 | `levels.js` | `GameLevels` | countObs,has,build,INTRO,LOST,DEF}})(); |
 | `levelview.js` | `GameLevelView` | draw}})(); |
+| `skins.js` | `GameSkin` | of,T} |
 | `spark.js` | `GameSpark` | draw,portrait,icon,whenReady,ready:()=>ok,form:v=>{if(v!=null)form=Math.max(0,Math.min(3,v\|0));return form},ATL}})(); |
 | `story.js` | `GameStory` | prologue:D.prologue,intro:D.intro,laws:D.laws,world:D.world,chars:D.chars,finals:D.finals,stages:D.stages,chapters:D.chapters, |
 | `storyui.js` | `GameStoryUI` | read,book}})(); |
@@ -113,6 +115,7 @@
 - **`game.js`**: `mk` L11, `T` L12, `fxDraw` L16, `save` L18, `beep` L21, `buzz` L35, `open` L38, `btn` L46, `menu` L47, `archive` L66, `levels` L72, `start` L92, `cs` L101, `size` L102, `reset` L110, `intro` L116, `lvIntro` L121, `closeOv` L126, `overlay` L127, `pause` L131, `finish` L135, `finale` L161, `choose` L163, `loop` L169, `drawCopy` L184, `drawArena` L188, `draw` L244, `pd` L303, `pu` L304, `lp` L307, `pdA` L308, `pmA` L311, `puA` L312, `kd` L316, `ku` L318, `vis` L319, `rs` L320, `stop` L322, `hideChip` L328, `showChip` L329
 - **`levels.js`**: `countObs` L137, `has` L138, `num` L139, `build` L140, `tA` L147, `mod` L148, `byte` L149, `row` L150, `arc` L151, `plat` L152
 - **`levelview.js`**: `A` L6, `lines` L8, `wrapX` L13, `extra` L15, `dashed` L26, `plat` L27, `item` L39, `juiceBack` L111, `juiceFront` L119, `draw` L148
+- **`skins.js`**: `of` L18
 - **`spark.js`**: `has` L16, `put` L19, `state` L22, `burst` L24, `emo` L25, `trail` L29, `cracks` L39, `runPose` L48, `draw` L51, `portrait` L86, `icon` L88, `whenReady` L89
 - **`storyui.js`**: `mk` L4, `read` L5, `show` L10, `book` L17, `sec` L21, `card` L22, `lock` L23
 

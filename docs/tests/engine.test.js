@@ -1,6 +1,6 @@
 /* Тест логики без браузера: node docs/tests/engine.test.js */
 const fs=require('fs'),path=require('path');const D=path.join(__dirname,'../../app/src/main/assets/features/game/');
-const ld=(f,n)=>new Function(fs.readFileSync(D+f,'utf8')+';return '+n)();
+const ld=(f,n)=>new Function((f==='art.js'?fs.readFileSync(D+'skins.js','utf8')+';':'')+fs.readFileSync(D+f,'utf8')+';return '+n)();
 const GE=ld('engine.js','GameEngine'),AR=new Function(fs.readFileSync(D+'engine.js','utf8')+';'+fs.readFileSync(D+'arena.js','utf8')+';'+fs.readFileSync(D+'boss12.js','utf8')+';'+fs.readFileSync(D+'boss12view.js','utf8')+';return GameArena')(),FX=ld('fx.js','GameFX'),ST=ld('story.js','GameStory'),CO=ld('core.js','GameCore');
 let ok=0,bad=[];const c=(n,v)=>{v?(ok++,console.log('ok  ',n)):(bad.push(n),console.log('FAIL',n))};
 function jump(hold){const S=GE.create({mode:'level',L:1,seed:1,W:360,H:600});S.items=[];let mn=1e9;const y0=S.p.y;GE.step(S,.016,{pressed:true,down:true});mn=Math.min(mn,S.p.y);for(let i=0;i<120;i++){GE.step(S,.016,{down:hold});mn=Math.min(mn,S.p.y)}return y0-mn}
