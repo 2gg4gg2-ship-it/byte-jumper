@@ -75,7 +75,13 @@ const GameLevelView=(()=>{
    if(ph<wn){ctx.globalAlpha=.5;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(x,gy+1,16,4,0,0,TAU);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=C.red;ctx.strokeRect(x-13,gy-26-0,26,26);ctx.globalAlpha=.4;ctx.strokeRect(x-13,gy-26,26,26);ctx.globalAlpha=1;return}
    if(!it.act)return;
    const by=gy-it.yy;glow(ctx,x,by-13,34,C.red,.35);ctx.fillStyle='#16161a';ctx.fillRect(x-13,by-26,26,26);ctx.fillStyle=C.red;ctx.fillRect(x-13,by-26,26,2);ctx.fillStyle='#8a8c93';ctx.fillRect(x-4,by-16,8,3);return}
-  if(k==='spike'){if(dark)glow(ctx,x,gy-8,26,C.red,.4);ctx.fillStyle='#e8e9ec';ctx.beginPath();ctx.moveTo(x-7,gy);ctx.lineTo(x,gy-12);ctx.lineTo(x+7,gy);ctx.closePath();ctx.fill();ctx.fillStyle=C.red;ctx.fillRect(x-2,gy-9,4,2);return}
+  if(k==='spike'){/* осколок Сбоя (0.16.3): чёрный зазубренный шип, красная неоновая кромка, трещина-ядро, красный отсвет на земле; размер и хитбокс прежние */
+   const pu=.5+.5*Math.sin(t*4+x*.07);glow(ctx,x,gy-4,dark?30:20,C.red,(dark?.5:.28)+.16*pu);
+   const g=ctx.createLinearGradient(0,gy,0,gy-13);g.addColorStop(0,'#05060a');g.addColorStop(.7,'#1a0a0a');g.addColorStop(1,'#5a1010');ctx.fillStyle=g;
+   ctx.beginPath();ctx.moveTo(x-7,gy);ctx.lineTo(x-4.5,gy-6);ctx.lineTo(x-2.4,gy-5);ctx.lineTo(x,gy-13);ctx.lineTo(x+2.6,gy-5.5);ctx.lineTo(x+5,gy-7);ctx.lineTo(x+7,gy);ctx.closePath();ctx.fill();
+   ctx.strokeStyle='rgba(255,59,74,'+(.75+.25*pu).toFixed(2)+')';ctx.lineWidth=1.3;ctx.stroke();
+   ctx.strokeStyle='rgba(255,120,128,'+(.5+.4*pu).toFixed(2)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,gy-11);ctx.lineTo(x-1.2,gy-6);ctx.lineTo(x+.8,gy-2.5);ctx.stroke();
+   if(((t*6+x)|0)%11===0){ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(x+2,gy-9,3,1)}return}
   if(k==='mov'){glow(ctx,x,gy-15,40,C.red,dark?.45:.25);ctx.fillStyle='#16161a';ctx.fillRect(x-10,gy-30,20,30);ctx.fillStyle=C.red;ctx.fillRect(x-10,gy-30,20,2);ctx.fillRect(x-10,gy-2,20,2);ctx.fillStyle='#8a8c93';ctx.fillRect(x-1,gy-22,2,14);return}
   if(k==='proj'){glow(ctx,x,y,24,C.red,.5);ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t*9)*.12);ctx.fillStyle='#e8e9ec';ctx.fillRect(-10,-7,20,14);ctx.fillStyle='#5a5c63';ctx.fillRect(-7,-3,11,2);ctx.fillRect(-7,1,8,2);ctx.fillStyle=C.red;ctx.beginPath();ctx.arc(6,3,3,0,TAU);ctx.fill();ctx.restore();return}
   if(k==='hop'){const e=GameEngine.hopE(S,it),by=gy-e;
