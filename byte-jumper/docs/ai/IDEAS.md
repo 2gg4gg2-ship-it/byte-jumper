@@ -1,0 +1,12 @@
+# IDEAS — owner-approved directions NOT to be built yet (build only when the owner says "делаем" for a specific item)
+Source: owner pasted a Google-AI suggestion ("stretch playtime inside the lore"). Facts in it that match the story bible: Gateways between chapters (ch.2, ch.4; level 15 «Первый Шлюз»), House of Golden Subscription (ch.5, level 42, boss Monarch, level 28 «Гость из Дома» offers "subscription for power"), level 47 «Бюджет облаков» (token meter), ending «Исправление» needs ≥ 90 of 100 Lost Ones.
+## A. Boss gate by collection (RECOMMENDED first; no timers, fully offline)
+Door to the chapter boss (levels 10,20,30,…) opens only with ≥ 6–7 Lost Ones OR ≥ 15 stars in the current chapter. Forces replays of missed Lost Ones / byte %. Needs: counters from save (`sv.lfs` = found Lost Ones, `sv.st` = stars per level; see `game.js` finish/levels screen), a gate check in the level-select screen (layer 3), Bit text "not enough signal" (text via STORY_BIBLE → story.js, ask owner for wording), a hint on the level card. Logic helper (pure function `chapterReady(sv,chapter)`) goes to a logic file (`flags.js`), screen only calls it; add a test in `systems.test.js`.
+## B. Lore deal with the House of Golden Subscription (after A)
+On defeat/out of hearts a "contract" window: "sign for +1 heart / +2 hearts in the next run?" in-world only. Cost side-effect: a mark in the Archive or +1 interference step. NO real ads, NO network, NO purchase SDK: the game is offline and the rule "no network/libraries" is in force. A real rewarded ad or paid unlock is a separate decision (needs Android SDK, Kotlin bridge, store rules) — ask the owner and the monetization model first.
+## C. Packets / bandwidth energy (needs owner decision, risky)
+Limited run "packets" per hour/day, level costs 1, boss 2. Offline timers use the device clock (user can cheat by changing time; handle with monotonic checks) and punish an action game by blocking play — owner must confirm he wants hard limits. If chosen: save field with migration in `flags.js`, pure function for refill, UI in game.js.
+## D. Chapter gateway "sync" timer (15–30 min)
+Same offline-clock caveat as C. Prefer A. If built, always allow skipping by collected bytes (no ads).
+## How to handle these when asked
+1. Re-read this file, ask the owner ONE question: which letter(s) and the monetization model (free / ads / paid). 2. Design in `docs/ai/STATUS.md` first (3–5 lines), 3. implement per MECHANICS.md/CODE_STYLE.md (logic pure + screen thin), 4. add the save migration, 5. test.

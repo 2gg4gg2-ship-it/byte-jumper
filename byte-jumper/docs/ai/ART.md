@@ -1,0 +1,14 @@
+# ART — graphics rules (layer 2 only; hitboxes untouched)
+All drawn by code on canvas (`art.js` backgrounds/HUD/ground, `levelview.js` obstacles/platforms, `bossart.js`, `spark.js` hero atlas, `fx.js`). Palette `GameArt.C` (navy/blue greys, gold, green, blue, red = danger; was black/grey/white before 0.14.0). Backgrounds: 4 scenes `SC` rows, each 5 levels, parallax from `S.x`, particles scale with `GameCore.perf.q`.
+## State at 0.16.0 (verify with grep before trusting)
+- DONE: hero atlas recoloured (glossy white shell, dark visor, cyan eyes, "> <" damage, cyan dash trail with code particles, red cracks on damage; 0.13.9). Platforms = dark editor windows with title bar, □ ×, code lines, neon ERROR (red) / WARN (green) lines under them; bytes = gold faceted diamonds; bugs = dark spiky spheres with red outline + glitch particles; Lost Ones = sad documents; background navy (#070b18–#141d42), light columns, background code, floating System Error popups (ALLOW?, 0x404) (0.14.0). Chapter backgrounds for all 100 levels (0.14.1 ch.1 dump rising to sky, 0.15.0 ch.2–4, 0.16.0 ch.5–10); boss arenas use their chapter's background. Palette now `GameArt.C` = navy/blue greys + `gold green blue navy red`.
+- 0.16.2: ground = code windows + neon ERROR/WARN lines, brighter sky, popups moved off the text zone, hero ×1.28 with glow + amber gem (`HS` in spark.js). Screenshot tool: `python3 -I docs/tools/shot.py out.png [level] [sec]` (use it, LOOK at the image).
+- 0.16.5: per-chapter floating details in `drift()` (art.js) — add new chapter motifs there, not by reusing errPops.
+- 0.16.6: boss arena backdrops 1–5 live in `arenabg.js` (GameArenaBg.draw(ctx,S,W,H,t,id)); all 10 bosses have their own backdrop (0.16.7).
+- NOT DONE (owner's concept part 3): HUD restyle (white hearts, "BYTES: 045" with gold diamond, settings button) — check `art.js hud` first; obstacle polish vs the reference images; echo-dash sprite pose with the amber side gem (owner's reference shows it; atlas has none; draw in code or ask owner for sprites).
+- Owner wants the whole look ≈ 90% like his concept images (hero sheet, 3 game screenshots: idle/jump, echo dash, glitch/damage). Procedure: take a Playwright screenshot of level 1 at 360×780 DPR2, compare with the concept, fix the biggest visible gaps first, one thing per delivery, show screenshots. Code can reach ~85–90% of composition/colours; painterly detail is impossible procedurally.
+## Rules
+- Do not read hitboxes from drawing code; draw from item/platform fields. Do not add logic to art files.
+- Offline: assets only inside `app/src/main/assets`; keep atlas small (<300 KB total new art); prefer procedural gradients/glow (`glowDot`, `grad`, `cham`) over PNG for backgrounds.
+- Cache static layers (art.js already caches layer canvases); no per-frame gradient creation for big areas.
+- Reference images come from owner chat only; never download/copy third-party art.

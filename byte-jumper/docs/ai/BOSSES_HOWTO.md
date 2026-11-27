@@ -1,0 +1,11 @@
+# BOSSES — how to build one (design numbers/rules: `docs/BOSSES.md`, grep it, 21 KB; story names: `docs/STORY_BIBLE.md`)
+A boss N = three things (never more places): 1) attacks `kitN` in `arena.js` (logic) 2) drawing branch `id===N` in `bossart.js` 3) names/texts in `story.js` (generated from STORY_BIBLE — do not hand-edit). Bosses 1–2 have extra logic/drawing in `boss12.js` / `boss12view.js` (shaft/tower). Register in `KITS={1:kit1,…}` (arena.js).
+## Arena model
+No scroll. Player: `p.x, p.y, p.vy, p.on`, control `ax` (-1..1) + jump. Platforms `S.pl[i] = {x,y,w,st:'ok'|'gone'|…,floor}`: two floor halves, two side ledges, one top. Boss `S.boss {x,y,hp,phase,atk,…}`; `S.atk` = seconds to next attack; attack pushes telegraphs `S.tel.push({x,t,k,…})` (warning time `t`) which later become `S.sh` shots; `aim(S,t)` aims with lead + error (don't bypass it).
+## Mandatory rules
+- Every attack: warning 0.5–1.2 s BEFORE damage (telegraph), ≤ 20 shots on screen (`shot()` caps), always a safe window/path. Phase by hp (`B.phase`); hearts 3, +1 heart on phase change.
+- Hit = `hit(S)` (1.3 s invulnerable). **Falling off a platform does NOT hurt** (since 0.13.8): `fall(S)` in arena.js re-places the player on the platform under him / nearest by x, no heart. Never add damage to falling.
+- Boss HP drops only by the boss's own mechanic (key/frame/pulse — see BOSSES.md for each). Keep hit-boxes generous (owner complained boss 1 was hard to hit; frame is 60×44).
+- Deterministic randomness: use `S.rnd()` (seeded), never `Math.random()` in logic (tests rely on seeds).
+## Steps for a new boss/attack
+1. Read ONLY that boss's section of `docs/BOSSES.md` (`grep -n "Босс N"`). 2. Write `kitN(S)` (≤ 25 lines; one telegraph kind per branch; reuse `tel` kinds `big/str/fan/fan2/…` before adding a new one; a new kind needs handling in the `tel`→shot conversion AND drawing). 3. Drawing branch in `bossart.js` (monochrome palette `GameArt.C`; red only for danger). 4. Test in `docs/tests/engine.test.js` style: `AR.create({W:360,H:520,seed:3,id:N})`, `S.hearts=999`, step 60 s with a scripted/dodging input, assert hp reachable to 0, shots ≤ 20, every attack preceded by telegraph. 5. `boss12.test.js` for bosses 1–2.
