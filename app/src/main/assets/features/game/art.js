@@ -135,7 +135,7 @@ const GameArt=(()=>{
    for(let i=0;i<5;i++){const x=((i*W/5-sx*.1+t*2)%W+W)%W;ctx.fillStyle=th.ac;ctx.globalAlpha=.05;ctx.fillRect(x,gy*.18,10,gy*.5);ctx.globalAlpha=.16;ctx.fillRect(x,gy*.18,1,gy*.5)}
    ctx.globalAlpha=a0}
   else{towers(ctx,W,gA,sx,.05,31+sd,th.far,50,130,60,0,false,t);packets(ctx,W,gy,t,sd,th.sc===9);rails(ctx,W,gy,t,th.sc===9)}
-  errPops(ctx,W,gy,sx,t,sd,3);
+  drift(ctx,W,gy,sx,t,sd,tx===1?'blocks':tx===2?'mirror':'pkt',th.sc===9);
   fog(ctx,W,gy-130,120,.1,t,sd);
   if(tx===1)stackStrip(ctx,W,gA,sx,th.near,dim,sd,true);else towers(ctx,W,gA,sx,.09,11+sd,th.near,34,90,56,0,false,t);
   fog(ctx,W,gy-56,60,.13,t,sd+2);
@@ -156,14 +156,14 @@ const GameArt=(()=>{
  /* главы 5–10 (уровни 41–100): облака, реестр, изнанка, журнал, синий экран и финал. Кэшированные полосы — как в главах 2–4 */
  function newer(ctx,W,H,gy,gA,sx,t,th,sd){
   const m=th.m,red=th.red;
-  if(m==='cloud'){towers(ctx,W,gA,sx,.05,41+sd,th.far,80,190,70,0,true,t);cloudBank(ctx,W,gy,sx,t,sd,th.ac,.1,.3);
+  if(m==='cloud'){towers(ctx,W,gA,sx,.05,41+sd,th.far,80,190,70,0,true,t);cloudBank(ctx,W,gy,sx,t,sd,th.ac,.1,.3);drift(ctx,W,gy,sx,t,sd,'contract');
    towers(ctx,W,gA,sx,.09,51+sd,th.near,40,110,60,0,false,t);cloudBank(ctx,W,gy,sx*1.2,t*1.3,sd+9,th.ac,.06,.1)}
   else if(m==='grid'){gridStrip(ctx,W,gA,sx,th.far,th.ac,sd,red);errPops(ctx,W,gy,sx,t,sd,2);gridStrip(ctx,W,gA,sx*1.6,th.near,th.ac,sd+3,red)}
-  else if(m==='frame'){frameStrip(ctx,W,gA,sx,th.far,th.ac,sd,false);frameStrip(ctx,W,gA,sx*1.5,th.near,th.ac,sd+5,true)}
-  else if(m==='log'){logStrip(ctx,W,gA,sx,th.far,th.ac,sd,false);logStrip(ctx,W,gA,sx*1.4,th.near,th.ac,sd+4,true)}
+  else if(m==='frame'){frameStrip(ctx,W,gA,sx,th.far,th.ac,sd,false);frameStrip(ctx,W,gA,sx*1.5,th.near,th.ac,sd+5,true);drift(ctx,W,gy,sx,t,sd,'ghost')}
+  else if(m==='log'){logStrip(ctx,W,gA,sx,th.far,th.ac,sd,false);logStrip(ctx,W,gA,sx*1.4,th.near,th.ac,sd+4,true);drift(ctx,W,gy,sx,t,sd,'logtag')}
   else if(m==='sky'){skyBand(ctx,W,gy,sx,t,th,sd);towers(ctx,W,gA,sx,.05,61+sd,th.far,40,120,80,0,false,t)}
   else if(m==='bsod'){bsodMid(ctx,W,gy,sx,t,th,sd);errPops(ctx,W,gy,sx,t,sd,2)}
-  else finaleMid(ctx,W,gy,sx,t,th,sd);
+  else{finaleMid(ctx,W,gy,sx,t,th,sd);drift(ctx,W,gy,sx,t,sd,'seal')}
   fog(ctx,W,gy-80,80,.08,t,sd+1);
  }
  /* полоса карточек реестра: ряды и столбцы, на некоторых карточках метка удаления (кэш, склеивается по кругу) */
@@ -251,6 +251,30 @@ const GameArt=(()=>{
   const n=Math.round(7*q);for(let i=0;i<n;i++){const x=((i*61+sd*13-sx*.35-t*(22+i*4))%(W+40)+W+40)%(W+40)-20,y=gy*.3+hs(i*3+sd)*gy*.5+Math.sin(t*1.3+i)*14;
    ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t*1.7+i)*.7);ctx.fillStyle='rgba(215,228,240,.34)';ctx.fillRect(-5,-7,10,14);ctx.fillStyle='rgba(30,50,70,.5)';ctx.fillRect(-3,-4,6,1);ctx.fillRect(-3,-1,6,1);ctx.fillRect(-3,2,4,1);ctx.restore()}
  }
+ /* летающие детали фона по главам (0.16.5): у каждой главы свои, а не одни и те же окна ошибок */
+ function chip(ctx,x,y,txt,col,a,fill){ctx.font='600 7px monospace';const w=ctx.measureText(txt).width+8;ctx.globalAlpha=a;if(fill){ctx.fillStyle='rgba(8,14,34,.7)';ctx.fillRect(x,y,w,12)}ctx.strokeStyle=col;ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,11);ctx.fillStyle=col;ctx.textAlign='left';ctx.fillText(txt,x+4,y+9)}
+ function drift(ctx,W,gy,sx,t,sd,kind,gold){
+  const a0=ctx.globalAlpha,wx=(x,p)=>{const m=W+p*2;return((x%m)+m)%m-p};
+  if(kind==='blocks'){/* стек: блоки PUSH/POP плывут вверх-вниз */
+   for(let i=0;i<4;i++){const x=wx(i*(W/3.4)+sd*31-sx*.12,60),y0=gy*(.22+.5*hs(i*5+sd)),n=2+(i%2);const y=y0+Math.sin(t*.5+i*1.9)*14;
+    for(let j=0;j<n;j++){const by=y-j*15;ctx.globalAlpha=a0*(.5-j*.08);ctx.fillStyle='#16306a';ctx.fillRect(x,by,44,13);ctx.strokeStyle='rgba(143,176,255,.7)';ctx.strokeRect(x+.5,by+.5,43,12);ctx.fillStyle='rgba(190,215,255,.85)';ctx.font='600 7px monospace';ctx.textAlign='center';ctx.fillText(j===n-1?'PUSH':'POP',x+22,by+9)}
+    ctx.globalAlpha=a0*.5;ctx.strokeStyle='rgba(143,176,255,.7)';ctx.beginPath();const d=Math.sin(t*.5+i*1.9)>0?1:-1;ctx.moveTo(x+52,y+4);ctx.lineTo(x+52,y-6*d);ctx.lineTo(x+49,y-2*d);ctx.moveTo(x+52,y-6*d);ctx.lineTo(x+55,y-2*d);ctx.stroke()}}
+  else if(kind==='mirror'){/* кэш: стеклянные панели с бликом и карточки HIT / MISS / STALE */
+   for(let i=0;i<3;i++){const x=wx(i*(W/2.4)+sd*23-sx*.1,90),h=gy*.55,y=gy*.12+hs(i+sd)*gy*.12;ctx.globalAlpha=a0;const g=ctx.createLinearGradient(x,y,x+60,y+h);g.addColorStop(0,'rgba(180,235,240,.0)');g.addColorStop(.5,'rgba(180,235,240,.13)');g.addColorStop(1,'rgba(180,235,240,.02)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(x+14,y);ctx.lineTo(x+70,y);ctx.lineTo(x+56,y+h);ctx.lineTo(x,y+h);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(200,245,250,.3)';ctx.stroke();ctx.strokeStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.moveTo(x+26,y+6);ctx.lineTo(x+10,y+h*.5);ctx.stroke()}
+   const T=['HIT','MISS','STALE','TTL 0'];for(let i=0;i<4;i++){const x=wx(i*(W/3.1)+sd*17-sx*.2+t*3,60),y=gy*(.18+.5*hs(i*3+sd));chip(ctx,x,y,T[i],i%2?'#9fb6bd':'#7fe8e0',a0*.8,true)}}
+  else if(kind==='pkt'){/* сокет: пакеты-метки бегут вдоль рельсов */
+   const T=['SYN','ACK','PING','200','RETRY','FIN'],c=gold?'#f5b82e':'#6fd8ff';for(let i=0;i<6;i++){const sp=34+hs(i+sd)*40,x=(W+80)-((t*sp+i*131+sd*19)%(W+160)),y=gy*(.15+.55*hs(i*7+sd));chip(ctx,x,y,T[i],i%3===1?'#7dffa8':c,a0*.75,true)}}
+  else if(kind==='contract'){/* облачные дома: договоры с печатью и монеты */
+   for(let i=0;i<4;i++){const x=wx(i*(W/3.2)+sd*27-sx*.15,40),y=gy*(.15+.5*hs(i*5+sd))+Math.sin(t*.7+i)*10;ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t*.6+i*2)*.35);ctx.globalAlpha=a0*.6;ctx.fillStyle='rgba(235,240,250,.85)';ctx.fillRect(-11,-14,22,28);ctx.fillStyle='rgba(60,70,100,.6)';for(let r=0;r<4;r++)ctx.fillRect(-7,-9+r*5,14-(r===3?6:0),1.4);ctx.fillStyle='#f5b82e';ctx.beginPath();ctx.arc(5,9,4,0,6.2832);ctx.fill();ctx.restore()}
+   for(let i=0;i<6;i++){const x=wx(i*(W/5)+sd*13-sx*.25,20),y=((t*(14+i*3)+i*57)%(gy*.8));glowDot(ctx,x,y,9,'#f5b82e',.35);ctx.globalAlpha=a0*.7;ctx.fillStyle='#f5b82e';ctx.beginPath();ctx.ellipse(x,y,3.2,Math.abs(Math.cos(t*2+i))*3.2+.4,0,0,6.2832);ctx.fill()}}
+  else if(kind==='ghost'){/* изнанка: стёртые жители-силуэты и шёпот «забудь» */
+   for(let i=0;i<4;i++){const x=wx(i*(W/3.3)+sd*19-sx*.1,30),y=gy*(.3+.4*hs(i*3+sd))-((t*8+i*40)%40);ctx.globalAlpha=a0*.28;ctx.strokeStyle='#e8f0ff';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,6,0,6.2832);ctx.moveTo(x-9,y+20);ctx.quadraticCurveTo(x-9,y+7,x,y+7);ctx.quadraticCurveTo(x+9,y+7,x+9,y+20);ctx.lineTo(x+5,y+17);ctx.lineTo(x+1,y+21);ctx.lineTo(x-3,y+17);ctx.lineTo(x-9,y+20);ctx.stroke()}
+   ctx.font='600 10px sans-serif';ctx.textAlign='left';const W2=['забудь','забудь','не помни','тише'];for(let i=0;i<4;i++){const x=wx(i*(W/3)+sd*11-sx*.18,60),y=gy*(.2+.5*hs(i*5+sd))+Math.sin(t*.8+i)*6;ctx.globalAlpha=a0*(.1+.12*Math.abs(Math.sin(t*.5+i)));ctx.fillStyle='#ffffff';ctx.fillText(W2[i],x,y)}}
+  else if(kind==='logtag'){/* журнал: уровни логов */
+   const T=[['INFO','#7dffa8'],['WARN','#f5b82e'],['ERROR','#ff3b4a'],['DEBUG','#7fb0ff']];for(let i=0;i<6;i++){const x=wx(i*(W/4.6)+sd*21-sx*.16,50),y=gy*(.15+.55*hs(i*7+sd))+Math.sin(t*.9+i)*5,tg=T[(i+sd)%4];chip(ctx,x,y,tg[0],tg[1],a0*.6,true)}}
+  else if(kind==='seal'){/* нулевая точка: печати */
+   for(let i=0;i<4;i++){const x=wx(i*(W/3)+sd*9-sx*.08,40),y=gy*(.2+.4*hs(i*3+sd))+Math.sin(t*.5+i)*8,r=14+hs(i+sd)*8;ctx.save();ctx.translate(x,y);ctx.globalAlpha=a0*.38;ctx.strokeStyle='#f2f2f2';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,r,0,6.2832);ctx.stroke();ctx.rotate(t*.3*(i%2?1:-1));for(let k=0;k<10;k++){ctx.rotate(.6283);ctx.moveTo(r,0);ctx.lineTo(r+3,0)}ctx.stroke();ctx.restore()}}
+  ctx.globalAlpha=a0}
  /* пустота ям (опасность: красное свечение снизу) и земля */
  function voidFill(ctx,W,H,gy,th,t){
   gy=Math.round(gy);blit(ctx,'void',0,gy,W,H-gy+4,x=>{const g=x.createLinearGradient(0,0,0,H-gy);g.addColorStop(0,'#050506');g.addColorStop(.55,'#08080a');g.addColorStop(1,'rgba(143,21,25,.55)');x.fillStyle=g;x.fillRect(0,0,W,H-gy+4)});
