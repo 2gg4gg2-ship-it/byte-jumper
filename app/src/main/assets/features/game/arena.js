@@ -8,7 +8,7 @@ const GameArena=(()=>{
   const W=S.W,H=S.H,gy=H*.84;S.gy=gy;
   const P=[[0,gy,W*.44],[W*.56,gy,W*.44],[14,gy-100,W*.3],[W-14-W*.3,gy-100,W*.3],[W*.5-W*.17,gy-200,W*.34]];
   if(!S.pl)S.pl=P.map(()=>({st:'ok',t:0}));
-  P.forEach((q,i)=>{const o=S.pl[i];o.x=q[0];o.y=q[1];o.w=q[2];o.floor=i<2})}
+  P.forEach((q,i)=>{const o=S.pl[i];o.x=q[0];o.bx=q[0];o.y=q[1];o.w=q[2];o.floor=i<2})}
  function create(o){
   if(o.id===1||o.id===2)return GameBoss12.create(o);
   const S={bid:o.id||1,arena:true,mode:'boss',W:o.W,H:o.H,rnd:mul(o.seed||7),t:0,over:null,ev:[],score:0,bytes:0,combo:0,hearts:3,maxHearts:3,lost:0,
@@ -24,7 +24,7 @@ const GameArena=(()=>{
  /* прицел с упреждением: куда игрок попадёт через t секунд; ошибка меньше на поздних фазах, больше после ударов */
  function aim(S,t){const p=S.p,amp=S.fair>0?95:S.boss.phase===1?55:S.boss.phase===2?38:26;
   return clamp(p.x+p.vx*t*.8+(S.rnd()-.5)*2*amp,16,S.W-16)}
- function hit(S){const p=S.p;if(p.inv>0||S.over)return;S.hearts--;S.lost++;p.inv=1.3;S.combo=0;S.ev.push('hit');
+ function hit(S){const p=S.p;if(p.inv>0||S.over)return;S.hearts--;S.lost++;if(S.bid===4&&S.key&&S.key.dl){S.key=null;S.kt=2}p.inv=1.3;S.combo=0;S.ev.push('hit');
   if(S.lastK)S.fear[S.lastK]=(S.fear[S.lastK]||0)+1;S.hits.push(S.t);S.hits=S.hits.filter(x=>S.t-x<6);if(S.hits.length>=2)S.fair=6;
   if(S.hearts<=0){S.over='dead';S.ev.push('die')}}
  /* падение вниз: урона нет; игрок сам приземляется на платформу под собой, а если под ним пусто — встаёт на ближайшую по горизонтали целую */
@@ -185,7 +185,10 @@ function step(S,dt,inp){
   S.hab[band(S,p.y+PH)]+=dt;S.hab=S.hab.map(v=>v*(1-dt*.03));if(on&&Math.abs(p.vx)<1)S.idle+=dt;else S.idle=0;
   /* платформы: метка → падение → возвращение */
   S.fallT-=dt;if(S.fallT<=0&&!(S.flip>0||S.fw>0)&&!S.p4&&S.bid!==3){dropPlat(S);S.fallT=S.bid===1?12:S.bid===10&&B.phase===2?6:B.phase===3?9:12}
-  for(const q of S.pl){if(q.st==='warn'){q.t-=dt;if(q.t<=0){q.st='gone';q.t=3}}else if(q.st==='gone'){q.t-=dt;if(q.t<=0)q.st='ok'}}
+  for(const q of S.pl){if(q.st==='warn'){q.t-=dt;if(q.t<=0){q.st='gone';q.t=S.bid===4?2:3}}else if(q.st==='gone'){q.t-=dt;if(q.t<=0)q.st='ok'}}
+  /* босс 4 (Таймаут): платформы едут по рельсам и несут героя; рельсы разной скорости, пол медленнее всех */
+  if(S.bid===4)S.pl.forEach((q,i)=>{if(q.st==='gone'||q.bx==null)return;const A=i<2?10:i===4?30:36,w=i<2?.5:i===2?1.1:i===3?-1.1:.8,nx=q.bx+A*Math.sin(S.t*w+i*1.7),dx=nx-q.x;
+   if(p.on&&Math.abs(p.y+PH-q.y)<2&&p.x+PW/2>q.x&&p.x-PW/2<q.x+q.w)p.x=clamp(p.x+dx,PW/2,W-PW/2);q.x=nx;if(S.key&&S.key.q===i)S.key.x+=dx});
   /* особенности глав */
   if(S.bid===3){
    staleTick(S,dt);
@@ -250,6 +253,6 @@ function step(S,dt,inp){
    if(Math.abs(s.x-p.x)<s.r+PW/2&&Math.abs(s.y-(p.y+PH/2))<s.r+PH/2)hit(S)}
   S.sh=S.sh.filter(s=>s.y<S.H+30&&s.y>-60&&s.x>-30&&s.x<W+30&&!(Math.abs(s.x-p.x)<s.r+PW/2&&Math.abs(s.y-(p.y+PH/2))<s.r+PH/2&&p.inv>0&&0));
   /* ключ на самой высокой платформе (в фазе «растерянности» на средней) */
-  if(S.bid===3){}else if(S.flip>0){}else if(S.key){S.key.t-=dt;if(S.key.t<=0)S.key=null;else if(Math.abs(S.key.x-p.x)<16&&Math.abs(S.key.y-(p.y+PH/2))<24){S.key=null;if(dmg(S))return;S.kt=B.phase===1?7:B.phase===2?6:5}}
-  else{S.kt-=dt;if(S.kt<=0&&!S.p4){const q=B.conf?S.pl[S.rnd()<.5?2:3]:S.pl[4];S.key={x:q.x+q.w*(.25+S.rnd()*.5),y:q.y-20,t:6}}}}
+  if(S.bid===3){}else if(S.flip>0){}else if(S.key){S.key.t-=dt;if(S.key.t<=0)S.key=null;else if(Math.abs(S.key.x-p.x)<16&&Math.abs(S.key.y-(p.y+PH/2))<24){if(S.bid===4&&!S.key.dl){const q=S.pl[4];S.key={x:q.x+q.w/2,y:q.y-20,t:1e9,dl:1,q:4};S.ev.push('byte');return}S.key=null;if(dmg(S))return;S.kt=B.phase===1?7:B.phase===2?6:5}}
+  else{S.kt-=dt;if(S.kt<=0&&!S.p4){const qi=S.bid===4?[0,1,2,3][Math.floor(S.rnd()*4)]:B.conf?(S.rnd()<.5?2:3):4,q=S.pl[qi];S.key={x:q.x+q.w*(.25+S.rnd()*.5),y:q.y-20,t:6,q:qi}}}}
  return{create,step,layout,reject:S=>{if(S&&S.b12)return;reject(S)},SPD}})();

@@ -184,4 +184,15 @@ c('графика: 8 сцен на уровни 1–40, смена раз в 10 
  for(let f=0;f<60*40;f++){S.p.inv=1e9;const before=new Set(S.sbytes);AR.step(S,1/60,{ax:0});S.ev.length=0;
   for(const b of S.sbytes){if(before.has(b))continue;born++;const q=S.pl.find(q=>q.st!=='gone'&&b.x>q.x&&b.x<q.x+q.w&&Math.abs(b.y+22-q.y)<1);if(!q||q.stale)bad++}}
  c('Stale: свежий байт появляется только на свежей платформе ('+born+' появлений, нарушений '+bad+')',born>5&&bad===0)}
+/* ---- босс 4 (Таймаут) по сюжету: рельсы, обрыв 2 с, ACK доставляется к индикатору ---- */
+{const S=AR.create({W:360,H:520,seed:3,id:4});S.hearts=99;const x0=S.pl[2].x;let mv=0,carried=true;
+ for(let f=0;f<60*20;f++){AR.step(S,1/60,{ax:0});S.atk=99;if(Math.abs(S.pl[2].x-x0)>10)mv=1}
+ c('босс 4: платформы едут по рельсам',mv===1);
+ const S2=AR.create({W:360,H:520,seed:3,id:4});S2.hearts=99;S2.atk=99;S2.pl[4].st='ok';S2.kt=0;let k=null,dl=0;
+ for(let f=0;f<60*30&&!dl;f++){S2.atk=99;AR.step(S2,1/60,{ax:0});k=S2.key;if(k&&!k.dl&&S2.t>1){S2.p.x=k.x;S2.p.y=k.y-GE.PH/2}else if(k&&k.dl)dl=1}
+ const hp=S2.boss.hp;c('босс 4: пойманный ACK ещё не бьёт босса, нужно доставить к индикатору',dl===1&&S2.boss.hp===hp);
+ for(let f=0;f<5&&S2.key;f++){S2.p.x=S2.key.x;S2.p.y=S2.key.y-GE.PH/2;S2.p.vy=0;AR.step(S2,1/60,{ax:0})}
+ c('босс 4: доставка ACK бьёт босса',S2.boss.hp<hp);
+ const S3=AR.create({W:360,H:520,seed:3,id:4});S3.key={x:50,y:50,t:1e9,dl:1,q:4};S3.p.inv=0;S3.sh.push({x:S3.p.x,y:S3.p.y+12,vx:0,vy:0,r:8,kind:2});AR.step(S3,1/60,{ax:0});
+ c('босс 4: удар роняет несомый ACK',S3.key===null)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}
