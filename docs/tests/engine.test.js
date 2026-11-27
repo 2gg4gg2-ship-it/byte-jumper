@@ -195,4 +195,33 @@ c('графика: 8 сцен на уровни 1–40, смена раз в 10 
  c('босс 4: доставка ACK бьёт босса',S2.boss.hp<hp);
  const S3=AR.create({W:360,H:520,seed:3,id:4});S3.key={x:50,y:50,t:1e9,dl:1,q:4};S3.p.inv=0;S3.sh.push({x:S3.p.x,y:S3.p.y+12,vx:0,vy:0,r:8,kind:2});AR.step(S3,1/60,{ax:0});
  c('босс 4: удар роняет несомый ACK',S3.key===null)}
+
+/* ---- 0.17.3: плавный прыжок и адаптивное качество ---- */
+{/* гравитация при удержании: нет ступеньки, высоты и время в воздухе как раньше */
+ const G=GE.G,JV=GE.JV,HM=GE.HMAX,DT=1/1200;
+ const jump=hold=>{let y=0,vy=-JV,t=0,h=HM,top=0,prev=null,maxd=0;
+  while(true){const down=hold==null||t<hold;let g=G;
+   if(down&&vy<0&&h>0){g=G*GE.gMul(h);h-=DT}else if(!down)h=0;
+   if(prev!=null&&hold==null)maxd=Math.max(maxd,Math.abs(g-prev));prev=g;
+   vy+=g*DT;y+=vy*DT;t+=DT;top=Math.max(top,-y);if(y>=0)break}
+  return{top,t,maxd}};
+ const tap=jump(0),h1=jump(.1),full=jump(null);
+ c('прыжок: тап 65,6 px ('+tap.top.toFixed(1)+')',Math.abs(tap.top-65.6)<.8);
+ c('прыжок: удержание 0,1 с 92,3 px ('+h1.top.toFixed(1)+')',Math.abs(h1.top-92.3)<1);
+ c('прыжок: полное удержание 123,2 px, не выше прежних 123,8 ('+full.top.toFixed(1)+')',full.top<=123.8&&full.top>=122.4);
+ c('прыжок: в воздухе 0,77 с ('+full.t.toFixed(3)+')',Math.abs(full.t-.77)<.015);
+ c('прыжок: гравитация без скачка (макс. шаг '+(full.maxd*DT*60/ (1/1200*60)).toFixed(0)+' px/с² за шаг 1/1200 с, раньше 1102)',full.maxd<30);
+ c('прыжок: gMul от HG до 1 без разрывов',Math.abs(GE.gMul(HM)-GE.HG)<1e-9&&Math.abs(GE.gMul(0)-1)<1e-9)}
+{/* ядро: адаптивное качество */
+ const mk=()=>ld('core.js','GameCore');
+ let K=mk();for(let i=0;i<40;i++)K.tick(22);c('ядро: стабильные 45 кадров/с (22 мс) снижают качество за 40 кадров',K.perf.q<1);
+ K=mk();let ch=0;for(let i=0;i<300;i++)if(K.tick(i%20===0?120:16.7))ch++;c('ядро: одиночные провалы кадра (120 мс раз в 20 кадров) качество не снижают',K.perf.q===1&&ch===0);
+ K=mk();K.settle();let ch2=0;for(let i=0;i<55;i++)if(K.tick(40))ch2++;c('ядро: после settle() 55 кадров не оцениваются',ch2===0&&K.perf.q===1);
+ K=mk();K.tick(500);K.tick(1200);c('ядро: кадр дольше 400 мс (пауза вкладки) не считается',K.perf.since===0);
+ K=mk();const dp=[];dp.push(K.dprFor(2));for(let s=0;s<3;s++){for(let i=0;i<200&&!K.tick(40););dp.push(K.dprFor(2))}
+ c('ядро: ступени холста 2 → 1,5 → 1,25 → 1 ('+dp.join(' → ')+')',dp.join()==='2,1.5,1.25,1');
+ c('ядро: на экране 1× холст не меньше 1 ('+K.dprFor(1)+')',K.dprFor(1)===1);
+ K=mk();for(let i=0;i<60;i++)K.tick(40);const lv=K.perf.lv;for(let i=0;i<700;i++)K.tick(12);c('ядро: после 10 с быстрой игры качество поднимается на ступень ('+lv+' → '+K.perf.lv+')',lv>0&&K.perf.lv===lv-1);
+ K=mk();for(let i=0;i<60;i++)K.tick(40);for(let i=0;i<700;i++)K.tick(12);const up=K.perf.lv;for(let i=0;i<200&&K.perf.lv===up;i++)K.tick(40);
+ for(let i=0;i<3000;i++)K.tick(12);c('ядро: если сразу после подъёма снова тормозит, выше этой ступени не поднимается (cap '+K.perf.cap+', ступень '+K.perf.lv+')',K.perf.cap>0&&K.perf.lv>=K.perf.cap)}
 console.log('\nИТОГ: %d ок, %d провалов',ok,bad.length);if(bad.length){console.log(bad);process.exit(1)}
