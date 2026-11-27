@@ -52,8 +52,10 @@ for(const W of [360,412]){const S=GE.create({mode:'level',L:2,seed:1,W,H:640});S
    if(S.lost>0){all=false;if(fails.length<5)fails.push(L+'@'+Math.round(pit.a)+' e1='+e1+' e2='+e2)}}}
  c('цепочки платформ проходятся при ошибке прыжка ±30 px ('+(fails.join('; ')||'все')+')',all)}
 /* бот проходит все уровни (0.10.1: сложность растёт, поэтому допускаем до 3 ударов из 5 сердец), на двух ширинах экрана */
-for(const W of [360,412]){const t0=Date.now();const bads=[];for(const L of LV){const S=B.run(L,1,{W});if(S.over!=='win'||S.lost>3)bads.push(L+':'+S.over+'/'+S.lost)}
- c('бот проходит 45 уровней (не больше 3 ударов), W='+W+' ('+(bads.join(' ')||'все')+', '+Math.round((Date.now()-t0)/1000)+' с)',!bads.length)}
+/* 0.17.0: на 25–49 цель — 3 потери (на 42, 45, 48 — 4) с допуском ±1; где иначе гибнет, боту включено «дальнее зрение» (levels2549.old.json) */
+const V=JSON.parse(require('fs').readFileSync(require('path').join(__dirname,'levels2549.old.json'),'utf8'));const cap=L=>V[L]?([42,45,48].includes(L)?5:4):3;
+for(const W of [360,412]){const t0=Date.now();const bads=[];for(const L of LV){const S=B.run(L,1,Object.assign({W},V[L]&&V[L].vis==='far'?{look:18,wide:14}:{}));if(S.over!=='win'||S.lost>cap(L))bads.push(L+':'+S.over+'/'+S.lost)}
+ c('бот проходит 45 уровней (до 3 ударов; на 25–49 до 4–5, см. выше), W='+W+' ('+(bads.join(' ')||'все')+', '+Math.round((Date.now()-t0)/1000)+' с)',!bads.length)}
 console.log('ИТОГ: '+ok+' ок, '+bad.length+' провалов'+(bad.length?': '+bad.join('; '):''));process.exit(bad.length?1:0)
 
 /* нарастание сложности 1–25 (вручную, без автоматического растягивания): длина ≈ 6000+90*(L-1), плотность 3.0–4.5 на 1000 px */

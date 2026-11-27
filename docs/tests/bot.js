@@ -26,11 +26,11 @@ function pick(S0,depth,width){
  return beam[0]}
 function run(L,seed,opt){
  opt=opt||{};const N=opt.lag|0,S=GE.create({mode:'level',L,seed:seed||1,W:opt.W||360,H:opt.H||640}),q=[];let n=0;
- /* opt.lag — задержка ввода в кадрах (2 кадра ≈ 33 мс): бот планирует без неё, а нажатия доходят позже, как у живого игрока */
+ /* opt.look и opt.wide — глубина (в шагах по 5 кадров) и ширина луча: «дальше видеть»; по умолчанию 11 и 10. opt.lag — задержка ввода в кадрах (2 кадра ≈ 33 мс): бот планирует без неё, а нажатия доходят позже, как у живого игрока */
  const real=(pr,dn)=>{q.push({pressed:pr,down:dn});const a=q.length>N?q.shift():{pressed:false,down:false};GE.step(S,DT,a);S.ev.length=0};
  while(!S.over&&n<6000){
   if(S.locked){if(N)real(false,false);else{GE.step(S,DT,{});S.ev.length=0}n++;continue}
-  const b=pick(S,11,10);
+  const b=pick(S,opt.look||11,opt.wide||10);
   if(N){for(let i=0;i<3&&!S.over;i++){const a=b.first[i]||0;for(let f=0;f<5&&!S.over;f++)real(a===1&&f===0,a>0)}}
   else for(let i=0;i<3&&!S.over;i++){slice(S,b.first[i]||0)}
   n++}
