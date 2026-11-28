@@ -75,12 +75,12 @@ const GameLevelView=(()=>{
    if(ph<wn){ctx.globalAlpha=.5;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(x,gy+1,16,4,0,0,TAU);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=C.red;ctx.strokeRect(x-13,gy-26-0,26,26);ctx.globalAlpha=.4;ctx.strokeRect(x-13,gy-26,26,26);ctx.globalAlpha=1;return}
    if(!it.act)return;
    const by=gy-it.yy;glow(ctx,x,by-13,34,C.red,.35);ctx.fillStyle='#16161a';ctx.fillRect(x-13,by-26,26,26);ctx.fillStyle=C.red;ctx.fillRect(x-13,by-26,26,2);ctx.fillStyle='#8a8c93';ctx.fillRect(x-4,by-16,8,3);return}
-  if(k==='spike'){const drawS=()=>{/* осколок Сбоя (0.16.3): чёрный зазубренный шип, красная неоновая кромка, трещина-ядро, красный отсвет на земле; размер и хитбокс прежние */
-   const pu=.5+.5*Math.sin(t*4+x*.07);glow(ctx,x,gy-4,dark?30:20,C.red,(dark?.5:.28)+.16*pu);
-   const g=ctx.createLinearGradient(0,gy,0,gy-13);g.addColorStop(0,'#05060a');g.addColorStop(.7,'#1a0a0a');g.addColorStop(1,'#5a1010');ctx.fillStyle=g;
-   ctx.beginPath();ctx.moveTo(x-7,gy);ctx.lineTo(x-4.5,gy-6);ctx.lineTo(x-2.4,gy-5);ctx.lineTo(x,gy-13);ctx.lineTo(x+2.6,gy-5.5);ctx.lineTo(x+5,gy-7);ctx.lineTo(x+7,gy);ctx.closePath();ctx.fill();
-   ctx.strokeStyle='rgba(255,59,74,'+(.75+.25*pu).toFixed(2)+')';ctx.lineWidth=1.3;ctx.stroke();
-   ctx.strokeStyle='rgba(255,120,128,'+(.5+.4*pu).toFixed(2)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,gy-11);ctx.lineTo(x-1.2,gy-6);ctx.lineTo(x+.8,gy-2.5);ctx.stroke();
+  if(k==='spike'){const K=GameSkin.of(th),drawS=()=>{/* осколок Сбоя: форма и цвет по главе (skins.js), размер и хитбокс те же */
+   const pu=.5+.5*Math.sin(t*4+x*.07);glow(ctx,x,gy-4,dark?30:20,K.hex,(dark?.5:.28)+.16*pu);
+   const g=ctx.createLinearGradient(0,gy,0,gy-13);g.addColorStop(0,K.d0);g.addColorStop(.7,K.d0);g.addColorStop(1,K.d1);ctx.fillStyle=g;
+   ctx.beginPath();K.sp.forEach((q,n)=>n?ctx.lineTo(x+q[0],gy-q[1]):ctx.moveTo(x+q[0],gy-q[1]));ctx.closePath();ctx.fill();
+   ctx.strokeStyle=K.a((.75+.25*pu).toFixed(2));ctx.lineWidth=1.3;ctx.stroke();
+   ctx.strokeStyle='rgba(255,255,255,'+(.3+.3*pu).toFixed(2)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,gy-11);ctx.lineTo(x-1.2,gy-6);ctx.lineTo(x+.8,gy-2.5);ctx.stroke();
    if(((t*6+x)|0)%11===0){ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(x+2,gy-9,3,1)}};
    drawS();/* испорченная память: чем дальше глава, тем чаще шип «рвётся» полосой со сдвигом */
    {const cr=th&&th.i!=null?.2+.8*Math.floor(th.i/10)/9:.2,ph=(t*1.7+it.x*.013)%1;if(ph<.14+.2*cr){const by=gy-14+((t*53+it.x)%1)*9,dx=(((t*97+it.x)|0)%2?1:-1)*(3+4*cr);ctx.save();ctx.beginPath();ctx.rect(x-14,by,28,5);ctx.clip();ctx.translate(dx,0);ctx.globalAlpha=.6;drawS();ctx.restore()}}

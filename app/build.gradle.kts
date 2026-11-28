@@ -11,8 +11,8 @@ android {
         applicationId = "com.bytejumper.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 58
-        versionName = "0.17.0"
+        versionCode = 61
+        versionName = "0.17.3"
     }
     // Постоянный debug-ключ: новые APK ставятся поверх старых
     signingConfigs {
