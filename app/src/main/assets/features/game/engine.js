@@ -259,7 +259,7 @@ function step(S,dt,inp){
     if(px1>it.x-w&&px0<it.x+w&&py1>Yb-h&&py0<Yb)hit(S,it)}}
   /* зоны босса: красная полоса на земле, жжёт только когда горит */
   for(const it of S.items)if(it.t==='zone'&&it.age>1.2&&it.age<2.4&&p.y+PH>=gy-6&&Math.abs(it.x-pw)<it.w/2+PW/2)hit(S,it);
-  S.items=S.items.filter(it=>!it.dead&&it.x>S.x-80&&!(it.t==='zone'&&it.age>2.6));
+  S.items=S.items.filter(it=>!it.dead&&(it.t==='mm'?it.x+it.w>S.x-80:it.x>S.x-80)&&!(it.t==='zone'&&it.age>2.6));
   S.pits=S.pits.filter(q=>q.b>S.x-80);
   if(lv&&S.locked&&!S.over){
    const dx=S.door-S.x;S.doorOpen=Math.max(0,Math.min(1,1-(dx-S.px-24)/150));
