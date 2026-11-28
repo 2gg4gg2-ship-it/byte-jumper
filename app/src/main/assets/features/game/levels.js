@@ -89,11 +89,11 @@ Object.assign(LOST,{31:['Рельс','Я тоже еду, но не знаю к�
   22:{seq:'bb:120 bb:130 t:a W c:fk,3,80,38,30 W d W c:fk,3,80,38,30 L bb:120 bb:130 W',txt:{a:'Серые контуры не держат. Прыгай с яркой части.'}},
   23:{seq:'bb:130 t:a lz:60,200,4.5,0 c:S+F+S,3,110,34,30 lz:10,180,4.0,1.0 W bb:120 p:180 p:180 L bb:120 W x:3',txt:{a:'Бирюзовые держат. Серые рассыпаются почти сразу.'}},
   24:{seq:'t:a x:3 lz:10,180,4.0,1.0 W W p:180 b p:110 d bb:130 bb:130 L bb:130 W p:180',txt:{a:'Лавка забытых вещей. Что-то лежит на полке.'}},
-  25:{echo:1,seq:'t:a f:1 U a:90 U a:90 P:90 a:50 U a:90 Jp P:100 a:60 U a:90 lz:10,160,4.0,0 U a:60 P:90 a:40 Fr:0 a:70 U a:110 x:2 U a:70 P:100 a:60 U a:90 x:2 U a:90 Wl a:70 U a:110 P:90 a:50 U a:90 L f:1',txt:{a:'Копия бага повторит твой прыжок. Жди её на том же месте.'}},
-  26:{seq:'t:a f:1 hm:dudd a:60 U a:90 U a:90 Mg:40 a:50 v:b g:jump hm:du P:100 a:50 x:2 U a:90 U a:90 Jp hm:ddu Wl a:70 U a:70 g:pass v:c x:3 U a:90 mg:40 U a:90 pi:260 cx:2 mm:600 U a:40 Mg:40 a:60 U a:90 hm:uddu fb:2.6,0 U a:90 v:d U a:90 x:2 U a:90 L',txt:{a:'Вставка-воспоминание: потолок и магниты. Смотри вверх.',mem:'Вставка-воспоминание: Кернел и Кайрем спорят об открытии Сети.'}},
-  27:{seq:'t:a f:1 c:blink,3,110,34,30 fx:2.6,0 U a:90 lz:10,180,4.0,0 Fr:0 U a:90 P:100 a:60 lz:10,180,4.0,1.0 x:2 hm:duddu a:60 fx:2.6,1.0 Fr:0 U a:90 lz:10,180,4.0,2.0 Wl a:70 U a:90 c:sB,3,110,34,30 P:120 a:60 hm:dud a:60 fx:2.6,0 U a:90 fx:2.6,1.0 P:100 a:40 U a:90 lz:60,200,4.5,0 x:3 c:sA,3,110,34,30 U a:70 x:2 fx:2.6,1.0 U a:90 Fr:0 a:60 U a:90 P:90 a:50 x:2 U a:90 L',txt:{a:'Схема меняется: мигают платформы и лазеры. Считай вспышки.'}},
-  28:{seq:'t:a f:1 l U a:90 g:jump x:3 P:110 a:50 l v:d U a:90 x:2 hm:uddu a:60 l Fr:0 U a:90 Bo g:jump l P:110 a:40 U a:90 P:130 a:50 x:2 hm:dud a:60 U a:90 l a:50 U a:70 P:100 a:50 U a:90 v:c x:4 Mg:30 a:60 g:jump U a:90 x:2 U a:90 l a:40 x:2 L',txt:{a:'Золото над ямами. Ускоритель — подписка на силу: не злоупотребляй.'}},
-  29:{seq:'t:a f:1 Jp U a:110 zl:260,90 Fr:0 U a:90 hm:dudd a:60 x:2 Mg:40 U a:90 P:100 a:40 Mg:40 k n mm:600 P:100 a:90 v:b g:pass U a:90 U a:90 Fr:0 a:70 x:2 hm:du a:60 lz:10,200,4.5,0 U a:90 P:90 a:50 x:3 U a:90 U a:70 P:110 a:50 x:2 Wl a:80 U a:90 v:d U a:90 Mg:40 a:40 P:100 U a:90 L f:1',txt:{a:'Передышка: батут и провод впереди. Потом ключ.',mem:'Первое упоминание Ключа.'}}};
+  25:{seq:'t:a f:1 bb:230 f:1 p:110 bb:200 f:1 d f:1 W f:1 U a:150 x:3 f:1 bb:230 U a:200 p:100 f:1 d x:2 U a:120 f:1 L f:1',txt:{a:'Копия бага повторяет твой прыжок. Жди её на том же месте.'}},
+  26:{seq:'t:a f:1 v:a g:pass h:d,2 f:1 v:b g:jump fx:2.6,0 f:1 h:u,3 v:c g:pass f:1 lz:10,200,4.5,0 v:b g:jump f:1 v:c h:d,2 fx:2.6,1.0 g:pass f:1 v:d h:u,2 g:jump f:1 L f:1 v:b v:e g:pass h:d,3 f:1 lz:60,200,4.5,1.0 v:c g:jump f:1',txt:{a:'Договоры, ворота и призраки работают вместе. Смотри, что летит первым.'}},
+  27:{seq:'t:a f:1 c:blink,3,110,34,30 fx:2.6,0 f:1 lz:10,180,4.0,0 c:blink,4,100,34,34 U a:120 f:1 lz:10,180,4.0,1.0 c:blink,3,110,34,30 p:200 f:1 fx:2.6,1.0 c:blink,4,100,34,34 lz:10,180,4.0,2.0 f:1 mg:0 h:d,3 fx:2.6,0 f:1 c:blink,3,110,34,30 lz:60,200,4.5,0 W f:1 p:110 c:blink,4,100,34,34 U a:120 L f:1',txt:{a:'Каждые несколько секунд схема меняется. Смотри на мигание, не на память.'}},
+  28:{seq:'t:a f:1 l bo f:1 l U a:120 l g:jump f:1 l x:3 p:120 l bo f:1 l g:pass v:d l f:1 l x:2 l p:110 f:1 bo l U a:120 g:jump l f:1 L f:1',txt:{a:'Золото лежит над ямами. Возьми не всё: каждый лишний прыжок стоит сердца.'}},
+  29:{seq:'t:a f:1 fx:2.6,0 h:d,2 lz:10,200,4.5,0 W f:1 l v:b bb:150 f:1 c:blink,3,110,34,30 U a:120 x:3 f:1 k bo f:1 p:120 lz:60,200,4.5,1.0 v:c g:jump f:1 l x:2 W h:u,3 fx:2.6,1.0 f:1 bb:200 U a:120 g:pass f:1 n L f:1',txt:{a:'Всё, что ты узнала, вместе. Чекпоинт посередине вернёт сердце.'}}};
 Object.assign(DEF,{
  31:{sp:1.2,seq:'t:a f:1 c:mw,3,110,36,30 x:3 mf:40,2.4,0 U a:120 p:230 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:60 ba:12,150,5,100,40 Wl a:60 ba:70,200,5,30,110 P:120 a:100 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 c:mw,3,110,36,30 x:3 U a:90 U a:90 f:1 mf:50,3.0,1.2 bb:130 c:mv,3,110,34,30 f:1 p:230 U a:120 x:2 mf:40,2.4,0 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 ba:12,150,5,100,40 Wl a:80 K:3 a:140 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 c:mw,3,110,36,30 bo x:3 lz:10,180,4.0,1.0 U a:120 c:mv,3,110,34,30 p:230 mf:40,2.4,0 U a:90 f:1 W x:3 c:mw,3,110,36,30 mf:50,3.0,1.2 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 ba:12,150,5,100,40 Wl a:120 ba:12,150,5,100,40 Wl a:140 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:120 p:230 L f:1 c:mv,3,110,34,30 U a:90 mf:40,2.4,0 c:mw,3,110,36,30 lz:10,180,4.0,1.0 U a:120 x:2 f:1',txt:{a:'Рельсы едут сами. Прыгай, когда платформа рядом с тобой.'}},
  32:{sp:1.2,seq:'t:a f:1 U a:90 U a:90 U a:90 U a:90 U a:90 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:120 U a:120 x:3 p:230 U a:90 U ba:12,150,5,100,40 Wl a:80 K:3 a:140 a:90 U a:90 x:2 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 bb:130 U a:90 U a:90 x:3 mf:40,2.4,0 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:150 U a:150 x:3 W f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 ba:12,150,5,100,40 Wl a:120 ba:12,150,5,100,40 Wl a:140 c:mw,3,110,36,30 U a:90 U a:90 U a:90 U a:90 U a:90 x:2 p:230 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 bb:120 x:3 U a:90 U a:90 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 lz:10,180,4.0,1.0 x:3 mf:40,2.4,0 f:1 U a:90 U a:90 U a:90 U a:90 U ba:12,150,5,100,40 Wl a:50 ba:80,220,5,30,115 P:160 a:80 a:90 U a:90 U a:90 U a:120 U a:120 U a:120 x:2 p:230 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 W x:3 U a:90 U a:90 U a:90 mf:50,3.0,1.2 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 bb:120 x:3 U a:90 U a:90 U a:90 U a:90 c:mw,3,110,36,30 L ba:12,150,5,100,40 Wl a:110 ba:12,150,5,100,40 Wl a:150 f:1 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 U a:90 x:3 U a:150 x:2 p:230 U a:90 U a:90 U a:90 lz:10,180,4.0,1.0 x:3 f:1',txt:{a:'Бит считает такт. Баги стоят через равные промежутки: прыгай в ритм.'}},
@@ -173,8 +173,6 @@ Object.assign(LORE,{
      else if(k==='mw')q=plat(x,ww,h,'mv',{amp:42,sp:.9,ph:-.9*tc});
      else if(k==='lift'){h=34;q=plat(x,ww,h,'lift',{amp:30,sp:1.9,ph:.6-1.9*tc})}
      else if(k==='blink')q=plat(x,ww,h,'blink',{per:3,on:2.1,ph:mod(1.05-tc,3)});
-     else if(k==='sA')q=plat(x,ww,h,'blink',{per:20,on:10,ph:mod(-tc,20)});
-     else if(k==='sB')q=plat(x,ww,h,'blink',{per:20,on:10,ph:mod(-tc,20)});
      else if(k==='rise')q=plat(x,ww,h,'st',{rise:1});
      else q=plat(x,ww,h,'st');
      byte(x+ww/2,h+36);
@@ -197,10 +195,6 @@ Object.assign(LORE,{
    h(modes,n){modes=String(modes||'u');n=n|0||modes.length;const per=1.1,amp=62;
     for(let i=0;i<n;i++){const x=c+150+i*210;it.push({t:'hop',x,h:0,amp:72,per,ph:mod(per/2-tA(x),per)});if(i<n-1)row(x+70,x+140,2,0)}
     c+=150+n*210+100},
-    /* hm режимы — прыгуны с учётом режима каждого (в отличие от h): d — к твоему приходу на земле (перепрыгни), u — в воздухе (иди под ним); например hm:dudd. Токен h не менялся: от него зависят откалиброванные уровни 31–49 */
-    hm(modes){modes=String(modes||'du');const per=1.1,n=modes.length;
-     for(let i=0;i<n;i++){const x=c+150+i*210,ta=tA(x),d=modes[i]==='d';it.push({t:'hop',x,h:0,amp:72,per,ph:mod((d?0:per/2)-ta,per)});if(i<n-1)row(x+70,x+140,2,0)}
-     c+=150+n*210+100},
    /* x n — кластер из n шипов «битых файлов» на земле; m amp,per,ph — блок-рельс на земле, едет туда-сюда */
    x(n){n=n|0||3;const x0=c+120;for(let i=0;i<n;i++)it.push({t:'spike',x:x0+i*18,h:0});c=x0+n*18+150},
    /* lz h,w,per,ph — луч поперёк уровня на высоте h (w — полуширина); fb per,ph — блок падает сверху на метку */
@@ -248,7 +242,6 @@ Object.assign(LORE,{
    /* pi len — портал-инвертор: касание рамки переворачивает гравитацию (ходишь по потолку) на len px */
    pi(len){const x=c+150;it.push({t:'inv',x,h:40,len:+(len||420),used:0});c=x+40+160},
    /* bo — ускоритель на земле: 1,5 с бежишь на +40% быстрее и прыгаешь выше */
-   mm(len){const w=+(len||600);it.push({t:'mm',x:c,w,h:0});c+=w},
    bo(){const x=c+150;it.push({t:'bo',x,h:0,w:90});c=x+90+200},
    /* cb — баг на потолке (бьёт, только когда Искра идёт по потолку) */
    cb(){const x=c+130;it.push({t:'bug',x,h:0,big:false,ceil:1});c+=300},

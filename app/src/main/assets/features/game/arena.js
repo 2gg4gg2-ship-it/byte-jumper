@@ -175,7 +175,7 @@ function step(S,dt,inp){
   for(const w of S.walls)if(p.x+PW/2>w.x-7&&p.x-PW/2<w.x+7&&p.y+PH>w.y&&p.y<w.y+w.h){if(S.wb>0){S.wb--;w.t=0;S.ev.push('shield')}else p.x=p.x<w.x?w.x-7-PW/2:w.x+7+PW/2}
   if(inp.pressed)p.buf=.12;p.coy=p.on?.08:p.coy-dt;p.buf-=dt;
   if(p.buf>0&&p.coy>0){p.vy=-E.JV*(S.flip>0?-1:1);p.on=false;p.coy=0;p.buf=0;p.hold=E.HMAX;S.ev.push('jump')}
-  let g=E.G;const sg=S.flip>0?-1:1;if(inp.down&&p.vy*sg<0&&p.hold>0){g=E.G*E.gMul(p.hold);p.hold-=dt}else if(!inp.down)p.hold=0;
+  let g=E.G;const sg=S.flip>0?-1:1;if(inp.down&&p.vy*sg<0&&p.hold>0){g=E.G*E.HG;p.hold-=dt}else if(!inp.down)p.hold=0;
   const pb=p.y+PH;p.vy+=g*sg*dt;p.y+=p.vy*dt;let on=false;
   if(S.flip>0){if(p.y<=100){p.y=100;p.vy=0;on=true}}else if(p.vy>=0)for(const q of S.pl){if(q.st==='gone')continue;
    if(pb<=q.y+3&&p.y+PH>=q.y&&p.x+PW/2>q.x&&p.x-PW/2<q.x+q.w){p.y=q.y-PH;p.vy=0;on=true;break}}

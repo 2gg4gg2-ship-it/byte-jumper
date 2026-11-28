@@ -339,8 +339,7 @@ const GameArt=(()=>{
   if(k==='bug'&&!it._g){const ph=(t*1.7+it.x*.013)%1;
    if(ph<.14+.2*cr){const gl=Object.assign({},it,{_g:1}),hh=36,by=gy-hh+((t*53+it.x)%1)*hh*.7,bh=4+hh*.18,dx=(((t*97+it.x)|0)%2?1:-1)*(3+4*cr);
     ctx.save();ctx.beginPath();ctx.rect(x-30,by,60,bh);ctx.clip();ctx.translate(dx,0);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.55;item(ctx,gl,x,y,gy,t,H,th);ctx.restore();
-    ctx.save();ctx.globalAlpha=.28+.2*cr;ctx.globalCompositeOperation='lighter';ctx.translate(-2-2*cr,0);item(ctx,gl,x,y,gy,t,H,th);ctx.restore();
-    ctx.save();ctx.beginPath();ctx.rect(x-30,by,60,bh);ctx.clip();ctx.fillStyle='rgba(90,210,255,'+(.1+.1*cr).toFixed(2)+')';ctx.fillRect(x-30,by,60,bh);ctx.restore()}
+    ctx.save();ctx.globalAlpha=.28+.2*cr;ctx.globalCompositeOperation='lighter';ctx.translate(-2-2*cr,0);ctx.filter&&(ctx.filter='hue-rotate(150deg)');item(ctx,gl,x,y,gy,t,H,th);ctx.restore()}
    if(cr>.35){ctx.save();ctx.font='600 6px monospace';ctx.textAlign='center';ctx.fillStyle='rgba(255,120,128,'+(.35+.3*Math.sin(t*3+it.x)).toFixed(2)+')';ctx.fillText(['null','404','???','~','0x00'][((it.x|0)%5+5)%5],x,gy-(it.big?13:10)*2-10);ctx.restore()}}
   if(k==='bug'){const K=GameSkin.of(th),R=it.big?13:10,cy=gy-R-1,j=Math.sin(t*14+it.x)*1,pu=.5+.5*Math.sin(t*5+it.x);glowDot(ctx,x+j,cy,R*3,K.hex,.28+.18*pu);
    ctx.save();ctx.translate(x+j,cy);

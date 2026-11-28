@@ -38,10 +38,6 @@ const GameLevelView=(()=>{
  /* ---------- предметы, которых нет в GameArt ---------- */
  function item(ctx,S,it,W,gy,t,font,dark,th){
   const k=it.t,C=A().C,glow=A().glowDot;let x=it.x-S.x;
-  if(k==='mm'){const x0=x,x1=x+it.w;if(x1<-20||x0>W+20)return;const a0=Math.max(0,x0),a1=Math.min(W,x1);
-   ctx.save();ctx.globalAlpha=.10+.03*Math.sin(t*2);ctx.fillStyle='#8f7bff';ctx.fillRect(a0,0,a1-a0,gy);ctx.restore();
-   const pw=S.x+S.px-it.x;if(pw>0&&pw<it.w&&S.def&&S.def.txt&&S.def.txt.mem){ctx.save();ctx.globalAlpha=.9;ctx.fillStyle='#e6e1ff';ctx.font='600 11px '+font;ctx.textAlign='center';ctx.fillText(S.def.txt.mem,W/2,96);ctx.restore()}
-   return}
   if(k==='proj'&&!it.go){if(it.wn){const y=gy-it.h-7,a=.5+.5*Math.abs(Math.sin(t*14));ctx.globalAlpha=a;glow(ctx,W-18,y,26,C.red,.6);ctx.fillStyle=C.red;ctx.beginPath();ctx.moveTo(W-6,y);ctx.lineTo(W-22,y-9);ctx.lineTo(W-22,y+9);ctx.closePath();ctx.fill();ctx.fillStyle='#f1f2f4';ctx.fillRect(W-36,y-5,9,10);ctx.fillRect(W-38,y-8,13,2);ctx.globalAlpha=1}return}
   if(x<-60||x>W+80)return;
   const y=gy-it.h;
@@ -169,7 +165,7 @@ const GameLevelView=(()=>{
   const p=S.p;let sy=gy;for(const pl of S.plats){if(pl.dead||pl.k==='fake'||S.px+8<pl.cx-S.x||S.px-8>pl.cx-S.x+pl.w)continue;const ty=gy-pl.cur;if(ty>=p.y+24-4&&ty<sy)sy=ty}
   GameArt.shadow(ctx,S.px,sy,p.y,24);
   {const bl=p.inv>0&&Math.floor(t*14)%2;
-   if(!bl||GameSpark.ready()){ctx.save();if(bl)ctx.globalAlpha=.45;ctx.translate(S.px,p.y+12);
+   if(!bl||GameSpark.ready()){ctx.save();if(bl)ctx.globalAlpha=.45;ctx.translate(S.px,p.y+12);ctx.rotate(p.flip?Math.PI:0);/* на потолке ноги вверх, к потолку */
     if(!GameSpark.draw(ctx,S,t,'level',PE)){ctx.fillStyle=col.tx;ctx.fillRect(-12,-12,24,24);ctx.fillStyle=col.bg;ctx.fillRect(-6,-4,4,5);ctx.fillRect(3,-4,4,5)}
     if(p.sh){ctx.strokeStyle=col.tx;ctx.lineWidth=2;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(0,0,21,0,TAU);ctx.stroke()}
     ctx.restore()}}
