@@ -8,12 +8,9 @@
    События для звука лежат в S.ev (очищает тот, кто рисует). Убрать игру: удалить папку features/game и её строки в index.html. */
 const GameEngine=(()=>{
  /* Прыжок: тап ≈ 66 px (малый), удержание ≈ 124 px (большой) */
- const G=1900,JV=500,HG=.42,HMAX=.32,PX=80,PW=20,PH=24,FOOT=8,GY=.68;
+ const G=1900,JV=500,HG=.42,HMAX=.25,PX=80,PW=20,PH=24,FOOT=8,GY=.68;
  /* новые блоки: CEIL — низ потолка (для портала-инвертора), PADV — скорость батута (≈160 px вверх) */
  const CEIL=70,PADV=780;
- /* гравитация при удержании: растёт от HG к 1 плавно (степень 4) за время HMAX, без ступеньки в конце (раньше 0,42 → 1 скачком, и героя «роняло» у вершины: скачок 1102 px/с², теперь 11).
-    Высоты те же (подбор перебором, docs/tests/parkour.test.js): тап 65,6; удержание 0,1 с 92,2 (было 92,3); полное 123,2 (было 123,8); в воздухе 0,772 с (было 0,769). Выше прежнего не бывает: уровни не упрощаются. hold = сколько осталось от HMAX */
- const gMul=h=>{const u=1-h/HMAX;return HG+(1-HG)*Math.pow(u<0?0:u>1?1:u,4)};
  const mul=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
  /* сложность d от 0 (уровень 1) до 1 (уровень 10): растёт плавно, размер героя, высота прыжка и управление не меняются */
@@ -148,7 +145,7 @@ function step(S,dt,inp){
    p.zip=null;p.vy=-jv*sg;p.on=false;p.stand=null;p.buf=0;p.hold=HMAX;S.ev.push('jump')}
   const feet0=p.y+PH;
   let g=G*sg;
-  if(inp&&inp.down&&p.vy*sg<0&&p.hold>0){g=G*gMul(p.hold)*sg;p.hold-=dt}else if(!(inp&&inp.down))p.hold=0;
+  if(inp&&inp.down&&p.vy*sg<0&&p.hold>0){g=G*HG*sg;p.hold-=dt}else if(!(inp&&inp.down))p.hold=0;
   /* быстрое падение (S.ab.fall): удержание в падении тянет втрое сильнее */
   if(S.ab&&S.ab.fall&&inp&&inp.down&&!p.on&&p.vy*sg>0)g=G*3*sg;
   /* провод: съехал с конца — отцепился */
@@ -266,4 +263,4 @@ function step(S,dt,inp){
    if(S.px>=dx-16){S.over='win';S.ev.push('win')}}}
  const stars=S=>{if(S.over!=='win'||S.mode!=='level')return S.over==='win'?3:0;const pc=S.bytes/Math.max(1,S.spawned);return 1+(pc>=.7?1:0)+(pc>=.9&&S.lost<=1?1:0)};
  const dist=S=>Math.floor(S.x/10);
- return{create,step,stars,dist,target,prm,levelD,PX,PW,PH,GY,G,JV,HMAX,HG,gMul,solid,inPit,gateSt,hopE,CEIL,PADV}})();
+ return{create,step,stars,dist,target,prm,levelD,PX,PW,PH,GY,G,JV,HMAX,HG,solid,inPit,gateSt,hopE,CEIL,PADV}})();

@@ -73,7 +73,7 @@ const GameBoss12=(()=>{
   if(inp.pressed)p.buf=.12;p.coy=p.on?.08:p.coy-dt;p.buf-=dt;
   if(p.buf>0&&p.coy>0){p.vy=-E.JV;p.on=false;p.stand=null;p.coy=0;p.buf=0;p.hold=E.HMAX;S.ev.push('jump')}
   else if(p.buf>0&&S.ab&&S.ab.double&&!p.on&&!p.dj){p.vy=-E.JV*.9;p.dj=1;p.buf=0;S.ev.push('jump')}
-  let g=E.G;if(inp.down&&p.vy<0&&p.hold>0){g=E.G*E.gMul(p.hold);p.hold-=dt}else if(!inp.down)p.hold=0;
+  let g=E.G;if(inp.down&&p.vy<0&&p.hold>0){g=E.G*E.HG;p.hold-=dt}else if(!inp.down)p.hold=0;
   if(S.ab&&S.ab.fall&&inp.down&&!p.on&&p.vy>0)g=E.G*3;
   const pb=p.y+PH,air=!p.on;p.vy+=g*dt;p.y+=p.vy*dt;let on=false;
   if(p.vy>=0)for(const q of S.pl){if(q.st==='gone'||q.dead)continue;

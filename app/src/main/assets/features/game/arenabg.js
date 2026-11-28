@@ -25,7 +25,6 @@ const GameArenaBg=(()=>{
   const wy=H*.2;glow(ctx,W-6,wy,120,'#ffd9a0',.4+.1*Math.sin(t*3));ctx.fillStyle='#ffd9a0';ctx.fillRect(W-26,wy-26,26,52);ctx.fillStyle='rgba(60,30,0,.5)';ctx.fillRect(W-22,wy-22,18,44);ctx.fillRect(W-13,wy-22,1,44);ctx.fillRect(W-26,wy,26,1);
   ctx.font='600 9px monospace';ctx.fillStyle='rgba(190,215,255,.16)';ctx.textAlign='left';for(let i=0;i<8;i++)ctx.fillText(i%2?'push()':'pop()',46,20+wrap(t*14+i*70,H));}
  /* босс 3: зеркальный зал. Стеклянные панели, бирюзовое свечение, пол отражает платформы */
- const RH={s:null,l:0,a:[]};
  function mirror(ctx,S,W,H,t){
   const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0a1a20');g.addColorStop(1,'#050b10');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   const fl=S.pl.find(q=>q.floor),fy=fl?fl.y:H*.8;
@@ -33,17 +32,13 @@ const GameArenaBg=(()=>{
   glow(ctx,W*.5,fy*.4,W*.8,'#6fd8ff',.14);
   /* отражение в полу: платформы вверх ногами, бледнее и со сдвигом по времени */
   ctx.save();ctx.beginPath();ctx.rect(0,fy,W,H-fy);ctx.clip();const rg=ctx.createLinearGradient(0,fy,0,H);rg.addColorStop(0,'rgba(120,230,225,.22)');rg.addColorStop(1,'rgba(10,30,40,.9)');ctx.fillStyle=rg;ctx.fillRect(0,fy,W,H-fy);
-  /* отражение запаздывает на 3 с (сюжет, босс 3): рисуем платформы такими, какими они были 3 секунды назад; свежие бирюзовые, устаревшие серые */
-  if(RH.s!==S||S.t<RH.l){RH.s=S;RH.a=[]}RH.l=S.t;RH.a.push({t:S.t,p:S.pl.map(q=>[q.x,q.y,q.w,q.floor?1:0,q.st==='gone'?1:0,q.stale?1:0])});while(RH.a.length>2&&RH.a[1].t<=S.t-3)RH.a.shift();
-  const old=RH.a[0].t<=S.t-2.9?RH.a[0].p:null;
-  if(old){for(const q of old){if(q[3]||q[4])continue;ctx.globalAlpha=q[5]?.16:.3;ctx.fillStyle=q[5]?'#9aa6a8':'#7fe8e0';ctx.fillRect(q[0],2*fy-q[1]-10+Math.sin(t*2+q[0])*1.5,q[2],6)}}
-  ctx.restore();
+  ctx.globalAlpha=.22;ctx.fillStyle='#7fe8e0';for(const q of S.pl){if(q.floor||q.st==='gone')continue;ctx.fillRect(q.x,2*fy-q.y-10+Math.sin(t*2+q.x)*1.5,q.w,6)}ctx.restore();
   ctx.fillStyle='rgba(223,244,242,.8)';ctx.fillRect(0,fy,W,1)}
  /* босс 4: конвейер. Три световых рельса, по ним бегут огни пакетов */
  function conveyor(ctx,S,W,H,t){
   const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#030a1a');g.addColorStop(1,'#06142a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   for(let i=0;i<6;i++){const x=hs(i*5)*W;ctx.fillStyle='rgba(60,110,200,.07)';ctx.fillRect(x,0,14+hs(i)*20,H)}
-  const ys=S.gy?[S.gy-200,S.gy-100,S.gy]:[H*.3,H*.52,H*.74];/* рельсы под платформами */
+  const ys=[H*.3,H*.52,H*.74];
   ys.forEach((y,k)=>{const sp=(k===2?60:110)*(k===1?-1:1);ctx.lineWidth=2;ctx.strokeStyle='rgba(111,216,255,.55)';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();ctx.strokeStyle='rgba(111,216,255,.15)';ctx.lineWidth=8;ctx.stroke();
    ctx.fillStyle='rgba(111,216,255,.9)';for(let i=0;i<7;i++){const x=wrap(i*(W/6)+t*sp,W+40)-20;ctx.fillRect(x,y-2,12,4);glow(ctx,x+6,y,16,'#74f0ff',.4)}
    ctx.fillStyle='rgba(125,255,168,.9)';{const x=wrap(W*.3+t*sp*.7+k*60,W+40)-20;ctx.fillRect(x,y-5,8,8)}
