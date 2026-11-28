@@ -2,27 +2,32 @@
  "25": {
   "len": 6780,
   "events": 16,
-  "vis": "std"
+  "vis": "std",
+  "manual": true
  },
  "26": {
   "len": 32340,
   "events": 70,
-  "vis": "std"
+  "vis": "std",
+  "manual": true
  },
  "27": {
   "len": 41116,
   "events": 62,
-  "vis": "std"
+  "vis": "std",
+  "manual": true
  },
  "28": {
   "len": 28008,
   "events": 69,
-  "vis": "std"
+  "vis": "std",
+  "manual": true
  },
  "29": {
   "len": 39010,
   "events": 78,
-  "vis": "far"
+  "vis": "far",
+  "manual": true
  },
  "31": {
   "len": 63608,
